@@ -1,0 +1,31 @@
+[package]
+name = "auth"
+version = "0.1.0"
+authors = ["Nyx <nnyyxxxx@protonmail.com>"]
+license = "GPL-2.0"
+description = "Authenticator app made in rust"
+repository = "https://github.com/nnyyxxxx/auth.git"
+readme = "readme.md"
+keywords = [
+    "authenticator",
+    "gui",
+]
+edition = "2021"
+
+[dependencies]
+ratatui = "0.26.1"
+crossterm = "0.27.0"
+totp-rs = "5.5.1"
+anyhow = "1.0.80"
+chrono = "0.4.34"
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8.10"
+sequoia-openpgp = "1.18.0"
+dirs = "5.0.1"
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true
+opt-level = 3
