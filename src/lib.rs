@@ -5,6 +5,7 @@ use std::io::stdout;
 pub mod app;
 pub mod crypto;
 pub mod entry;
+pub mod root;
 pub mod ui;
 pub mod utils;
 
