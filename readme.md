@@ -1,8 +1,8 @@
+<div align="center">
+
 # Auth
 
 ![](.github/auth.png)
-
-<div align="center">
 
 A simple terminal-based authenticator app written in Rust that generates TOTP codes.
 
