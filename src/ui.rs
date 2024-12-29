@@ -19,7 +19,13 @@ pub fn draw(frame: &mut Frame, app: &App) {
             Line::from(format!("Width = {} Height = {}", MIN_WIDTH, MIN_HEIGHT)),
         ];
 
-        let warning = Paragraph::new(text)
+        let vertical_pad = (area.height as usize - 5) / 2;
+        let padded_text = (0..vertical_pad)
+            .map(|_| Line::from(""))
+            .chain(text)
+            .collect::<Vec<_>>();
+
+        let warning = Paragraph::new(padded_text)
             .alignment(Alignment::Center)
             .style(Style::default().fg(Color::LightCyan));
 
