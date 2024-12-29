@@ -317,13 +317,16 @@ impl App {
 
     fn next_entry(&mut self) {
         if !self.entries.is_empty() {
-            self.selected = (self.selected + 1).min(self.entries.len() - 1);
+            self.selected = (self.selected + 1) % self.entries.len();
         }
     }
 
     fn previous_entry(&mut self) {
         if !self.entries.is_empty() {
-            self.selected = self.selected.saturating_sub(1);
+            self.selected = self
+                .selected
+                .checked_sub(1)
+                .unwrap_or(self.entries.len() - 1);
         }
     }
 
