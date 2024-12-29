@@ -38,7 +38,7 @@ A simple terminal-based authenticator app written in Rust that generates TOTP co
 ### Building
 
 ```
-cargo build --release
+cargo run --release
 ```
 
 ## License
