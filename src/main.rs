@@ -67,6 +67,7 @@ impl Entry {
 enum InputMode {
     Normal,
     Adding,
+    Editing,
     Importing,
     Exporting,
 }
@@ -78,6 +79,8 @@ struct App {
     input_mode: InputMode,
     new_entry_name: String,
     new_entry_secret: String,
+    edit_entry_name: String,
+    edit_entry_secret: String,
     input_field: usize,
     entries_path: PathBuf,
     copy_notification_time: Option<SystemTime>,
@@ -100,6 +103,8 @@ impl App {
             input_mode: InputMode::Normal,
             new_entry_name: String::new(),
             new_entry_secret: String::new(),
+            edit_entry_name: String::new(),
+            edit_entry_secret: String::new(),
             input_field: 0,
             entries_path,
             copy_notification_time: None,
@@ -244,6 +249,7 @@ impl App {
                         KeyCode::Char('j') | KeyCode::Down => self.next_entry(),
                         KeyCode::Char('k') | KeyCode::Up => self.previous_entry(),
                         KeyCode::Char('a') => self.input_mode = InputMode::Adding,
+                        KeyCode::Char('E') => self.start_editing(),
                         KeyCode::Char('d') => self.delete_entry(),
                         KeyCode::Char('i') => self.input_mode = InputMode::Importing,
                         KeyCode::Char('e') => self.input_mode = InputMode::Exporting,
@@ -306,6 +312,42 @@ impl App {
                         }
                         _ => {}
                     },
+                    InputMode::Editing => match key.code {
+                        KeyCode::Esc => {
+                            self.input_mode = InputMode::Normal;
+                            self.edit_entry_name.clear();
+                            self.edit_entry_secret.clear();
+                            self.input_field = 0;
+                        }
+                        KeyCode::Enter => {
+                            if self.input_field == 0 {
+                                self.input_field = 1;
+                            } else {
+                                if let Err(e) = self.edit_entry() {
+                                    eprintln!("Failed to save entries: {}", e);
+                                }
+                                self.input_mode = InputMode::Normal;
+                                self.edit_entry_name.clear();
+                                self.edit_entry_secret.clear();
+                                self.input_field = 0;
+                            }
+                        }
+                        KeyCode::Char(c) => {
+                            if self.input_field == 0 {
+                                self.edit_entry_name.push(c);
+                            } else {
+                                self.edit_entry_secret.push(c);
+                            }
+                        }
+                        KeyCode::Backspace => {
+                            if self.input_field == 0 {
+                                self.edit_entry_name.pop();
+                            } else {
+                                self.edit_entry_secret.pop();
+                            }
+                        }
+                        _ => {}
+                    },
                 }
             }
         }
@@ -321,6 +363,27 @@ impl App {
     fn previous_entry(&mut self) {
         if !self.entries.is_empty() {
             self.selected = self.selected.saturating_sub(1);
+        }
+    }
+
+    fn edit_entry(&mut self) -> Result<()> {
+        if !self.entries.is_empty() {
+            self.entries[self.selected] = Entry {
+                name: self.edit_entry_name.clone(),
+                secret: self.edit_entry_secret.clone(),
+            };
+            self.save_entries()?;
+        }
+        Ok(())
+    }
+
+    fn start_editing(&mut self) {
+        if !self.entries.is_empty() {
+            let entry = &self.entries[self.selected];
+            self.edit_entry_name = entry.name.clone();
+            self.edit_entry_secret = entry.secret.clone();
+            self.input_mode = InputMode::Editing;
+            self.input_field = 0;
         }
     }
 }
@@ -401,7 +464,7 @@ fn run() -> Result<()> {
                 .collect();
 
             let help_text = vec![Line::from(
-                "a: add  d: del  i: import  e: export  ↑/k: up  ↓/j: down  enter: copy  q: quit",
+                "a: add  E: edit  d: del  i: import  e: export  ↑/k: up  ↓/j: down  enter: copy  q: quit",
             )];
 
             let main_widget = Paragraph::new(entries)
@@ -461,6 +524,35 @@ fn run() -> Result<()> {
                 let popup = Paragraph::new(vec![
                     Line::from("Path:"),
                     Line::from(format!("{}▎", app.path_input.as_str())),
+                ])
+                .block(popup_block);
+
+                frame.render_widget(Clear, area);
+                frame.render_widget(popup, area);
+            }
+
+            if app.input_mode == InputMode::Editing {
+                let popup_block = Block::default()
+                    .title(" Edit Entry ")
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded)
+                    .border_style(Style::default().fg(Color::Rgb(203, 153, 148)));
+
+                let area = centered_rect(60, 20, area);
+                let popup = Paragraph::new(vec![
+                    Line::from("Name:"),
+                    Line::from(format!(
+                        "{}{}",
+                        app.edit_entry_name.as_str(),
+                        if app.input_field == 0 { "▎" } else { "" }
+                    )),
+                    Line::from(""),
+                    Line::from("Secret:"),
+                    Line::from(format!(
+                        "{}{}",
+                        app.edit_entry_secret.as_str(),
+                        if app.input_field == 1 { "▎" } else { "" }
+                    )),
                 ])
                 .block(popup_block);
 
