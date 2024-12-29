@@ -8,7 +8,7 @@ repository = "https://github.com/nnyyxxxx/auth.git"
 readme = "readme.md"
 keywords = [
     "authenticator",
-    "gui",
+    "tui",
 ]
 edition = "2021"
 
