@@ -1,11 +1,13 @@
-use crate::app::{App, InputMode};
+use crate::{
+    app::{App, InputMode},
+    utils::{
+        centered_rect, create_block, get_notification_title, pad_vertical, MIN_HEIGHT, MIN_WIDTH,
+    },
+};
 use ratatui::{
     prelude::*,
-    widgets::{Block, BorderType, Borders, Clear, Paragraph},
+    widgets::{Clear, Paragraph},
 };
-
-const MIN_WIDTH: u16 = 103;
-const MIN_HEIGHT: u16 = 31;
 
 pub fn draw(frame: &mut Frame, app: &App) {
     let area = frame.area();
@@ -19,12 +21,7 @@ pub fn draw(frame: &mut Frame, app: &App) {
             Line::from(format!("Width = {} Height = {}", MIN_WIDTH, MIN_HEIGHT)),
         ];
 
-        let vertical_pad = (area.height as usize - 5) / 2;
-        let padded_text = (0..vertical_pad)
-            .map(|_| Line::from(""))
-            .chain(text)
-            .collect::<Vec<_>>();
-
+        let padded_text = pad_vertical(text, area.height);
         let warning = Paragraph::new(padded_text)
             .alignment(Alignment::Center)
             .style(Style::default().fg(Color::LightCyan));
@@ -44,28 +41,8 @@ pub fn draw(frame: &mut Frame, app: &App) {
 }
 
 fn draw_main_block(frame: &mut Frame, app: &App, area: Rect) {
-    let title = if let Some((msg, time)) = &app.error_message {
-        if time.elapsed().unwrap_or_default().as_secs() < 3 {
-            format!(" {} ", msg)
-        } else {
-            " Auth ".to_string()
-        }
-    } else if let Some(notify_time) = app.copy_notification_time {
-        if notify_time.elapsed().unwrap_or_default().as_secs() < 3 {
-            " Copied! ".to_string()
-        } else {
-            " Auth ".to_string()
-        }
-    } else {
-        " Auth ".to_string()
-    };
-
-    let main_block = Block::default()
-        .title(title)
-        .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
-        .border_style(Style::default().fg(Color::Rgb(203, 153, 148)));
-
+    let title = get_notification_title(&app.error_message, app.copy_notification_time);
+    let main_block = create_block(&title);
     let entries: Vec<Line> = app
         .entries
         .iter()
@@ -96,12 +73,7 @@ fn draw_main_block(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn draw_help_block(frame: &mut Frame, area: Rect) {
-    let help_block = Block::default()
-        .title(" Bindings ")
-        .borders(Borders::ALL)
-        .border_type(BorderType::Rounded)
-        .border_style(Style::default().fg(Color::Rgb(203, 153, 148)));
-
+    let help_block = create_block(" Bindings ");
     let help_text = vec![Line::from(
         "a: add  E: edit  d: del  i: import  e: export  ↑/k: up  ↓/j: down  enter: copy  q: quit",
     )];
@@ -116,12 +88,7 @@ fn draw_help_block(frame: &mut Frame, area: Rect) {
 fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
     match app.input_mode {
         InputMode::Adding => {
-            let popup_block = Block::default()
-                .title(" Add Entry ")
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(Color::Rgb(203, 153, 148)));
-
+            let popup_block = create_block(" Add Entry ");
             let area = centered_rect(60, 20, area);
             let popup = Paragraph::new(vec![
                 Line::from("Name:"),
@@ -150,12 +117,7 @@ fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
                 _ => unreachable!(),
             };
 
-            let popup_block = Block::default()
-                .title(title)
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(Color::Rgb(203, 153, 148)));
-
+            let popup_block = create_block(title);
             let area = centered_rect(60, 20, area);
             let popup = Paragraph::new(vec![
                 Line::from("Path:"),
@@ -167,12 +129,7 @@ fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
             frame.render_widget(popup, area);
         }
         InputMode::Editing => {
-            let popup_block = Block::default()
-                .title(" Edit Entry ")
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(Color::Rgb(203, 153, 148)));
-
+            let popup_block = create_block(" Edit Entry ");
             let area = centered_rect(60, 20, area);
             let popup = Paragraph::new(vec![
                 Line::from("Name:"),
@@ -196,24 +153,4 @@ fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
         }
         _ => {}
     }
-}
-
-fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage((100 - percent_y) / 2),
-            Constraint::Percentage(percent_y),
-            Constraint::Percentage((100 - percent_y) / 2),
-        ])
-        .split(r);
-
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage((100 - percent_x) / 2),
-            Constraint::Percentage(percent_x),
-            Constraint::Percentage((100 - percent_x) / 2),
-        ])
-        .split(popup_layout[1])[1]
 }

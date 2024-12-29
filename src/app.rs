@@ -1,11 +1,11 @@
 use crate::{
     crypto::Crypto,
     entry::{Entries, Entry},
-    utils::CommandExt,
+    utils::copy_to_clipboard,
 };
 use anyhow::Result;
-use crossterm::event::{self, Event, KeyCode};
-use std::{env, fs, path::PathBuf, process::Command, thread, time::SystemTime};
+use crossterm::event::{Event, KeyCode};
+use std::{env, fs, path::PathBuf, time::SystemTime};
 
 #[derive(PartialEq)]
 pub enum InputMode {
@@ -109,20 +109,7 @@ impl App {
         if !self.entries.is_empty() {
             let entry = &self.entries[self.selected];
             let (code, _) = entry.generate_totp_with_time()?;
-
-            thread::spawn(move || {
-                if Command::new("wl-copy").arg(&code).output().is_err()
-                    && Command::new("xclip")
-                        .arg("-selection")
-                        .arg("clipboard")
-                        .arg("-in")
-                        .process_input(code.as_bytes())
-                        .is_err()
-                {
-                    eprintln!("Failed to copy to clipboard: neither wl-copy nor xclip worked");
-                }
-            });
-
+            copy_to_clipboard(code)?;
             self.copy_notification_time = Some(SystemTime::now());
         }
         Ok(())
@@ -201,118 +188,124 @@ impl App {
         Ok(())
     }
 
-    pub fn handle_events(&mut self) -> Result<()> {
-        if event::poll(std::time::Duration::from_millis(50))? {
-            if let Event::Key(key) = event::read()? {
-                match &self.input_mode {
-                    InputMode::Normal => match key.code {
-                        KeyCode::Char('q') => self.should_quit = true,
-                        KeyCode::Char('j') | KeyCode::Down => self.next_entry(),
-                        KeyCode::Char('k') | KeyCode::Up => self.previous_entry(),
-                        KeyCode::Char('a') => self.input_mode = InputMode::Adding,
-                        KeyCode::Char('E') => self.start_editing(),
-                        KeyCode::Char('d') => self.delete_entry(),
-                        KeyCode::Char('i') => self.input_mode = InputMode::Importing,
-                        KeyCode::Char('e') => self.input_mode = InputMode::Exporting,
-                        KeyCode::Enter => self.copy_current_code()?,
-                        _ => {}
-                    },
-                    InputMode::Importing | InputMode::Exporting => match key.code {
-                        KeyCode::Esc => {
-                            self.input_mode = InputMode::Normal;
-                            self.path_input.clear();
-                        }
-                        KeyCode::Enter => {
-                            match self.input_mode {
-                                InputMode::Importing => self.import_entries()?,
-                                InputMode::Exporting => self.export_entries()?,
-                                _ => unreachable!(),
-                            }
-                            self.input_mode = InputMode::Normal;
-                            self.path_input.clear();
-                        }
-                        KeyCode::Char(c) => self.path_input.push(c),
-                        KeyCode::Backspace => {
-                            self.path_input.pop();
-                        }
-                        _ => {}
-                    },
-                    InputMode::Adding => match key.code {
-                        KeyCode::Esc => {
-                            self.input_mode = InputMode::Normal;
-                            self.new_entry_name.clear();
-                            self.new_entry_secret.clear();
-                            self.input_field = 0;
-                        }
-                        KeyCode::Enter => {
-                            if self.input_field == 0 {
-                                self.input_field = 1;
-                            } else {
-                                if let Err(e) = self.add_entry() {
-                                    eprintln!("Failed to save entries: {}", e);
-                                }
-                                self.input_mode = InputMode::Normal;
-                                self.new_entry_name.clear();
-                                self.new_entry_secret.clear();
-                                self.input_field = 0;
-                            }
-                        }
-                        KeyCode::Char(c) => {
-                            if self.input_field == 0 {
-                                self.new_entry_name.push(c);
-                            } else {
-                                self.new_entry_secret.push(c);
-                            }
-                        }
-                        KeyCode::Backspace => {
-                            if self.input_field == 0 {
-                                self.new_entry_name.pop();
-                            } else {
-                                self.new_entry_secret.pop();
-                            }
-                        }
-                        _ => {}
-                    },
-                    InputMode::Editing => match key.code {
-                        KeyCode::Esc => {
-                            self.input_mode = InputMode::Normal;
-                            self.edit_entry_name.clear();
-                            self.edit_entry_secret.clear();
-                            self.input_field = 0;
-                        }
-                        KeyCode::Enter => {
-                            if self.input_field == 0 {
-                                self.input_field = 1;
-                            } else {
-                                if let Err(e) = self.edit_entry() {
-                                    eprintln!("Failed to save entries: {}", e);
-                                }
-                                self.input_mode = InputMode::Normal;
-                                self.edit_entry_name.clear();
-                                self.edit_entry_secret.clear();
-                                self.input_field = 0;
-                            }
-                        }
-                        KeyCode::Char(c) => {
-                            if self.input_field == 0 {
-                                self.edit_entry_name.push(c);
-                            } else {
-                                self.edit_entry_secret.push(c);
-                            }
-                        }
-                        KeyCode::Backspace => {
-                            if self.input_field == 0 {
-                                self.edit_entry_name.pop();
-                            } else {
-                                self.edit_entry_secret.pop();
-                            }
-                        }
-                        _ => {}
-                    },
-                }
-            }
+    pub fn handle_events(&mut self, event: Event) -> Result<()> {
+        if let Event::Key(key) = event {
+            self.handle_input_mode(key)?;
         }
         Ok(())
+    }
+
+    fn handle_input_mode(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
+        match self.input_mode {
+            InputMode::Normal => self.handle_normal_mode(key),
+            InputMode::Adding | InputMode::Editing => self.handle_entry_mode(key),
+            InputMode::Importing | InputMode::Exporting => self.handle_file_mode(key),
+        }
+    }
+
+    fn handle_normal_mode(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
+        match key.code {
+            KeyCode::Char('q') => self.should_quit = true,
+            KeyCode::Char('j') | KeyCode::Down => self.next_entry(),
+            KeyCode::Char('k') | KeyCode::Up => self.previous_entry(),
+            KeyCode::Char('a') => self.input_mode = InputMode::Adding,
+            KeyCode::Char('E') => self.start_editing(),
+            KeyCode::Char('d') => self.delete_entry(),
+            KeyCode::Char('i') => self.input_mode = InputMode::Importing,
+            KeyCode::Char('e') => self.input_mode = InputMode::Exporting,
+            KeyCode::Enter => self.copy_current_code()?,
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn handle_entry_mode(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
+        match key.code {
+            KeyCode::Esc => self.reset_entry_state(),
+            KeyCode::Enter => self.process_entry_input()?,
+            KeyCode::Char(c) => self.update_entry_field(c),
+            KeyCode::Backspace => self.remove_entry_char(),
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn handle_file_mode(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
+        match key.code {
+            KeyCode::Esc => {
+                self.input_mode = InputMode::Normal;
+                self.path_input.clear();
+            }
+            KeyCode::Enter => {
+                match self.input_mode {
+                    InputMode::Importing => self.import_entries()?,
+                    InputMode::Exporting => self.export_entries()?,
+                    _ => unreachable!(),
+                }
+                self.input_mode = InputMode::Normal;
+                self.path_input.clear();
+            }
+            KeyCode::Char(c) => self.path_input.push(c),
+            KeyCode::Backspace => {
+                self.path_input.pop();
+            }
+            _ => {}
+        }
+        Ok(())
+    }
+
+    fn reset_entry_state(&mut self) {
+        self.input_mode = InputMode::Normal;
+        if self.input_mode == InputMode::Adding {
+            self.new_entry_name.clear();
+            self.new_entry_secret.clear();
+        } else {
+            self.edit_entry_name.clear();
+            self.edit_entry_secret.clear();
+        }
+        self.input_field = 0;
+    }
+
+    fn process_entry_input(&mut self) -> Result<()> {
+        if self.input_field == 0 {
+            self.input_field = 1;
+        } else {
+            match self.input_mode {
+                InputMode::Adding => self.add_entry()?,
+                InputMode::Editing => self.edit_entry()?,
+                _ => unreachable!(),
+            }
+            self.reset_entry_state();
+        }
+        Ok(())
+    }
+
+    fn update_entry_field(&mut self, c: char) {
+        let (name, secret) = if self.input_mode == InputMode::Adding {
+            (&mut self.new_entry_name, &mut self.new_entry_secret)
+        } else {
+            (&mut self.edit_entry_name, &mut self.edit_entry_secret)
+        };
+
+        if self.input_field == 0 {
+            name.push(c);
+        } else {
+            secret.push(c);
+        }
+    }
+
+    fn remove_entry_char(&mut self) {
+        let (name, secret) = if self.input_mode == InputMode::Adding {
+            (&mut self.new_entry_name, &mut self.new_entry_secret)
+        } else {
+            (&mut self.edit_entry_name, &mut self.edit_entry_secret)
+        };
+
+        if self.input_field == 0 {
+            name.pop();
+        } else {
+            secret.pop();
+        }
     }
 
     fn next_entry(&mut self) {

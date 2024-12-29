@@ -18,7 +18,9 @@ pub fn run() -> Result<()> {
 
     while !app.should_quit {
         terminal.draw(|f| ui::draw(f, &app))?;
-        app.handle_events()?;
+        if let Some(event) = utils::poll_event()? {
+            app.handle_events(event)?;
+        }
     }
 
     Ok(())
