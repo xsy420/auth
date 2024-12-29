@@ -11,7 +11,7 @@ A simple terminal-based authenticator app written in Rust that generates TOTP co
 ## Security
 
 > [!WARNING]
-> TOTP secrets are stored unencrypted in `~/.local/share/auth/entries.toml`. This will be changed later in the future.
+> TOTP secrets are stored encrypted in `~/.local/share/auth/entries.toml`. The key to unencrypt them is stored in `~/.local/share/auth/key`.
 
 ## Features
 

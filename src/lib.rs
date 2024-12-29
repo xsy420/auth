@@ -3,6 +3,7 @@ use ratatui::{backend::CrosstermBackend, Terminal};
 use std::io::stdout;
 
 pub mod app;
+pub mod crypto;
 pub mod entry;
 pub mod ui;
 pub mod utils;

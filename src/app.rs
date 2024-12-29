@@ -1,4 +1,5 @@
 use crate::{
+    crypto::Crypto,
     entry::{Entries, Entry},
     utils::CommandExt,
 };
@@ -29,6 +30,7 @@ pub struct App {
     pub copy_notification_time: Option<SystemTime>,
     pub path_input: String,
     pub error_message: Option<(String, SystemTime)>,
+    crypto: Crypto,
 }
 
 impl App {
@@ -38,6 +40,7 @@ impl App {
         fs::create_dir_all(&auth_dir)?;
 
         let entries_path = auth_dir.join("entries.toml");
+        let crypto = Crypto::new(&auth_dir)?;
 
         let mut app = Self {
             should_quit: false,
@@ -53,6 +56,7 @@ impl App {
             copy_notification_time: None,
             path_input: String::new(),
             error_message: None,
+            crypto,
         };
 
         app.load_entries()?;
@@ -61,7 +65,9 @@ impl App {
 
     fn load_entries(&mut self) -> Result<()> {
         if self.entries_path.exists() {
-            let contents = fs::read_to_string(&self.entries_path)?;
+            let encrypted = fs::read(&self.entries_path)?;
+            let decrypted = self.crypto.decrypt(&encrypted)?;
+            let contents = String::from_utf8(decrypted)?;
             let entries: Entries = toml::from_str(&contents)?;
             self.entries = entries.entries;
         }
@@ -73,7 +79,8 @@ impl App {
             entries: self.entries.clone(),
         };
         let contents = toml::to_string_pretty(&entries)?;
-        fs::write(&self.entries_path, contents)?;
+        let encrypted = self.crypto.encrypt(contents.as_bytes())?;
+        fs::write(&self.entries_path, encrypted)?;
         Ok(())
     }
 
