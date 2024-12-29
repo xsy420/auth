@@ -19,6 +19,20 @@ use std::{
 };
 use totp_rs::{Algorithm, TOTP};
 
+trait CommandExt {
+    fn process_input(&mut self, input: &[u8]) -> std::io::Result<std::process::Output>;
+}
+
+impl CommandExt for Command {
+    fn process_input(&mut self, input: &[u8]) -> std::io::Result<std::process::Output> {
+        let mut child = self.stdin(std::process::Stdio::piped()).spawn()?;
+        if let Some(mut stdin) = child.stdin.take() {
+            std::io::Write::write_all(&mut stdin, input)?;
+        }
+        child.wait_with_output()
+    }
+}
+
 #[derive(Serialize, Deserialize)]
 struct Entries {
     entries: Vec<Entry>,
@@ -160,7 +174,18 @@ impl App {
             let entry = &self.entries[self.selected];
             let (code, _) = entry.generate_totp_with_time()?;
 
-            thread::spawn(move || Command::new("wl-copy").arg(&code).output());
+            thread::spawn(move || {
+                if Command::new("wl-copy").arg(&code).output().is_err()
+                    && Command::new("xclip")
+                        .arg("-selection")
+                        .arg("clipboard")
+                        .arg("-in")
+                        .process_input(code.as_bytes())
+                        .is_err()
+                {
+                    eprintln!("Failed to copy to clipboard: neither wl-copy nor xclip worked");
+                }
+            });
 
             self.copy_notification_time = Some(SystemTime::now());
         }

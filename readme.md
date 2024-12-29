@@ -18,7 +18,7 @@ A simple terminal-based authenticator app written in Rust that generates TOTP co
 - Generate TOTP codes with remaining time
 - Add/Delete entries
 - Import/Export entries as TOML files
-- Copy codes to clipboard (requires wl-copy)
+- Copy codes to clipboard (requires wl-copy or xclip, depending on your display server it is recommended that you only have 1 of these installed at a time)
 - Terminal UI with keyboard controls
 
 ## Usage
