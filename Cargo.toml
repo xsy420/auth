@@ -13,14 +13,14 @@ keywords = [
 edition = "2021"
 
 [dependencies]
-ratatui = "0.26.1"
-crossterm = "0.27.0"
-totp-rs = "5.5.1"
-anyhow = "1.0.80"
+ratatui = "0.29.0"
+crossterm = "0.28.1"
+totp-rs = "5.6.0"
+anyhow = "1.0.95"
 serde = { version = "1.0", features = ["derive"] }
-toml = "0.8.10"
+toml = "0.8.19"
 dirs = "5.0.1"
-base32 = "0.4.0"
+base32 = "0.5.1"
 
 [profile.release]
 lto = "fat"

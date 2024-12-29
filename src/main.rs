@@ -38,7 +38,7 @@ impl Entry {
             secret.push('=');
         }
 
-        let decoded = base32::decode(base32::Alphabet::RFC4648 { padding: true }, &secret)
+        let decoded = base32::decode(base32::Alphabet::Rfc4648 { padding: true }, &secret)
             .ok_or_else(|| anyhow::anyhow!("Invalid base32 secret"))?;
 
         if decoded.len() < 16 {
@@ -406,7 +406,7 @@ fn run() -> Result<()> {
 
     while !app.should_quit {
         terminal.draw(|frame| {
-            let area = frame.size();
+            let area = frame.area();
 
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
