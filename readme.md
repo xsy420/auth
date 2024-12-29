@@ -8,6 +8,11 @@ A simple terminal-based authenticator app written in Rust that generates TOTP co
 
 </div>
 
+## Security
+
+> [!WARNING]
+> TOTP secrets are stored unencrypted in `~/.local/share/auth/entries.toml`. This will be changed later in the future.
+
 ## Features
 
 - Generate TOTP codes with remaining time
@@ -21,6 +26,7 @@ A simple terminal-based authenticator app written in Rust that generates TOTP co
 ### Controls
 
 - `a`: Add new entry
+- `E`: Edit selected entry
 - `d`: Delete selected entry
 - `i`: Import entries
 - `e`: Export entries
@@ -28,10 +34,6 @@ A simple terminal-based authenticator app written in Rust that generates TOTP co
 - `↓/j`: Move selection down
 - `Enter`: Copy code to clipboard
 - `q`: Quit
-
-### Storage
-
-Entries are stored in `~/.local/share/auth/entries.toml`
 
 ### Building
 
