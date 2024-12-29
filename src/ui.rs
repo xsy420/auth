@@ -101,14 +101,14 @@ fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
                 Line::from(format!(
                     "{}{}",
                     app.new_entry_name.as_str(),
-                    if app.input_field == 0 { "▎" } else { "" }
+                    if app.input_field == 0 { "|" } else { "" }
                 )),
                 Line::from(""),
                 Line::from("Secret:"),
                 Line::from(format!(
                     "{}{}",
                     app.new_entry_secret.as_str(),
-                    if app.input_field == 1 { "▎" } else { "" }
+                    if app.input_field == 1 { "|" } else { "" }
                 )),
             ])
             .block(popup_block);
@@ -132,7 +132,7 @@ fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
             let area = centered_rect(60, 20, area);
             let popup = Paragraph::new(vec![
                 Line::from("Path:"),
-                Line::from(format!("{}▎", app.path_input.as_str())),
+                Line::from(format!("{}|", app.path_input.as_str())),
             ])
             .block(popup_block);
 
@@ -152,14 +152,14 @@ fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
                 Line::from(format!(
                     "{}{}",
                     app.edit_entry_name.as_str(),
-                    if app.input_field == 0 { "▎" } else { "" }
+                    if app.input_field == 0 { "|" } else { "" }
                 )),
                 Line::from(""),
                 Line::from("Secret:"),
                 Line::from(format!(
                     "{}{}",
                     app.edit_entry_secret.as_str(),
-                    if app.input_field == 1 { "▎" } else { "" }
+                    if app.input_field == 1 { "|" } else { "" }
                 )),
             ])
             .block(popup_block);
