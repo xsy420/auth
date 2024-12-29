@@ -82,7 +82,7 @@ fn draw_main_block(frame: &mut Frame, app: &App, area: Rect) {
                 .unwrap_or_else(|_| ("Invalid".to_string(), 0));
 
             Line::styled(
-                format!("{:<30} {:>6} ({:>2}s)", entry.name, code, remaining),
+                format!("{:<30} {:>6} ({:>1}s)", entry.name, code, remaining),
                 style,
             )
         })
