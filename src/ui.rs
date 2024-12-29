@@ -4,8 +4,29 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, Clear, Paragraph},
 };
 
+const MIN_WIDTH: u16 = 103;
+const MIN_HEIGHT: u16 = 31;
+
 pub fn draw(frame: &mut Frame, app: &App) {
     let area = frame.area();
+
+    if area.width < MIN_WIDTH || area.height < MIN_HEIGHT {
+        let text = vec![
+            Line::from("Terminal size too small:"),
+            Line::from(format!("Width = {} Height = {}", area.width, area.height)),
+            Line::from(""),
+            Line::from("Needed to display properly:"),
+            Line::from(format!("Width = {} Height = {}", MIN_WIDTH, MIN_HEIGHT)),
+        ];
+
+        let warning = Paragraph::new(text)
+            .alignment(Alignment::Center)
+            .style(Style::default().fg(Color::LightCyan));
+
+        frame.render_widget(warning, area);
+        return;
+    }
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Min(3), Constraint::Length(3)].as_ref())
