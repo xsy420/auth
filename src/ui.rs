@@ -49,7 +49,7 @@ fn draw_main_block(frame: &mut Frame, app: &App, area: Rect) {
         .enumerate()
         .map(|(i, entry)| {
             let style = if i == app.selected {
-                Style::default().fg(Color::Rgb(203, 153, 148))
+                Style::default().fg(Color::Yellow)
             } else {
                 Style::default()
             };
