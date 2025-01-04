@@ -1,8 +1,7 @@
 use crate::{
     app::{App, InputMode},
-    utils::{
-        centered_rect, create_block, get_notification_title, pad_vertical, MIN_HEIGHT, MIN_WIDTH,
-    },
+    size::check_terminal_size,
+    utils::{centered_rect, create_block, get_notification_title},
 };
 use ratatui::{
     prelude::*,
@@ -12,21 +11,7 @@ use ratatui::{
 pub fn draw(frame: &mut Frame, app: &App) {
     let area = frame.area();
 
-    if area.width < MIN_WIDTH || area.height < MIN_HEIGHT {
-        let text = vec![
-            Line::from("Terminal size too small:"),
-            Line::from(format!("Width = {} Height = {}", area.width, area.height)),
-            Line::from(""),
-            Line::from("Needed to display properly:"),
-            Line::from(format!("Width = {} Height = {}", MIN_WIDTH, MIN_HEIGHT)),
-        ];
-
-        let padded_text = pad_vertical(text, area.height);
-        let warning = Paragraph::new(padded_text)
-            .alignment(Alignment::Center)
-            .style(Style::default().fg(Color::LightCyan));
-
-        frame.render_widget(warning, area);
+    if check_terminal_size(frame, area) {
         return;
     }
 
