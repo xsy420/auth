@@ -13,23 +13,15 @@ A simple terminal-based authenticator app written in Rust that generates TOTP co
 > [!WARNING]
 > TOTP secrets are stored encrypted in `~/.local/share/auth/entries.toml`. The key to unencrypt them is stored in `~/.local/share/auth/key`.
 
-## Usage
+## Building
 
-### Controls
+The built binary will be located inside of `target/release/`, Then it can be placed in `/usr/bin/`.
 
-- `a`: Add new entry
-- `E`: Edit selected entry
-- `d`: Delete selected entry
-- `i`: Import entries
-- `e`: Export entries
-- `↑/k`: Move selection up
-- `↓/j`: Move selection down
-- `Enter`: Copy code to clipboard (requires wl-copy or xclip)
-- `q`: Quit
-
-### Building
-
-```
+```bash
+# Replace `pacman` with your package manager
+sudo pacman -S --needed rust git base-devel
+git clone https://github.com/nnyyxxxx/auth.git
+cd auth
 cargo run --release
 ```
 
