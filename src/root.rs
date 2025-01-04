@@ -29,7 +29,7 @@ pub fn show_root_warning() -> Result<()> {
             let warning = Paragraph::new(text)
                 .block(block)
                 .alignment(Alignment::Center)
-                .style(Style::default().fg(Color::Rgb(203, 153, 148)));
+                .style(Style::default().fg(Color::Red));
 
             let popup_area = centered_rect(60, 20, area);
             f.render_widget(Clear, popup_area);
