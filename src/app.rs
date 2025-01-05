@@ -144,7 +144,7 @@ impl App {
                 return Ok(());
             }
 
-            if !path.extension().map_or(false, |ext| ext == "toml") {
+            if path.extension().is_none_or(|ext| ext != "toml") {
                 self.show_error("File must have .toml extension");
                 return Ok(());
             }
