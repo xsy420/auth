@@ -1,4 +1,7 @@
-use crate::utils::{centered_rect, create_block, create_terminal, poll_event, shutdown, startup};
+use crate::{
+    constants::{ROOT_WARNING, WARNING_TITLE},
+    utils::{centered_rect, create_block, create_terminal, poll_event, shutdown, startup},
+};
 use anyhow::Result;
 use crossterm::event::Event;
 use nix::unistd::Uid;
@@ -19,12 +22,11 @@ pub fn show_root_warning() -> Result<()> {
     loop {
         terminal.draw(|f| {
             let area = f.area();
-            let block = create_block(" Warning ");
-            let text = vec![
-                Line::from("Running as root is not supported"),
-                Line::from(""),
-                Line::from("Press any key to exit"),
-            ];
+            let block = create_block(WARNING_TITLE);
+            let text = ROOT_WARNING
+                .iter()
+                .map(|&s| Line::from(s))
+                .collect::<Vec<_>>();
 
             let warning = Paragraph::new(text)
                 .block(block)

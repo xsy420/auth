@@ -1,5 +1,6 @@
 use crate::{
     app::{App, InputMode},
+    constants::*,
     size::check_terminal_size,
     utils::{centered_rect, create_block, get_notification_title},
 };
@@ -58,10 +59,8 @@ fn draw_main_block(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn draw_help_block(frame: &mut Frame, area: Rect) {
-    let help_block = create_block(" Bindings ");
-    let help_text = vec![Line::from(
-        "a: add  E: edit  d: del  i: import  e: export  ↑/k: up  ↓/j: down  enter: copy  q: quit",
-    )];
+    let help_block = create_block(BINDINGS_TITLE);
+    let help_text = vec![Line::from(HELP_TEXT)];
 
     let help_widget = Paragraph::new(help_text)
         .block(help_block)
@@ -73,17 +72,17 @@ fn draw_help_block(frame: &mut Frame, area: Rect) {
 fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
     match app.input_mode {
         InputMode::Adding => {
-            let popup_block = create_block(" Add Entry ");
+            let popup_block = create_block(ADD_ENTRY_TITLE);
             let area = centered_rect(60, 20, area);
             let popup = Paragraph::new(vec![
-                Line::from("Name:"),
+                Line::from(NAME_LABEL),
                 Line::from(format!(
                     "{}{}",
                     app.new_entry_name.as_str(),
                     if app.input_field == 0 { "|" } else { "" }
                 )),
                 Line::from(""),
-                Line::from("Secret:"),
+                Line::from(SECRET_LABEL),
                 Line::from(format!(
                     "{}{}",
                     app.new_entry_secret.as_str(),
@@ -96,16 +95,16 @@ fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
             frame.render_widget(popup, area);
         }
         InputMode::Importing | InputMode::Exporting => {
-            let title = match app.input_mode {
-                InputMode::Importing => " Import ",
-                InputMode::Exporting => " Export ",
-                _ => unreachable!(),
+            let title = if matches!(app.input_mode, InputMode::Importing) {
+                IMPORT_TITLE
+            } else {
+                EXPORT_TITLE
             };
 
             let popup_block = create_block(title);
             let area = centered_rect(60, 20, area);
             let popup = Paragraph::new(vec![
-                Line::from("Path:"),
+                Line::from(PATH_LABEL),
                 Line::from(format!("{}|", app.path_input.as_str())),
             ])
             .block(popup_block);
@@ -114,7 +113,7 @@ fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
             frame.render_widget(popup, area);
         }
         InputMode::Editing => {
-            let popup_block = create_block(" Edit Entry ");
+            let popup_block = create_block(EDIT_ENTRY_TITLE);
             let area = centered_rect(60, 20, area);
             let popup = Paragraph::new(vec![
                 Line::from("Name:"),

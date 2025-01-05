@@ -1,3 +1,4 @@
+use crate::constants::{TOTP_DIGITS, TOTP_PERIOD, TOTP_STEP};
 use anyhow::Result;
 use crossterm::{
     event::{self, Event},
@@ -17,12 +18,6 @@ use std::{
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use totp_rs::{Algorithm, TOTP};
-
-pub const MIN_WIDTH: u16 = 103;
-pub const MIN_HEIGHT: u16 = 31;
-pub const TOTP_PERIOD: u64 = 30;
-pub const TOTP_DIGITS: usize = 6;
-pub const TOTP_STEP: u8 = 1;
 
 pub trait CommandExt {
     fn process_input(&mut self, input: &[u8]) -> std::io::Result<std::process::Output>;
