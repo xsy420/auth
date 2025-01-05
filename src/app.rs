@@ -4,7 +4,7 @@ use crate::{
     utils::copy_to_clipboard,
 };
 use anyhow::Result;
-use crossterm::event::{Event, KeyCode};
+use crossterm::event::{Event, KeyCode, KeyModifiers};
 use std::{env, fs, path::PathBuf, time::SystemTime};
 
 #[derive(PartialEq)]
@@ -205,6 +205,11 @@ impl App {
 
     fn handle_normal_mode(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
         match key.code {
+            KeyCode::Char('q') | KeyCode::Char('c')
+                if key.modifiers.contains(KeyModifiers::CONTROL) =>
+            {
+                self.should_quit = true
+            }
             KeyCode::Char('q') => self.should_quit = true,
             KeyCode::Char('j') | KeyCode::Down => self.next_entry(),
             KeyCode::Char('k') | KeyCode::Up => self.previous_entry(),
