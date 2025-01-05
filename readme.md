@@ -13,7 +13,22 @@ A simple terminal-based authenticator app written in Rust that generates TOTP co
 > [!WARNING]
 > TOTP secrets are stored encrypted in `~/.local/share/auth/entries.toml`. The key to unencrypt them is stored in `~/.local/share/auth/key`.
 
-## Building
+## Installation
+
+### Arch Linux
+
+Auth is available on the [AUR](https://aur.archlinux.org/packages/auth-tui)
+
+```bash
+# Using paru as an example, replace with your desired AUR helper.
+paru -S auth-tui
+```
+
+### Releases
+
+Prebuilt binaries can be found in the [releases](https://github.com/nnyyxxxx/auth/releases) page
+
+### Building
 
 The built binary will be located inside of `target/release/`, Then it can be placed in `/usr/bin/`.
 
