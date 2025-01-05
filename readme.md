@@ -44,7 +44,7 @@ The built binary will be located inside of `target/release/`, Then it can be pla
 sudo pacman -S --needed rust git base-devel
 git clone https://github.com/nnyyxxxx/auth.git
 cd auth
-cargo run --release
+cargo build --release
 ```
 
 ## License
