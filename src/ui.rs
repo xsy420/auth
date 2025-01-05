@@ -29,6 +29,9 @@ pub fn draw(frame: &mut Frame, app: &App) {
 fn draw_main_block(frame: &mut Frame, app: &App, area: Rect) {
     let title = get_notification_title(&app.error_message, app.copy_notification_time);
     let main_block = create_block(&title);
+
+    let max_name_width = app.entries.iter().map(|e| e.name.len()).max().unwrap_or(0);
+
     let entries: Vec<Line> = app
         .entries
         .iter()
@@ -45,7 +48,13 @@ fn draw_main_block(frame: &mut Frame, app: &App, area: Rect) {
                 .unwrap_or_else(|_| ("Invalid".to_string(), 0));
 
             Line::styled(
-                format!("{:<30} {:>6} ({:>1}s)", entry.name, code, remaining),
+                format!(
+                    "{:<width$} {:>6} ({:>1}s)",
+                    entry.name,
+                    code,
+                    remaining,
+                    width = max_name_width + 2
+                ),
                 style,
             )
         })
