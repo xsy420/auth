@@ -20,7 +20,7 @@ A simple terminal-based authenticator app written in Rust that generates TOTP co
 Auth is available on the [AUR](https://aur.archlinux.org/packages/auth-tui)
 
 ```bash
-# Using paru as an example, replace with your desired AUR helper.
+# Using `paru` as an example, replace with your desired AUR helper.
 paru -S auth-tui
 ```
 
@@ -28,12 +28,19 @@ paru -S auth-tui
 
 Prebuilt binaries can be found in the [releases](https://github.com/nnyyxxxx/auth/releases) page
 
+```bash
+curl -fsSL https://github.com/nnyyxxxx/auth/releases/latest/download/auth -o auth
+chmod +x auth
+# Using `sudo` as an example, replace with your desired escalation tool.
+sudo mv auth /usr/bin
+```
+
 ### Building
 
 The built binary will be located inside of `target/release/`, Then it can be placed in `/usr/bin/`.
 
 ```bash
-# Replace `pacman` with your package manager
+# Using `pacman` as an example, replace with your desired package manager.
 sudo pacman -S --needed rust git base-devel
 git clone https://github.com/nnyyxxxx/auth.git
 cd auth
