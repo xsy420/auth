@@ -192,11 +192,23 @@ fn spawn_clipboard_thread(text: String, tx: mpsc::Sender<()>) {
 }
 
 fn try_copy_to_clipboard(text: &str) -> bool {
-    try_wayland_copy(text) || try_xclip_copy(text)
+    if is_wayland_session() {
+        try_wayland_copy(text)
+    } else {
+        try_xclip_copy(text)
+    }
+}
+
+fn is_wayland_session() -> bool {
+    std::env::var("WAYLAND_DISPLAY").is_ok()
 }
 
 fn try_wayland_copy(text: &str) -> bool {
-    Command::new("wl-copy").arg(text).output().is_ok()
+    Command::new("wl-copy")
+        .arg(text)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null())
+        .status().is_ok_and(|status| status.success())
 }
 
 fn try_xclip_copy(text: &str) -> bool {
