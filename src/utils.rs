@@ -1,18 +1,11 @@
 use crate::constants::{AUTH_TITLE, COPIED_MSG, TOTP_DIGITS, TOTP_PERIOD, TOTP_STEP};
 use anyhow::Result;
-use ratatui::crossterm::{
-    event::{self, Event},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
 use ratatui::{
     prelude::*,
     style::{Color, Style},
     widgets::{Block, BorderType, Borders},
-    Terminal,
 };
 use std::{
-    io::stdout,
     process::Command,
     sync::mpsc,
     thread,
@@ -72,30 +65,6 @@ impl CommandExt for Command {
         child.wait_with_output().map_err(|_| {
             std::io::Error::new(std::io::ErrorKind::Other, crate::constants::CLIPBOARD_ERROR)
         })
-    }
-}
-
-pub fn startup() -> Result<()> {
-    enable_raw_mode()?;
-    execute!(stdout(), EnterAlternateScreen)?;
-    Ok(())
-}
-
-pub fn shutdown() -> Result<()> {
-    execute!(stdout(), LeaveAlternateScreen)?;
-    disable_raw_mode()?;
-    Ok(())
-}
-
-pub fn create_terminal() -> Result<Terminal<CrosstermBackend<std::io::Stdout>>> {
-    Ok(Terminal::new(CrosstermBackend::new(stdout()))?)
-}
-
-pub fn poll_event() -> Result<Option<Event>> {
-    if event::poll(Duration::from_millis(50))? {
-        Ok(Some(event::read()?))
-    } else {
-        Ok(None)
     }
 }
 
