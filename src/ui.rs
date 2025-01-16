@@ -80,70 +80,77 @@ fn draw_help_block(frame: &mut Frame, area: Rect) {
 
 fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
     match app.input_mode {
-        InputMode::Adding => {
-            let popup_block = create_block(ADD_ENTRY_TITLE);
-            let area = centered_rect(60, 20, area);
-            let popup = Paragraph::new(vec![
-                Line::from(NAME_LABEL),
-                Line::from(format!(
-                    "{}{}",
-                    app.new_entry_name.as_str(),
-                    if app.input_field == 0 { "|" } else { "" }
-                )),
-                Line::from(""),
-                Line::from(SECRET_LABEL),
-                Line::from(format!(
-                    "{}{}",
-                    app.new_entry_secret.as_str(),
-                    if app.input_field == 1 { "|" } else { "" }
-                )),
-            ])
-            .block(popup_block);
-
-            frame.render_widget(Clear, area);
-            frame.render_widget(popup, area);
-        }
-        InputMode::Importing | InputMode::Exporting => {
-            let title = if matches!(app.input_mode, InputMode::Importing) {
-                IMPORT_TITLE
-            } else {
-                EXPORT_TITLE
-            };
-
-            let popup_block = create_block(title);
-            let area = centered_rect(60, 20, area);
-            let popup = Paragraph::new(vec![
-                Line::from(PATH_LABEL),
-                Line::from(format!("{}|", app.path_input.as_str())),
-            ])
-            .block(popup_block);
-
-            frame.render_widget(Clear, area);
-            frame.render_widget(popup, area);
-        }
-        InputMode::Editing => {
-            let popup_block = create_block(EDIT_ENTRY_TITLE);
-            let area = centered_rect(60, 20, area);
-            let popup = Paragraph::new(vec![
-                Line::from("Name:"),
-                Line::from(format!(
-                    "{}{}",
-                    app.edit_entry_name.as_str(),
-                    if app.input_field == 0 { "|" } else { "" }
-                )),
-                Line::from(""),
-                Line::from("Secret:"),
-                Line::from(format!(
-                    "{}{}",
-                    app.edit_entry_secret.as_str(),
-                    if app.input_field == 1 { "|" } else { "" }
-                )),
-            ])
-            .block(popup_block);
-
-            frame.render_widget(Clear, area);
-            frame.render_widget(popup, area);
-        }
+        InputMode::Adding => draw_add_popup(frame, app, area),
+        InputMode::Importing | InputMode::Exporting => draw_file_popup(frame, app, area),
+        InputMode::Editing => draw_edit_popup(frame, app, area),
         _ => {}
     }
+}
+
+fn draw_add_popup(frame: &mut Frame, app: &App, area: Rect) {
+    let popup_block = create_block(ADD_ENTRY_TITLE);
+    let popup_area = centered_rect(60, 20, area);
+    let cursor = if app.input_field == 0 { "|" } else { "" };
+    let secret_cursor = if app.input_field == 1 { "|" } else { "" };
+
+    let popup = Paragraph::new(vec![
+        Line::from(NAME_LABEL),
+        Line::from(format!("{}{}", app.new_entry_name.as_str(), cursor)),
+        Line::from(""),
+        Line::from(SECRET_LABEL),
+        Line::from(format!(
+            "{}{}",
+            app.new_entry_secret.as_str(),
+            secret_cursor
+        )),
+    ])
+    .block(popup_block);
+
+    render_popup(frame, popup, popup_area);
+}
+
+fn draw_file_popup(frame: &mut Frame, app: &App, area: Rect) {
+    let title = if matches!(app.input_mode, InputMode::Importing) {
+        IMPORT_TITLE
+    } else {
+        EXPORT_TITLE
+    };
+
+    let popup_block = create_block(title);
+    let popup_area = centered_rect(60, 20, area);
+
+    let popup = Paragraph::new(vec![
+        Line::from(PATH_LABEL),
+        Line::from(format!("{}|", app.path_input.as_str())),
+    ])
+    .block(popup_block);
+
+    render_popup(frame, popup, popup_area);
+}
+
+fn draw_edit_popup(frame: &mut Frame, app: &App, area: Rect) {
+    let popup_block = create_block(EDIT_ENTRY_TITLE);
+    let popup_area = centered_rect(60, 20, area);
+    let cursor = if app.input_field == 0 { "|" } else { "" };
+    let secret_cursor = if app.input_field == 1 { "|" } else { "" };
+
+    let popup = Paragraph::new(vec![
+        Line::from("Name:"),
+        Line::from(format!("{}{}", app.edit_entry_name.as_str(), cursor)),
+        Line::from(""),
+        Line::from("Secret:"),
+        Line::from(format!(
+            "{}{}",
+            app.edit_entry_secret.as_str(),
+            secret_cursor
+        )),
+    ])
+    .block(popup_block);
+
+    render_popup(frame, popup, popup_area);
+}
+
+fn render_popup(frame: &mut Frame, popup: Paragraph, area: Rect) {
+    frame.render_widget(Clear, area);
+    frame.render_widget(popup, area);
 }

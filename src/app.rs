@@ -5,7 +5,7 @@ use crate::{
 };
 use anyhow::Result;
 use crossterm::event::{Event, KeyCode, KeyModifiers};
-use std::{env, fs, path::PathBuf, time::SystemTime};
+use std::{env, fs, path::Path, path::PathBuf, time::SystemTime};
 
 #[derive(PartialEq)]
 pub enum InputMode {
@@ -136,32 +136,50 @@ impl App {
     }
 
     pub fn import_entries(&mut self) -> Result<()> {
-        if !self.path_input.is_empty() {
-            let path = self.expand_path(&self.path_input);
-
-            if !path.exists() {
-                self.show_error("Invalid path");
-                return Ok(());
-            }
-
-            if path.extension().is_none_or(|ext| ext != "toml") {
-                self.show_error("File must have .toml extension");
-                return Ok(());
-            }
-
-            match fs::read_to_string(&path) {
-                Ok(contents) => match toml::from_str::<Entries>(&contents) {
-                    Ok(entries) => {
-                        self.entries.extend(entries.entries);
-                        if self.save_entries().is_err() {
-                            self.show_error("Failed to save entries");
-                        }
-                    }
-                    Err(_) => self.show_error("Failed to parse entries"),
-                },
-                Err(_) => self.show_error("Failed to read file"),
-            }
+        if self.path_input.is_empty() {
+            return Ok(());
         }
+
+        let path = self.expand_path(&self.path_input);
+        if let Err(err) = self.validate_import_path(&path) {
+            self.show_error(err);
+            return Ok(());
+        }
+
+        let contents = match fs::read_to_string(&path) {
+            Ok(contents) => contents,
+            Err(_) => {
+                self.show_error("Failed to read file");
+                return Ok(());
+            }
+        };
+
+        let entries = match toml::from_str::<Entries>(&contents) {
+            Ok(entries) => entries,
+            Err(_) => {
+                self.show_error("Failed to parse entries");
+                return Ok(());
+            }
+        };
+
+        self.entries.extend(entries.entries);
+
+        if self.save_entries().is_err() {
+            self.show_error("Failed to save entries");
+        }
+
+        Ok(())
+    }
+
+    fn validate_import_path(&self, path: &Path) -> Result<(), &'static str> {
+        if !path.exists() {
+            return Err("Invalid path");
+        }
+
+        if path.extension().is_none_or(|ext| ext != "toml") {
+            return Err("File must have .toml extension");
+        }
+
         Ok(())
     }
 
