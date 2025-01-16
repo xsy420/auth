@@ -211,8 +211,8 @@ fn check_clipboard_result(rx: mpsc::Receiver<()>) -> Result<()> {
     thread::sleep(Duration::from_millis(100));
     let result = rx.try_recv();
     match result {
-        Ok(_) => Err(anyhow::anyhow!(crate::constants::CLIPBOARD_ERROR)),
-        Err(_) => Ok(()),
+        Ok(_) => Ok(()),
+        Err(_) => Err(anyhow::anyhow!(crate::constants::CLIPBOARD_ERROR)),
     }
 }
 
