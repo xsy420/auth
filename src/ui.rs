@@ -1,6 +1,9 @@
 use crate::{
     app::{App, InputMode},
-    constants::*,
+    constants::{
+        ADD_ENTRY_TITLE, BINDINGS_TITLE, EDIT_ENTRY_TITLE, EXPORT_TITLE, HELP_TEXT, IMPORT_TITLE,
+        INVALID_LABEL, NAME_LABEL, PATH_LABEL, SECRET_LABEL,
+    },
     size::check_terminal_size,
     utils::{centered_rect, create_block, get_notification_title},
 };
@@ -45,7 +48,7 @@ fn draw_main_block(frame: &mut Frame, app: &App, area: Rect) {
 
             let (code, remaining) = entry
                 .generate_totp_with_time()
-                .unwrap_or_else(|_| ("Invalid".to_string(), 0));
+                .unwrap_or_else(|_| (INVALID_LABEL.to_string(), 0));
 
             Line::styled(
                 format!(
@@ -135,10 +138,10 @@ fn draw_edit_popup(frame: &mut Frame, app: &App, area: Rect) {
     let secret_cursor = if app.input_field == 1 { "|" } else { "" };
 
     let popup = Paragraph::new(vec![
-        Line::from("Name:"),
+        Line::from(NAME_LABEL),
         Line::from(format!("{}{}", app.edit_entry_name.as_str(), cursor)),
         Line::from(""),
-        Line::from("Secret:"),
+        Line::from(SECRET_LABEL),
         Line::from(format!(
             "{}{}",
             app.edit_entry_secret.as_str(),

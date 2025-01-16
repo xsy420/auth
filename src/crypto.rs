@@ -1,3 +1,4 @@
+use crate::constants::{ENCRYPTOR_ERROR, INVALID_KEY_ERROR};
 use age::{secrecy::ExposeSecret, x25519::Identity, Encryptor};
 use anyhow::{anyhow, Result};
 use std::{fs, io::Write, path::Path, str::FromStr};
@@ -11,7 +12,7 @@ impl Crypto {
         let key_path = auth_dir.join("key");
         let identity = if key_path.exists() {
             let key_str = fs::read_to_string(&key_path)?;
-            Identity::from_str(&key_str).map_err(|e| anyhow!("Invalid key: {}", e))?
+            Identity::from_str(&key_str).map_err(|e| anyhow!("{}: {}", INVALID_KEY_ERROR, e))?
         } else {
             let identity = Identity::generate();
             fs::write(&key_path, identity.to_string().expose_secret())?;
@@ -25,7 +26,7 @@ impl Crypto {
         let recipient = self.identity.to_public();
         let encryptor =
             Encryptor::with_recipients(std::iter::once(&recipient as &dyn age::Recipient))
-                .expect("Failed to create encryptor");
+                .expect(ENCRYPTOR_ERROR);
 
         let mut encrypted = vec![];
         let mut writer = encryptor.wrap_output(&mut encrypted)?;

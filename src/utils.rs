@@ -1,4 +1,4 @@
-use crate::constants::{TOTP_DIGITS, TOTP_PERIOD, TOTP_STEP};
+use crate::constants::{AUTH_TITLE, COPIED_MSG, TOTP_DIGITS, TOTP_PERIOD, TOTP_STEP};
 use anyhow::Result;
 use crossterm::{
     event::{self, Event},
@@ -146,9 +146,9 @@ pub fn get_notification_title(
 
     if let Some(notify_time) = copy_notification_time {
         if notify_time.elapsed().unwrap_or_default().as_secs() < 3 {
-            return " Copied! ".to_string();
+            return COPIED_MSG.to_string();
         }
     }
 
-    " Auth ".to_string()
+    AUTH_TITLE.to_string()
 }

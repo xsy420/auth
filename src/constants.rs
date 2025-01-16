@@ -29,6 +29,8 @@ pub const PARSE_ERROR: &str = "Failed to parse entries";
 pub const READ_ERROR: &str = "Failed to read file";
 pub const WRITE_ERROR: &str = "Failed to write file";
 pub const SERIALIZE_ERROR: &str = "Failed to serialize entries";
+pub const INVALID_KEY_ERROR: &str = "Invalid key";
+pub const ENCRYPTOR_ERROR: &str = "Failed to create encryptor";
 
 pub const ROOT_WARNING: &[&str] = &[
     "Running as root is not supported",

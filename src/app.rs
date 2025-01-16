@@ -1,4 +1,8 @@
 use crate::{
+    constants::{
+        INVALID_PATH_ERROR, PARSE_ERROR, READ_ERROR, SAVE_ERROR, SERIALIZE_ERROR, TOML_EXT_ERROR,
+        WRITE_ERROR,
+    },
     crypto::Crypto,
     entry::{Entries, Entry},
     utils::copy_to_clipboard,
@@ -149,7 +153,7 @@ impl App {
         let contents = match fs::read_to_string(&path) {
             Ok(contents) => contents,
             Err(_) => {
-                self.show_error("Failed to read file");
+                self.show_error(READ_ERROR);
                 return Ok(());
             }
         };
@@ -157,7 +161,7 @@ impl App {
         let entries = match toml::from_str::<Entries>(&contents) {
             Ok(entries) => entries,
             Err(_) => {
-                self.show_error("Failed to parse entries");
+                self.show_error(PARSE_ERROR);
                 return Ok(());
             }
         };
@@ -165,7 +169,7 @@ impl App {
         self.entries.extend(entries.entries);
 
         if self.save_entries().is_err() {
-            self.show_error("Failed to save entries");
+            self.show_error(SAVE_ERROR);
         }
 
         Ok(())
@@ -173,11 +177,11 @@ impl App {
 
     fn validate_import_path(&self, path: &Path) -> Result<(), &'static str> {
         if !path.exists() {
-            return Err("Invalid path");
+            return Err(INVALID_PATH_ERROR);
         }
 
         if path.extension().is_none_or(|ext| ext != "toml") {
-            return Err("File must have .toml extension");
+            return Err(TOML_EXT_ERROR);
         }
 
         Ok(())
@@ -197,10 +201,10 @@ impl App {
             match toml::to_string_pretty(&entries) {
                 Ok(contents) => {
                     if fs::write(&path, contents).is_err() {
-                        self.show_error("Failed to write file");
+                        self.show_error(WRITE_ERROR);
                     }
                 }
-                Err(_) => self.show_error("Failed to serialize entries"),
+                Err(_) => self.show_error(SERIALIZE_ERROR),
             }
         }
         Ok(())
