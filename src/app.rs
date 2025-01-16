@@ -567,11 +567,14 @@ impl App {
     }
 
     fn get_current_field(&mut self) -> &mut String {
-        match (self.input_mode.clone(), self.input_field) {
-            (InputMode::Adding, 0) => &mut self.new_entry_name,
-            (InputMode::Adding, _) => &mut self.new_entry_secret,
-            (_, 0) => &mut self.edit_entry_name,
-            (_, _) => &mut self.edit_entry_secret,
+        let is_adding = matches!(self.input_mode, InputMode::Adding);
+        let is_name_field = self.input_field == 0;
+        
+        match (is_adding, is_name_field) {
+            (true, true) => &mut self.new_entry_name,
+            (true, false) => &mut self.new_entry_secret,
+            (false, true) => &mut self.edit_entry_name,
+            (false, false) => &mut self.edit_entry_secret,
         }
     }
 
