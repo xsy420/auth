@@ -80,7 +80,6 @@ dependencies = [
  "age",
  "anyhow",
  "base32 0.5.1",
- "crossterm",
  "dirs",
  "nix",
  "ratatui",

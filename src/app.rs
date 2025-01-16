@@ -10,7 +10,7 @@ use crate::{
     utils::copy_to_clipboard,
 };
 use anyhow::Result;
-use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
+use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 use std::{env, fs, path::Path, path::PathBuf, time::SystemTime};
 
 #[derive(PartialEq, Clone)]
@@ -414,7 +414,7 @@ impl App {
         }
     }
 
-    fn handle_normal_mode(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
+    fn handle_normal_mode(&mut self, key: ratatui::crossterm::event::KeyEvent) -> Result<()> {
         if self.check_control_quit(key) {
             return Ok(());
         }
@@ -423,7 +423,7 @@ impl App {
         Ok(())
     }
 
-    fn handle_normal_key(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
+    fn handle_normal_key(&mut self, key: ratatui::crossterm::event::KeyEvent) -> Result<()> {
         match key.code {
             KeyCode::Char('q') => self.should_quit = true,
             KeyCode::Char('j') | KeyCode::Down => self.next_entry(),
@@ -439,7 +439,7 @@ impl App {
         Ok(())
     }
 
-    fn check_control_quit(&mut self, key: crossterm::event::KeyEvent) -> bool {
+    fn check_control_quit(&mut self, key: ratatui::crossterm::event::KeyEvent) -> bool {
         if matches!(key.code, KeyCode::Char('q') | KeyCode::Char('c'))
             && key.modifiers.contains(KeyModifiers::CONTROL)
         {
@@ -449,7 +449,7 @@ impl App {
         false
     }
 
-    fn handle_entry_mode(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
+    fn handle_entry_mode(&mut self, key: ratatui::crossterm::event::KeyEvent) -> Result<()> {
         match key.code {
             KeyCode::Esc => self.reset_entry_state(),
             KeyCode::Enter => self.process_entry_input()?,
@@ -469,7 +469,7 @@ impl App {
         };
     }
 
-    fn handle_file_mode(&mut self, key: crossterm::event::KeyEvent) -> Result<()> {
+    fn handle_file_mode(&mut self, key: ratatui::crossterm::event::KeyEvent) -> Result<()> {
         match key.code {
             KeyCode::Esc => self.reset_file_mode(),
             KeyCode::Enter => self.process_file_mode_input()?,
@@ -569,7 +569,7 @@ impl App {
     fn get_current_field(&mut self) -> &mut String {
         let is_adding = matches!(self.input_mode, InputMode::Adding);
         let is_name_field = self.input_field == 0;
-        
+
         match (is_adding, is_name_field) {
             (true, true) => &mut self.new_entry_name,
             (true, false) => &mut self.new_entry_secret,

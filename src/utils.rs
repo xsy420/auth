@@ -1,6 +1,6 @@
 use crate::constants::{AUTH_TITLE, COPIED_MSG, TOTP_DIGITS, TOTP_PERIOD, TOTP_STEP};
 use anyhow::Result;
-use crossterm::{
+use ratatui::crossterm::{
     event::{self, Event},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},

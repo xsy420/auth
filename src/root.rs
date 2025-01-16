@@ -3,8 +3,8 @@ use crate::{
     utils::{centered_rect, create_block, create_terminal, poll_event, shutdown, startup},
 };
 use anyhow::Result;
-use crossterm::event::Event;
 use nix::unistd::Uid;
+use ratatui::crossterm::event::Event;
 use ratatui::{
     prelude::*,
     widgets::{Clear, Paragraph},
