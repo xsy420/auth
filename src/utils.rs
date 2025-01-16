@@ -14,6 +14,7 @@ use ratatui::{
 use std::{
     io::stdout,
     process::Command,
+    sync::mpsc,
     thread,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
@@ -119,6 +120,8 @@ pub fn generate_totp(secret: &str) -> Result<(String, u64)> {
 }
 
 pub fn copy_to_clipboard(text: String) -> Result<()> {
+    let (tx, rx) = mpsc::channel();
+
     thread::spawn(move || {
         if Command::new("wl-copy").arg(&text).output().is_err()
             && Command::new("xclip")
@@ -128,10 +131,17 @@ pub fn copy_to_clipboard(text: String) -> Result<()> {
                 .process_input(text.as_bytes())
                 .is_err()
         {
-            eprintln!("Failed to copy to clipboard: neither wl-copy nor xclip worked");
+            tx.send(()).ok();
         }
     });
-    Ok(())
+
+    thread::sleep(Duration::from_millis(100));
+
+    if rx.try_recv().is_ok() {
+        Err(anyhow::anyhow!(crate::constants::CLIPBOARD_ERROR))
+    } else {
+        Ok(())
+    }
 }
 
 pub fn get_notification_title(

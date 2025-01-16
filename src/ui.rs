@@ -2,7 +2,7 @@ use crate::{
     app::{App, InputMode},
     constants::{
         ADD_ENTRY_TITLE, BINDINGS_TITLE, EDIT_ENTRY_TITLE, EXPORT_TITLE, HELP_TEXT, IMPORT_TITLE,
-        INVALID_LABEL, NAME_LABEL, PATH_LABEL, SECRET_LABEL,
+        NAME_LABEL, PATH_LABEL, SECRET_LABEL,
     },
     size::check_terminal_size,
     utils::{centered_rect, create_block, get_notification_title},
@@ -46,9 +46,7 @@ fn draw_main_block(frame: &mut Frame, app: &App, area: Rect) {
                 Style::default()
             };
 
-            let (code, remaining) = entry
-                .generate_totp_with_time()
-                .unwrap_or_else(|_| (INVALID_LABEL.to_string(), 0));
+            let (code, remaining) = entry.generate_totp_with_time();
 
             Line::styled(
                 format!(

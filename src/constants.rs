@@ -31,6 +31,15 @@ pub const WRITE_ERROR: &str = "Failed to write file";
 pub const SERIALIZE_ERROR: &str = "Failed to serialize entries";
 pub const INVALID_KEY_ERROR: &str = "Invalid key";
 pub const ENCRYPTOR_ERROR: &str = "Failed to create encryptor";
+pub const CLIPBOARD_ERROR: &str = "Failed to copy to clipboard";
+pub const TOTP_ERROR: &str = "Failed to generate TOTP code";
+pub const DECRYPT_ERROR: &str = "Failed to decrypt entries";
+pub const UTF8_ERROR: &str = "Failed to decode entries as UTF-8";
+pub const HOME_DIR_ERROR: &str = "Could not find home directory";
+pub const CREATE_DIR_ERROR: &str = "Failed to create auth directory";
+pub const CRYPTO_INIT_ERROR: &str = "Failed to initialize encryption";
+pub const HOME_DIR_EXPAND_ERROR: &str = "Could not expand home directory";
+pub const EMPTY_ENTRY_ERROR: &str = "Empty entries are not allowed";
 
 pub const ROOT_WARNING: &[&str] = &[
     "Running as root is not supported",
@@ -47,4 +56,4 @@ pub const SIZE_WARNING: &[&str] = &[
 ];
 
 pub const HELP_TEXT: &str =
-    "a: add  E: edit  d: del  i: import  e: export  ↑/k: up  ↓/j: down  enter: copy  q: quit";
+    "a: add  E: edit  d: del  i: import  e: export  ↑/k: up  ↓/j: down  enter: copy  q: quit  tab: cycle fields";

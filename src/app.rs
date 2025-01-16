@@ -1,7 +1,8 @@
 use crate::{
     constants::{
-        INVALID_PATH_ERROR, PARSE_ERROR, READ_ERROR, SAVE_ERROR, SERIALIZE_ERROR, TOML_EXT_ERROR,
-        WRITE_ERROR,
+        CLIPBOARD_ERROR, CREATE_DIR_ERROR, CRYPTO_INIT_ERROR, DECRYPT_ERROR, EMPTY_ENTRY_ERROR,
+        ENCRYPTOR_ERROR, HOME_DIR_ERROR, INVALID_PATH_ERROR, PARSE_ERROR, READ_ERROR, SAVE_ERROR,
+        SERIALIZE_ERROR, TOML_EXT_ERROR, UTF8_ERROR, WRITE_ERROR,
     },
     crypto::Crypto,
     entry::{Entries, Entry},
@@ -11,7 +12,7 @@ use anyhow::Result;
 use crossterm::event::{Event, KeyCode, KeyModifiers};
 use std::{env, fs, path::Path, path::PathBuf, time::SystemTime};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum InputMode {
     Normal,
     Adding,
@@ -39,12 +40,25 @@ pub struct App {
 
 impl App {
     pub fn new() -> Result<Self> {
-        let home = dirs::home_dir().expect("Could not find home directory");
+        let home = match dirs::home_dir() {
+            Some(path) => path,
+            None => {
+                return Err(anyhow::anyhow!(HOME_DIR_ERROR));
+            }
+        };
+
         let auth_dir = home.join(".local/share/auth");
-        fs::create_dir_all(&auth_dir)?;
+        if fs::create_dir_all(&auth_dir).is_err() {
+            return Err(anyhow::anyhow!(CREATE_DIR_ERROR));
+        }
 
         let entries_path = auth_dir.join("entries.toml");
-        let crypto = Crypto::new(&auth_dir)?;
+        let crypto = match Crypto::new(&auth_dir) {
+            Ok(crypto) => crypto,
+            Err(_) => {
+                return Err(anyhow::anyhow!(CRYPTO_INIT_ERROR));
+            }
+        };
 
         let mut app = Self {
             should_quit: false,
@@ -63,38 +77,89 @@ impl App {
             crypto,
         };
 
-        app.load_entries()?;
+        if app.load_entries().is_err() {
+            app.show_error(READ_ERROR);
+        }
+
         Ok(app)
     }
 
     fn load_entries(&mut self) -> Result<()> {
         if self.entries_path.exists() {
-            let encrypted = fs::read(&self.entries_path)?;
-            let decrypted = self.crypto.decrypt(&encrypted)?;
-            let contents = String::from_utf8(decrypted)?;
-            let entries: Entries = toml::from_str(&contents)?;
-            self.entries = entries.entries;
+            let encrypted = match fs::read(&self.entries_path) {
+                Ok(data) => data,
+                Err(_) => {
+                    self.show_error(READ_ERROR);
+                    return Ok(());
+                }
+            };
+
+            let decrypted = match self.crypto.decrypt(&encrypted) {
+                Ok(data) => data,
+                Err(_) => {
+                    self.show_error(DECRYPT_ERROR);
+                    return Ok(());
+                }
+            };
+
+            let contents = match String::from_utf8(decrypted) {
+                Ok(s) => s,
+                Err(_) => {
+                    self.show_error(UTF8_ERROR);
+                    return Ok(());
+                }
+            };
+
+            match toml::from_str::<Entries>(&contents) {
+                Ok(entries) => self.entries = entries.entries,
+                Err(_) => {
+                    self.show_error(PARSE_ERROR);
+                    return Ok(());
+                }
+            }
         }
         Ok(())
     }
 
-    pub fn save_entries(&self) -> Result<()> {
+    pub fn save_entries(&mut self) -> Result<()> {
         let entries = Entries {
             entries: self.entries.clone(),
         };
-        let contents = toml::to_string_pretty(&entries)?;
-        let encrypted = self.crypto.encrypt(contents.as_bytes())?;
-        fs::write(&self.entries_path, encrypted)?;
+
+        let contents = match toml::to_string_pretty(&entries) {
+            Ok(contents) => contents,
+            Err(_) => {
+                self.show_error(SERIALIZE_ERROR);
+                return Ok(());
+            }
+        };
+
+        let encrypted = match self.crypto.encrypt(contents.as_bytes()) {
+            Ok(data) => data,
+            Err(_) => {
+                self.show_error(ENCRYPTOR_ERROR);
+                return Ok(());
+            }
+        };
+
+        if fs::write(&self.entries_path, encrypted).is_err() {
+            self.show_error(WRITE_ERROR);
+        }
+
         Ok(())
     }
 
     pub fn add_entry(&mut self) -> Result<()> {
-        if !self.new_entry_name.is_empty() && !self.new_entry_secret.is_empty() {
-            self.entries.push(Entry {
-                name: self.new_entry_name.clone(),
-                secret: self.new_entry_secret.clone(),
-            });
-            self.save_entries()?;
+        if self.new_entry_name.is_empty() || self.new_entry_secret.is_empty() {
+            self.show_error(EMPTY_ENTRY_ERROR);
+            return Ok(());
+        }
+        self.entries.push(Entry {
+            name: self.new_entry_name.clone(),
+            secret: self.new_entry_secret.clone(),
+        });
+        if self.save_entries().is_err() {
+            self.show_error(SAVE_ERROR);
         }
         Ok(())
     }
@@ -105,15 +170,20 @@ impl App {
             if self.selected >= self.entries.len() && !self.entries.is_empty() {
                 self.selected = self.entries.len() - 1;
             }
-            self.save_entries().expect("Failed to save entries");
+            if self.save_entries().is_err() {
+                self.show_error(SAVE_ERROR);
+            }
         }
     }
 
     pub fn copy_current_code(&mut self) -> Result<()> {
         if !self.entries.is_empty() {
             let entry = &self.entries[self.selected];
-            let (code, _) = entry.generate_totp_with_time()?;
-            copy_to_clipboard(code)?;
+            let (code, _) = entry.generate_totp_with_time();
+            if copy_to_clipboard(code).is_err() {
+                self.show_error(CLIPBOARD_ERROR);
+                return Ok(());
+            }
             self.copy_notification_time = Some(SystemTime::now());
         }
         Ok(())
@@ -125,8 +195,10 @@ impl App {
 
     pub fn expand_path(&self, path: &str) -> PathBuf {
         if path.starts_with('~') {
-            let home = dirs::home_dir().expect("Could not find home directory");
-            home.join(&path[2..])
+            match dirs::home_dir() {
+                Some(home) => home.join(&path[2..]),
+                None => PathBuf::from(path),
+            }
         } else if let Some(stripped) = path.strip_prefix('$') {
             let var_end = stripped.find('/').map(|i| i + 1).unwrap_or(path.len());
             let (var, rest) = stripped.split_at(var_end - 1);
@@ -144,7 +216,8 @@ impl App {
             return Ok(());
         }
 
-        let path = self.expand_path(&self.path_input);
+        let path_input = self.path_input.clone();
+        let path = self.expand_path(&path_input);
         if let Err(err) = self.validate_import_path(&path) {
             self.show_error(err);
             return Ok(());
@@ -189,7 +262,8 @@ impl App {
 
     pub fn export_entries(&mut self) -> Result<()> {
         if !self.path_input.is_empty() {
-            let mut path = self.expand_path(&self.path_input);
+            let path_input = self.path_input.clone();
+            let mut path = self.expand_path(&path_input);
 
             if !path.to_string_lossy().ends_with(".toml") {
                 path.set_extension("toml");
@@ -252,6 +326,12 @@ impl App {
             KeyCode::Enter => self.process_entry_input()?,
             KeyCode::Char(c) => self.update_entry_field(c),
             KeyCode::Backspace => self.remove_entry_char(),
+            KeyCode::Tab if key.modifiers.contains(KeyModifiers::SHIFT) => {
+                self.input_field = if self.input_field == 0 { 1 } else { 0 };
+            }
+            KeyCode::Tab => {
+                self.input_field = if self.input_field == 1 { 0 } else { 1 };
+            }
             _ => {}
         }
         Ok(())
@@ -282,8 +362,9 @@ impl App {
     }
 
     fn reset_entry_state(&mut self) {
+        let current_mode = self.input_mode.clone();
         self.input_mode = InputMode::Normal;
-        if self.input_mode == InputMode::Adding {
+        if current_mode == InputMode::Adding {
             self.new_entry_name.clear();
             self.new_entry_secret.clear();
         } else {
@@ -298,11 +379,21 @@ impl App {
             self.input_field = 1;
         } else {
             match self.input_mode {
-                InputMode::Adding => self.add_entry()?,
-                InputMode::Editing => self.edit_entry()?,
+                InputMode::Adding => {
+                    self.add_entry()?;
+                    self.input_mode = InputMode::Normal;
+                    self.new_entry_name.clear();
+                    self.new_entry_secret.clear();
+                }
+                InputMode::Editing => {
+                    self.edit_entry()?;
+                    self.input_mode = InputMode::Normal;
+                    self.edit_entry_name.clear();
+                    self.edit_entry_secret.clear();
+                }
                 _ => unreachable!(),
             }
-            self.reset_entry_state();
+            self.input_field = 0;
         }
         Ok(())
     }
@@ -352,11 +443,17 @@ impl App {
 
     fn edit_entry(&mut self) -> Result<()> {
         if !self.entries.is_empty() {
+            if self.edit_entry_name.is_empty() || self.edit_entry_secret.is_empty() {
+                self.show_error(EMPTY_ENTRY_ERROR);
+                return Ok(());
+            }
             self.entries[self.selected] = Entry {
                 name: self.edit_entry_name.clone(),
                 secret: self.edit_entry_secret.clone(),
             };
-            self.save_entries()?;
+            if self.save_entries().is_err() {
+                self.show_error(SAVE_ERROR);
+            }
         }
         Ok(())
     }
