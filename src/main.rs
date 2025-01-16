@@ -1,7 +1,5 @@
 use anyhow::Result;
 use auth::{root, ui, App};
-use ratatui::crossterm::event::{self};
-use std::time::Duration;
 
 fn main() -> Result<()> {
     if root::check_root() {
@@ -15,10 +13,8 @@ fn main() -> Result<()> {
     while !app.should_quit {
         terminal.draw(|f| ui::draw(f, &app))?;
 
-        if event::poll(Duration::from_millis(50))? {
-            if let Ok(event) = event::read() {
-                app.handle_events(event)?;
-            }
+        if let Some(event) = auth::utils::poll_event()? {
+            app.handle_events(event)?;
         }
     }
 

@@ -1,15 +1,14 @@
 use crate::{
     constants::{ROOT_WARNING, WARNING_TITLE},
-    utils::centered_rect,
+    utils::{centered_rect, poll_event},
 };
 use anyhow::Result;
 use nix::unistd::Uid;
-use ratatui::crossterm::event::{self, Event};
+use ratatui::crossterm::event::Event;
 use ratatui::{
     prelude::*,
     widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget},
 };
-use std::time::Duration;
 
 pub fn check_root() -> bool {
     Uid::effective().is_root()
@@ -88,9 +87,5 @@ fn render_warning(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>) ->
 }
 
 fn should_exit() -> Result<bool> {
-    if event::poll(Duration::from_millis(50))? {
-        Ok(matches!(event::read()?, Event::Key(_)))
-    } else {
-        Ok(false)
-    }
+    Ok(matches!(poll_event()?, Some(Event::Key(_))))
 }

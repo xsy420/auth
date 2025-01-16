@@ -1,6 +1,7 @@
 use crate::constants::{AUTH_TITLE, COPIED_MSG, TOTP_DIGITS, TOTP_PERIOD, TOTP_STEP};
 use anyhow::Result;
 use ratatui::{
+    crossterm::event::{self, Event},
     prelude::*,
     style::{Color, Style},
     widgets::{Block, BorderType, Borders},
@@ -247,5 +248,13 @@ fn get_copy_message(copy_notification_time: Option<SystemTime>) -> Option<String
         Some(COPIED_MSG.to_string())
     } else {
         None
+    }
+}
+
+pub fn poll_event() -> Result<Option<Event>> {
+    if event::poll(Duration::from_millis(50))? {
+        Ok(Some(event::read()?))
+    } else {
+        Ok(None)
     }
 }
