@@ -20,29 +20,40 @@ pub fn show_root_warning() -> Result<()> {
     terminal.clear()?;
 
     loop {
-        terminal.draw(|f| {
-            let area = f.area();
-            let block = create_block(WARNING_TITLE);
-            let text = ROOT_WARNING
-                .iter()
-                .map(|&s| Line::from(s))
-                .collect::<Vec<_>>();
-
-            let warning = Paragraph::new(text)
-                .block(block)
-                .alignment(Alignment::Center)
-                .style(Style::default().fg(Color::Red));
-
-            let popup_area = centered_rect(60, 20, area);
-            f.render_widget(Clear, popup_area);
-            f.render_widget(warning, popup_area);
-        })?;
-
-        if let Some(Event::Key(_)) = poll_event()? {
+        render_warning(&mut terminal)?;
+        if should_exit()? {
             break;
         }
     }
 
     shutdown()?;
     Ok(())
+}
+
+fn render_warning(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>) -> Result<()> {
+    terminal.draw(|f| {
+        let warning = create_warning_widget();
+        let popup_area = centered_rect(60, 20, f.area());
+
+        f.render_widget(Clear, popup_area);
+        f.render_widget(warning, popup_area);
+    })?;
+    Ok(())
+}
+
+fn create_warning_widget() -> Paragraph<'static> {
+    let block = create_block(WARNING_TITLE);
+    let text = ROOT_WARNING
+        .iter()
+        .map(|&s| Line::from(s))
+        .collect::<Vec<_>>();
+
+    Paragraph::new(text)
+        .block(block)
+        .alignment(Alignment::Center)
+        .style(Style::default().fg(Color::Red))
+}
+
+fn should_exit() -> Result<bool> {
+    Ok(matches!(poll_event()?, Some(Event::Key(_))))
 }

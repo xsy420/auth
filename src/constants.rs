@@ -40,6 +40,10 @@ pub const CREATE_DIR_ERROR: &str = "Failed to create auth directory";
 pub const CRYPTO_INIT_ERROR: &str = "Failed to initialize encryption";
 pub const HOME_DIR_EXPAND_ERROR: &str = "Could not expand home directory";
 pub const EMPTY_ENTRY_ERROR: &str = "Empty entries are not allowed";
+pub const DIRECTORY_ERROR: &str = "Path points to a directory";
+pub const FILE_NOT_EXIST_ERROR: &str = "File does not exist";
+pub const NO_FILENAME_ERROR: &str = "No file name provided";
+pub const EMPTY_EXPORT_ERROR: &str = "No entries to export";
 
 pub const ROOT_WARNING: &[&str] = &[
     "Running as root is not supported",
