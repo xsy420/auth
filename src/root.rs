@@ -61,7 +61,7 @@ impl Widget for WarningWidget<'_> {
             .title(self.title)
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
-            .border_style(self.style);
+            .style(self.style);
 
         let inner_area = block.inner(area);
         block.render(area, buf);
@@ -70,7 +70,7 @@ impl Widget for WarningWidget<'_> {
 
         Paragraph::new(text)
             .alignment(Alignment::Center)
-            .style(self.style)
+            .style(Style::default().fg(Color::White))
             .render(inner_area, buf);
     }
 }
