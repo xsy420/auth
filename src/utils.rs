@@ -208,7 +208,8 @@ fn try_wayland_copy(text: &str) -> bool {
         .arg(text)
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
-        .status().is_ok_and(|status| status.success())
+        .status()
+        .is_ok_and(|status| status.success())
 }
 
 fn try_xclip_copy(text: &str) -> bool {

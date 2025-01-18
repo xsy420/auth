@@ -1,8 +1,10 @@
 use anyhow::Result;
-use auth::{root, ui, App};
+use auth::{cli, root, ui, App};
 
 fn main() -> Result<()> {
-    if root::check_root() {
+    let args = cli::parse_args();
+
+    if !args.no_root_check && root::check_root() {
         root::show_root_warning()?;
         return Ok(());
     }
@@ -11,7 +13,7 @@ fn main() -> Result<()> {
     let mut app = App::new()?;
 
     while !app.should_quit {
-        terminal.draw(|f| ui::draw(f, &app))?;
+        terminal.draw(|f| ui::draw(f, &app, args.no_size_check))?;
 
         if let Some(event) = auth::utils::poll_event()? {
             app.handle_events(event)?;

@@ -13,10 +13,10 @@ use ratatui::{
     widgets::{Clear, Paragraph},
 };
 
-pub fn draw(frame: &mut Frame, app: &App) {
+pub fn draw(frame: &mut Frame, app: &App, no_size_check: bool) {
     let area = frame.area();
 
-    if check_terminal_size(frame, area) {
+    if !no_size_check && check_terminal_size(frame, area) {
         return;
     }
 
