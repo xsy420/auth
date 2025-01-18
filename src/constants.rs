@@ -1,4 +1,4 @@
-pub const MIN_WIDTH: u16 = 103;
+pub const MIN_WIDTH: u16 = 110;
 pub const MIN_HEIGHT: u16 = 31;
 pub const TOTP_PERIOD: u64 = 30;
 pub const TOTP_DIGITS: usize = 6;
