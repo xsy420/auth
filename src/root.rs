@@ -4,8 +4,8 @@ use crate::{
 };
 use anyhow::Result;
 use nix::unistd::Uid;
-use ratatui::crossterm::event::Event;
 use ratatui::{
+    crossterm::event::Event,
     prelude::*,
     widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget},
 };

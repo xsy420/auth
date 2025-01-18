@@ -11,7 +11,11 @@ use crate::{
 };
 use anyhow::Result;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
-use std::{env, fs, path::Path, path::PathBuf, time::SystemTime};
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+    time::SystemTime,
+};
 
 #[derive(PartialEq, Clone)]
 pub enum InputMode {
@@ -398,6 +402,7 @@ impl App {
     pub fn handle_events(&mut self, event: Event) -> Result<()> {
         match event {
             Event::Key(key) => self.handle_key_event(key),
+            Event::Mouse(mouse) => crate::mouse::handle_mouse_event(self, mouse),
             _ => Ok(()),
         }
     }

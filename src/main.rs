@@ -1,5 +1,10 @@
 use anyhow::Result;
 use auth::{cli, root, ui, App};
+use ratatui::crossterm::{
+    event::{DisableMouseCapture, EnableMouseCapture},
+    execute,
+};
+use std::io::stdout;
 
 fn main() -> Result<()> {
     let args = cli::parse_args();
@@ -7,6 +12,10 @@ fn main() -> Result<()> {
     if !args.no_root_check && root::check_root() {
         root::show_root_warning()?;
         return Ok(());
+    }
+
+    if args.mouse {
+        execute!(stdout(), EnableMouseCapture)?;
     }
 
     let mut terminal = ratatui::init();
@@ -18,6 +27,10 @@ fn main() -> Result<()> {
         if let Some(event) = auth::utils::poll_event()? {
             app.handle_events(event)?;
         }
+    }
+
+    if args.mouse {
+        execute!(stdout(), DisableMouseCapture)?;
     }
 
     ratatui::restore();
