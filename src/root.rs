@@ -40,7 +40,7 @@ impl<'a> WarningWidget<'a> {
         Self {
             text,
             title: WARNING_TITLE,
-            style: Style::default().fg(Color::Yellow),
+            style: Style::default().fg(Color::Green),
         }
     }
 

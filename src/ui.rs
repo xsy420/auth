@@ -71,7 +71,7 @@ fn create_entry_line(index: usize, entry: &Entry, selected: usize, max_width: us
 
 fn get_line_style(is_selected: bool) -> Style {
     if is_selected {
-        Style::default().fg(Color::Yellow)
+        Style::default().fg(Color::Green)
     } else {
         Style::default()
     }

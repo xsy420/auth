@@ -74,7 +74,7 @@ pub fn create_block(title: &str) -> Block {
         .title(title)
         .borders(Borders::ALL)
         .border_type(BorderType::Rounded)
-        .border_style(Style::default().fg(Color::Yellow))
+        .border_style(Style::default().fg(Color::Green))
 }
 
 pub fn pad_vertical(text: Vec<Line>, height: u16) -> Vec<Line> {
