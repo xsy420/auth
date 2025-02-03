@@ -2,9 +2,11 @@ use crate::{
     clipboard::copy_to_clipboard,
     constants::{
         CLIPBOARD_ERROR, CREATE_DIR_ERROR, CRYPTO_INIT_ERROR, DECRYPT_ERROR, DIRECTORY_ERROR,
-        EMPTY_ENTRY_ERROR, EMPTY_EXPORT_ERROR, ENCRYPTOR_ERROR, FILE_NOT_EXIST_ERROR,
-        HOME_DIR_ERROR, NO_FILENAME_ERROR, PARSE_ERROR, READ_ERROR, SAVE_ERROR, SERIALIZE_ERROR,
-        TOML_EXT_ERROR, UTF8_ERROR, WRITE_ERROR,
+        EMPTY_ENTRY_ERROR, EMPTY_EXPORT_ERROR, ENCRYPTOR_ERROR, ENV_VAR_OFFSET,
+        FILE_NOT_EXIST_ERROR, HOME_DIR_ERROR, HOME_PREFIX_LEN, LAST_ENTRY_INDEX, LAST_ENTRY_OFFSET,
+        NAME_FIELD, NEXT_ENTRY_STEP, NO_FILENAME_ERROR, PARSE_ERROR, PATH_SEPARATOR_OFFSET,
+        READ_ERROR, SAVE_ERROR, SECRET_FIELD, SERIALIZE_ERROR, SINGLE_CHAR_PATH, TOML_EXT_ERROR,
+        UTF8_ERROR, WRITE_ERROR,
     },
     crypto::Crypto,
     entry::{Entries, Entry},
@@ -77,7 +79,7 @@ impl App {
             new_entry_secret: String::new(),
             edit_entry_name: String::new(),
             edit_entry_secret: String::new(),
-            input_field: 0,
+            input_field: NAME_FIELD,
             entries_path,
             copy_notification_time: None,
             path_input: String::new(),
@@ -187,7 +189,7 @@ impl App {
         if !self.entries.is_empty() {
             self.entries.remove(self.selected);
             if self.selected >= self.entries.len() && !self.entries.is_empty() {
-                self.selected = self.entries.len() - 1;
+                self.selected = self.entries.len() - LAST_ENTRY_OFFSET;
             }
             if self.save_entries().is_err() {
                 self.show_error(SAVE_ERROR);
@@ -238,16 +240,16 @@ impl App {
             return PathBuf::from(path);
         };
 
-        if path.len() == 1 {
+        if path.len() == SINGLE_CHAR_PATH {
             return home;
         }
 
-        home.join(&path[2..])
+        home.join(&path[HOME_PREFIX_LEN..])
     }
 
     fn expand_env_path(&self, stripped: &str, original_path: &str) -> PathBuf {
         let var_end = Self::get_var_end(stripped, original_path);
-        let (var, rest) = stripped.split_at(var_end - 1);
+        let (var, rest) = stripped.split_at(var_end - ENV_VAR_OFFSET);
         let expanded_path = Self::expand_env_var(var, rest);
         expanded_path.unwrap_or_else(|| PathBuf::from(original_path))
     }
@@ -255,7 +257,7 @@ impl App {
     fn get_var_end(stripped: &str, original_path: &str) -> usize {
         stripped
             .find('/')
-            .map(|i| i + 1)
+            .map(|i| i + PATH_SEPARATOR_OFFSET)
             .unwrap_or(original_path.len())
     }
 
@@ -467,8 +469,8 @@ impl App {
 
     fn handle_tab_key(&mut self, is_shift: bool) {
         self.input_field = match (self.input_field, is_shift) {
-            (0, true) | (1, false) => 0,
-            (0, false) | (1, true) => 1,
+            (NAME_FIELD, true) | (SECRET_FIELD, false) => NAME_FIELD,
+            (NAME_FIELD, false) | (SECRET_FIELD, true) => SECRET_FIELD,
             _ => unreachable!(),
         };
     }
@@ -515,7 +517,7 @@ impl App {
             self.edit_entry_name.clear();
             self.edit_entry_secret.clear();
         }
-        self.input_field = 0;
+        self.input_field = NAME_FIELD;
     }
 
     fn process_entry_input(&mut self) -> Result<()> {
@@ -527,7 +529,7 @@ impl App {
     }
 
     fn is_name_field(&self) -> bool {
-        self.input_field == 0
+        self.input_field == NAME_FIELD
     }
 
     fn handle_final_entry_input(&mut self) -> Result<()> {
@@ -553,11 +555,11 @@ impl App {
     }
 
     fn reset_input_field(&mut self) {
-        self.input_field = 0;
+        self.input_field = NAME_FIELD;
     }
 
     fn switch_to_secret_field(&mut self) {
-        self.input_field = 1;
+        self.input_field = SECRET_FIELD;
     }
 
     fn update_entry_field(&mut self, c: char) {
@@ -572,7 +574,7 @@ impl App {
 
     fn get_current_field(&mut self) -> &mut String {
         let is_adding = matches!(self.input_mode, InputMode::Adding);
-        let is_name_field = self.input_field == 0;
+        let is_name_field = self.input_field == NAME_FIELD;
 
         match (is_adding, is_name_field) {
             (true, true) => &mut self.new_entry_name,
@@ -623,13 +625,13 @@ impl App {
             self.edit_entry_name = entry.name.clone();
             self.edit_entry_secret = entry.secret.clone();
             self.input_mode = InputMode::Editing;
-            self.input_field = 0;
+            self.input_field = NAME_FIELD;
         }
     }
 
     fn next_entry(&mut self) {
         if !self.entries.is_empty() {
-            self.selected = (self.selected + 1) % self.entries.len();
+            self.selected = (self.selected + NEXT_ENTRY_STEP) % self.entries.len();
         }
     }
 
@@ -637,8 +639,8 @@ impl App {
         if !self.entries.is_empty() {
             self.selected = self
                 .selected
-                .checked_sub(1)
-                .unwrap_or(self.entries.len() - 1);
+                .checked_sub(LAST_ENTRY_INDEX)
+                .unwrap_or(self.entries.len() - LAST_ENTRY_INDEX);
         }
     }
 }

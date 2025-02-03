@@ -1,4 +1,4 @@
-use crate::constants::{AUTH_TITLE, COPIED_MSG};
+use crate::constants::{AUTH_TITLE, COPIED_MSG, NOTIFICATION_TIMEOUT};
 use std::time::SystemTime;
 
 pub fn get_notification_title(
@@ -20,7 +20,7 @@ pub fn get_notification_title(
 
 fn get_error_message(error_message: &Option<(String, SystemTime)>) -> Option<String> {
     let (msg, time) = error_message.as_ref()?;
-    if time.elapsed().unwrap_or_default().as_secs() < 3 {
+    if time.elapsed().unwrap_or_default().as_secs() < NOTIFICATION_TIMEOUT {
         Some(format!(" {} ", msg))
     } else {
         None
@@ -29,7 +29,7 @@ fn get_error_message(error_message: &Option<(String, SystemTime)>) -> Option<Str
 
 fn get_copy_message(copy_notification_time: Option<SystemTime>) -> Option<String> {
     let notify_time = copy_notification_time?;
-    if notify_time.elapsed().unwrap_or_default().as_secs() < 3 {
+    if notify_time.elapsed().unwrap_or_default().as_secs() < NOTIFICATION_TIMEOUT {
         Some(COPIED_MSG.to_string())
     } else {
         None

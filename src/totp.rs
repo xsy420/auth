@@ -1,4 +1,7 @@
-use crate::constants::{TOTP_DIGITS, TOTP_PERIOD, TOTP_STEP};
+use crate::constants::{
+    MIN_SECRET_LENGTH, PADDING_BYTE, REMAINDER_ZERO, SECRET_PADDING_BLOCK, SECRET_PAD_CHAR,
+    TOTP_DIGITS, TOTP_PERIOD, TOTP_STEP,
+};
 use anyhow::Result;
 use std::time::{SystemTime, UNIX_EPOCH};
 use totp_rs::{Algorithm, TOTP};
@@ -12,8 +15,8 @@ pub fn generate_totp(secret: &str) -> Result<(String, u64)> {
 
 fn normalize_secret(secret: &str) -> String {
     let mut secret = secret.replace(' ', "").to_uppercase();
-    while secret.len() % 8 != 0 {
-        secret.push('=');
+    while secret.len() % SECRET_PADDING_BLOCK != REMAINDER_ZERO {
+        secret.push(SECRET_PAD_CHAR);
     }
     secret
 }
@@ -26,10 +29,10 @@ fn decode_and_pad_secret(secret: &str) -> Result<Vec<u8>> {
 }
 
 fn pad_secret_if_needed(decoded: Vec<u8>) -> Vec<u8> {
-    if decoded.len() < 16 {
-        let mut padded = vec![0u8; 16];
+    if decoded.len() < MIN_SECRET_LENGTH {
+        let mut padded = vec![PADDING_BYTE; MIN_SECRET_LENGTH];
         padded[..decoded.len()].copy_from_slice(&decoded);
-        padded[decoded.len()..].fill(0);
+        padded[decoded.len()..].fill(PADDING_BYTE);
         padded
     } else {
         decoded

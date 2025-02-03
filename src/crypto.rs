@@ -1,4 +1,4 @@
-use crate::constants::{ENCRYPTOR_ERROR, INVALID_KEY_ERROR};
+use crate::constants::{ENCRYPTOR_ERROR, INVALID_KEY_ERROR, KEY_FILE};
 use age::{secrecy::ExposeSecret, x25519::Identity, Encryptor};
 use anyhow::{anyhow, Result};
 use std::{fs, io::Write, path::Path, str::FromStr};
@@ -9,7 +9,7 @@ pub struct Crypto {
 
 impl Crypto {
     pub fn new(auth_dir: &Path) -> Result<Self> {
-        let key_path = auth_dir.join("key");
+        let key_path = auth_dir.join(KEY_FILE);
         let identity = if key_path.exists() {
             let key_str = fs::read_to_string(&key_path)?;
             Identity::from_str(&key_str).map_err(|e| anyhow!("{}: {}", INVALID_KEY_ERROR, e))?

@@ -1,5 +1,5 @@
 use crate::{
-    constants::{ROOT_WARNING, WARNING_TITLE},
+    constants::{POPUP_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT, ROOT_WARNING, WARNING_TITLE},
     event::poll_event,
     layout::centered_rect,
 };
@@ -79,7 +79,7 @@ impl Widget for WarningWidget<'_> {
 fn render_warning(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>) -> Result<()> {
     terminal.draw(|f| {
         let warning = WarningWidget::new(ROOT_WARNING);
-        let popup_area = centered_rect(60, 20, f.area());
+        let popup_area = centered_rect(POPUP_WIDTH_PERCENT, POPUP_HEIGHT_PERCENT, f.area());
 
         f.render_widget(Clear, popup_area);
         f.render_widget(warning, popup_area);

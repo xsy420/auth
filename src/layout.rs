@@ -1,3 +1,4 @@
+use crate::constants::{TOTAL_PERCENTAGE, VERTICAL_PADDING_DIVISOR};
 use ratatui::{
     prelude::*,
     style::{Color, Style},
@@ -13,7 +14,7 @@ pub fn create_block(title: &str) -> Block {
 }
 
 pub fn pad_vertical(text: Vec<Line>, height: u16) -> Vec<Line> {
-    let padding = (height.saturating_sub(text.len() as u16) / 2) as usize;
+    let padding = (height.saturating_sub(text.len() as u16) / VERTICAL_PADDING_DIVISOR) as usize;
     let mut padded = vec![Line::from(""); padding];
     padded.extend(text);
     padded
@@ -25,7 +26,7 @@ pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 }
 
 fn create_vertical_layout(percent: u16, area: Rect) -> Vec<Rect> {
-    let margin = (100 - percent) / 2;
+    let margin = (TOTAL_PERCENTAGE - percent) / VERTICAL_PADDING_DIVISOR;
     let constraints = [
         Constraint::Percentage(margin),
         Constraint::Percentage(percent),
@@ -40,7 +41,7 @@ fn create_vertical_layout(percent: u16, area: Rect) -> Vec<Rect> {
 }
 
 fn create_horizontal_layout(percent: u16, area: Rect) -> Rect {
-    let margin = (100 - percent) / 2;
+    let margin = (TOTAL_PERCENTAGE - percent) / VERTICAL_PADDING_DIVISOR;
     let constraints = [
         Constraint::Percentage(margin),
         Constraint::Percentage(percent),

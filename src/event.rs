@@ -1,9 +1,10 @@
+use crate::constants::EVENT_POLL_DURATION;
 use anyhow::Result;
 use ratatui::crossterm::event::{self, Event};
 use std::time::Duration;
 
 pub fn poll_event() -> Result<Option<Event>> {
-    if event::poll(Duration::from_millis(50))? {
+    if event::poll(Duration::from_millis(EVENT_POLL_DURATION))? {
         Ok(Some(event::read()?))
     } else {
         Ok(None)

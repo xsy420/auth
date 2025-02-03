@@ -1,4 +1,4 @@
-use crate::command::CommandExt;
+use crate::{command::CommandExt, constants::CLIPBOARD_SLEEP_DURATION};
 use anyhow::Result;
 use std::{process::Command, sync::mpsc, thread, time::Duration};
 
@@ -46,7 +46,7 @@ fn try_xclip_copy(text: &str) -> bool {
 }
 
 fn check_clipboard_result(rx: mpsc::Receiver<()>) -> Result<()> {
-    thread::sleep(Duration::from_millis(100));
+    thread::sleep(Duration::from_millis(CLIPBOARD_SLEEP_DURATION));
     rx.try_recv()
         .map_err(|_| anyhow::anyhow!(crate::constants::CLIPBOARD_ERROR))
 }

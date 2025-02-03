@@ -1,4 +1,4 @@
-use crate::App;
+use crate::{constants::FIRST_ENTRY_ROW, App};
 use anyhow::Result;
 use ratatui::crossterm::event::{MouseEvent, MouseEventKind};
 
@@ -15,8 +15,8 @@ fn handle_mouse_click(app: &mut App) -> Result<()> {
 }
 
 fn handle_mouse_hover(app: &mut App, row: usize) -> Result<()> {
-    if row >= 1 && row < app.entries.len() + 1 {
-        app.selected = row - 1;
+    if row >= FIRST_ENTRY_ROW && row < app.entries.len() + FIRST_ENTRY_ROW {
+        app.selected = row - FIRST_ENTRY_ROW;
     }
     Ok(())
 }

@@ -1,8 +1,10 @@
 use crate::{
     app::{App, InputMode},
     constants::{
-        ADD_ENTRY_TITLE, BINDINGS_TITLE, EDIT_ENTRY_TITLE, EXPORT_TITLE, HELP_TEXT, IMPORT_TITLE,
-        NAME_LABEL, PATH_LABEL, SECRET_LABEL,
+        ADD_ENTRY_TITLE, BINDINGS_TITLE, CODE_WIDTH, CURSOR_CHAR, DEFAULT_NAME_WIDTH,
+        EDIT_ENTRY_TITLE, EMPTY_CURSOR, EXPORT_TITLE, HELP_BLOCK_HEIGHT, HELP_TEXT, IMPORT_TITLE,
+        MIN_BLOCK_HEIGHT, NAME_FIELD, NAME_LABEL, NAME_PADDING, PATH_LABEL, POPUP_HEIGHT_PERCENT,
+        POPUP_WIDTH_PERCENT, REMAINING_WIDTH, SECRET_FIELD, SECRET_LABEL,
     },
     entry::Entry,
     layout::{centered_rect, create_block},
@@ -23,7 +25,13 @@ pub fn draw(frame: &mut Frame, app: &App, no_size_check: bool) {
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Min(3), Constraint::Length(3)].as_ref())
+        .constraints(
+            [
+                Constraint::Min(MIN_BLOCK_HEIGHT),
+                Constraint::Length(HELP_BLOCK_HEIGHT),
+            ]
+            .as_ref(),
+        )
         .split(area);
 
     draw_main_block(frame, app, chunks[0]);
@@ -53,7 +61,11 @@ fn create_entry_lines(app: &App) -> Vec<Line> {
 }
 
 fn get_max_name_width(entries: &[Entry]) -> usize {
-    entries.iter().map(|e| e.name.len()).max().unwrap_or(0)
+    entries
+        .iter()
+        .map(|e| e.name.len())
+        .max()
+        .unwrap_or(DEFAULT_NAME_WIDTH)
 }
 
 fn create_formatted_lines(entries: &[Entry], selected: usize, max_width: usize) -> Vec<Line> {
@@ -81,11 +93,11 @@ fn get_line_style(is_selected: bool) -> Style {
 fn format_entry_text(entry: &Entry, max_width: usize) -> String {
     let (code, remaining) = entry.generate_totp_with_time();
     format!(
-        "{:<width$} {:>6} ({:>1}s)",
+        "{:<width$} {:>CODE_WIDTH$} ({:>REMAINING_WIDTH$}s)",
         entry.name,
         code,
         remaining,
-        width = max_width + 2
+        width = max_width + NAME_PADDING
     )
 }
 
@@ -142,8 +154,16 @@ fn create_entry_popup<'a>(
 }
 
 fn create_cursor_indicators(input_field: usize) -> (String, String) {
-    let name_cursor = if input_field == 0 { "|" } else { "" };
-    let secret_cursor = if input_field == 1 { "|" } else { "" };
+    let name_cursor = if input_field == NAME_FIELD {
+        CURSOR_CHAR
+    } else {
+        EMPTY_CURSOR
+    };
+    let secret_cursor = if input_field == SECRET_FIELD {
+        CURSOR_CHAR
+    } else {
+        EMPTY_CURSOR
+    };
     (name_cursor.to_string(), secret_cursor.to_string())
 }
 
@@ -176,12 +196,15 @@ fn get_file_popup_title(input_mode: &InputMode) -> &'static str {
 }
 
 fn create_file_popup<'a>(title: &'a str, path: &'a str) -> Paragraph<'a> {
-    let lines = vec![Line::from(PATH_LABEL), Line::from(format!("{}|", path))];
+    let lines = vec![
+        Line::from(PATH_LABEL),
+        Line::from(format!("{}{}", path, CURSOR_CHAR)),
+    ];
     Paragraph::new(lines).block(create_block(title))
 }
 
 fn render_centered_popup(frame: &mut Frame, popup: Paragraph, area: Rect) {
-    let popup_area = centered_rect(60, 20, area);
+    let popup_area = centered_rect(POPUP_WIDTH_PERCENT, POPUP_HEIGHT_PERCENT, area);
     frame.render_widget(Clear, popup_area);
     frame.render_widget(popup, popup_area);
 }
