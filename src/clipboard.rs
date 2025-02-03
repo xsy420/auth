@@ -1,4 +1,10 @@
-use crate::{command::CommandExt, constants::CLIPBOARD_SLEEP_DURATION};
+use crate::{
+    command::CommandExt,
+    constants::{
+        CLIPBOARD_SLEEP_DURATION, WAYLAND_COPY_COMMAND, XCLIP_CLIPBOARD_ARG, XCLIP_COMMAND,
+        XCLIP_IN_ARG, XCLIP_SELECTION_ARG,
+    },
+};
 use anyhow::Result;
 use std::{process::Command, sync::mpsc, thread, time::Duration};
 
@@ -28,8 +34,15 @@ fn is_wayland_session() -> bool {
     std::env::var("WAYLAND_DISPLAY").is_ok()
 }
 
+// I shouldn't have to write these comments but @adamperkowski made me do it.
+// See command.rs for more details, if this isn't clear enough.
+
+/// Attempts to copy text to clipboard using wl-copy on Wayland
+/// Handles clipboard operations in an isolated process with null stdio
+/// This prevents potential command injection since text is passed as a direct argument
+/// Returns true if copying succeeded, false otherwise
 fn try_wayland_copy(text: &str) -> bool {
-    Command::new("wl-copy")
+    Command::new(WAYLAND_COPY_COMMAND)
         .arg(text)
         .stdout(std::process::Stdio::null())
         .stderr(std::process::Stdio::null())
@@ -37,9 +50,13 @@ fn try_wayland_copy(text: &str) -> bool {
         .is_ok_and(|status| status.success())
 }
 
+/// Attempts to copy text to clipboard using xclip on X11
+/// Uses a separate trait implementation for secure process input handling
+/// Text is passed through a controlled pipe rather than shell arguments
+/// Returns true if copying succeeded, false otherwise
 fn try_xclip_copy(text: &str) -> bool {
-    let args = ["-selection", "clipboard", "-in"];
-    Command::new("xclip")
+    let args = [XCLIP_SELECTION_ARG, XCLIP_CLIPBOARD_ARG, XCLIP_IN_ARG];
+    Command::new(XCLIP_COMMAND)
         .args(args)
         .process_input(text.as_bytes())
         .is_ok()

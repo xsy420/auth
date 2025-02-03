@@ -71,6 +71,11 @@ pub const REMAINING_WIDTH: usize = 1;
 pub const NAME_PADDING: usize = 2;
 pub const CURSOR_CHAR: &str = "|";
 pub const EMPTY_CURSOR: &str = "";
+pub const XCLIP_SELECTION_ARG: &str = "-selection";
+pub const XCLIP_CLIPBOARD_ARG: &str = "clipboard";
+pub const XCLIP_IN_ARG: &str = "-in";
+pub const XCLIP_COMMAND: &str = "xclip";
+pub const WAYLAND_COPY_COMMAND: &str = "wl-copy";
 
 pub const ROOT_WARNING: &[&str] = &[
     "Running as root is not supported",
