@@ -1,4 +1,4 @@
-use crate::{constants::*, utils::pad_vertical};
+use crate::{constants::*, layout::pad_vertical};
 use ratatui::{prelude::*, widgets::Paragraph};
 
 pub fn check_terminal_size(frame: &mut Frame, area: Rect) -> bool {
@@ -22,11 +22,11 @@ fn create_warning_text(area: Rect) -> Vec<Line<'static>> {
 }
 
 fn format_warning_line(text: &str, width: u16) -> Line<'static> {
-    if text.contains("{}") {
-        Line::from(text.replace("{}", &width.to_string()))
-    } else {
-        Line::from(text.to_string())
-    }
+    let text = match text.contains("{}") {
+        true => text.replace("{}", &width.to_string()),
+        false => text.to_string(),
+    };
+    Line::from(text)
 }
 
 fn render_size_warning(frame: &mut Frame, area: Rect) {

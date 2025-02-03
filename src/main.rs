@@ -1,5 +1,5 @@
 use anyhow::Result;
-use auth::{cli, root, ui, App};
+use auth::{cli, event, root, ui, App};
 use ratatui::crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
@@ -24,7 +24,7 @@ fn main() -> Result<()> {
     while !app.should_quit {
         terminal.draw(|f| ui::draw(f, &app, args.no_size_check))?;
 
-        if let Some(event) = auth::utils::poll_event()? {
+        if let Some(event) = event::poll_event()? {
             app.handle_events(event)?;
         }
     }

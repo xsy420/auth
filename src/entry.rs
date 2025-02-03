@@ -1,4 +1,4 @@
-use crate::constants::INVALID_LABEL;
+use crate::{constants::INVALID_LABEL, totp::generate_totp};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -14,7 +14,7 @@ pub struct Entry {
 
 impl Entry {
     pub fn generate_totp_with_time(&self) -> (String, u64) {
-        match crate::utils::generate_totp(&self.secret) {
+        match generate_totp(&self.secret) {
             Ok(result) => result,
             Err(_) => (INVALID_LABEL.to_string(), 0),
         }

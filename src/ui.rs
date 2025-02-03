@@ -5,8 +5,9 @@ use crate::{
         NAME_LABEL, PATH_LABEL, SECRET_LABEL,
     },
     entry::Entry,
+    layout::{centered_rect, create_block},
+    notification::get_notification_title,
     size::check_terminal_size,
-    utils::{centered_rect, create_block, get_notification_title},
 };
 use ratatui::{
     prelude::*,
@@ -70,11 +71,11 @@ fn create_entry_line(index: usize, entry: &Entry, selected: usize, max_width: us
 }
 
 fn get_line_style(is_selected: bool) -> Style {
-    if is_selected {
-        Style::default().fg(Color::Green)
-    } else {
-        Style::default()
-    }
+    let color = match is_selected {
+        true => Color::Green,
+        false => Color::Reset,
+    };
+    Style::default().fg(color)
 }
 
 fn format_entry_text(entry: &Entry, max_width: usize) -> String {

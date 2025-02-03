@@ -1,6 +1,7 @@
 use crate::{
     constants::{ROOT_WARNING, WARNING_TITLE},
-    utils::{centered_rect, poll_event},
+    event::poll_event,
+    layout::centered_rect,
 };
 use anyhow::Result;
 use nix::unistd::Uid;

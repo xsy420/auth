@@ -1,4 +1,5 @@
 use crate::{
+    clipboard::copy_to_clipboard,
     constants::{
         CLIPBOARD_ERROR, CREATE_DIR_ERROR, CRYPTO_INIT_ERROR, DECRYPT_ERROR, DIRECTORY_ERROR,
         EMPTY_ENTRY_ERROR, EMPTY_EXPORT_ERROR, ENCRYPTOR_ERROR, FILE_NOT_EXIST_ERROR,
@@ -7,7 +8,6 @@ use crate::{
     },
     crypto::Crypto,
     entry::{Entries, Entry},
-    utils::copy_to_clipboard,
 };
 use anyhow::Result;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
