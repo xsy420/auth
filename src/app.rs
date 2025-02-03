@@ -234,16 +234,15 @@ impl App {
     }
 
     fn expand_home_path(&self, path: &str) -> PathBuf {
-        match dirs::home_dir() {
-            Some(home) => {
-                if path.len() == 1 {
-                    home
-                } else {
-                    home.join(&path[2..])
-                }
-            }
-            None => PathBuf::from(path),
+        let Some(home) = dirs::home_dir() else {
+            return PathBuf::from(path);
+        };
+
+        if path.len() == 1 {
+            return home;
         }
+
+        home.join(&path[2..])
     }
 
     fn expand_env_path(&self, stripped: &str, original_path: &str) -> PathBuf {
