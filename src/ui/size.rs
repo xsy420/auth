@@ -1,4 +1,4 @@
-use crate::{constants::*, layout::pad_vertical};
+use crate::{ui::layout::pad_vertical, utils::constants::*};
 use ratatui::{prelude::*, widgets::Paragraph};
 
 pub fn check_terminal_size(frame: &mut Frame, area: Rect) -> bool {

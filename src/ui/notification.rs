@@ -1,4 +1,4 @@
-use crate::constants::{AUTH_TITLE, COPIED_MSG, NOTIFICATION_TIMEOUT};
+use crate::utils::constants::{AUTH_TITLE, COPIED_MSG, NOTIFICATION_TIMEOUT};
 use std::time::SystemTime;
 
 pub fn get_notification_title(

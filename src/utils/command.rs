@@ -1,4 +1,4 @@
-use crate::constants::CLIPBOARD_ERROR;
+use crate::utils::constants::CLIPBOARD_ERROR;
 use std::process::Command;
 
 pub trait CommandExt {

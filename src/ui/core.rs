@@ -1,15 +1,19 @@
 use crate::{
-    app::{App, InputMode},
-    constants::{
+    core::{
+        app::{App, InputMode},
+        entry::Entry,
+    },
+    ui::{
+        layout::{centered_rect, create_block},
+        notification::get_notification_title,
+        size::check_terminal_size,
+    },
+    utils::constants::{
         ADD_ENTRY_TITLE, BINDINGS_TITLE, CODE_WIDTH, CURSOR_CHAR, DEFAULT_NAME_WIDTH,
         EDIT_ENTRY_TITLE, EMPTY_CURSOR, EXPORT_TITLE, HELP_BLOCK_HEIGHT, HELP_TEXT, IMPORT_TITLE,
         MIN_BLOCK_HEIGHT, NAME_FIELD, NAME_LABEL, NAME_PADDING, PATH_LABEL, POPUP_HEIGHT_PERCENT,
         POPUP_WIDTH_PERCENT, REMAINING_WIDTH, SECRET_FIELD, SECRET_LABEL,
     },
-    entry::Entry,
-    layout::{centered_rect, create_block},
-    notification::get_notification_title,
-    size::check_terminal_size,
 };
 use ratatui::{
     prelude::*,

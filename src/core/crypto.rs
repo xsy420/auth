@@ -1,4 +1,4 @@
-use crate::constants::{ENCRYPTOR_ERROR, INVALID_KEY_ERROR, KEY_FILE};
+use crate::utils::constants::{ENCRYPTOR_ERROR, INVALID_KEY_ERROR, KEY_FILE};
 use age::{secrecy::ExposeSecret, x25519::Identity, Encryptor};
 use anyhow::{anyhow, Result};
 use std::{fs, io::Write, path::Path, str::FromStr};

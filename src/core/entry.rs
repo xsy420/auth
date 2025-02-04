@@ -1,6 +1,6 @@
 use crate::{
-    constants::{INVALID_LABEL, INVALID_REMAINING_TIME},
-    totp::generate_totp,
+    core::totp::generate_totp,
+    utils::constants::{INVALID_LABEL, INVALID_REMAINING_TIME},
 };
 use serde::{Deserialize, Serialize};
 

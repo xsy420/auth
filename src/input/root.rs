@@ -1,7 +1,7 @@
 use crate::{
-    constants::{POPUP_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT, ROOT_WARNING, WARNING_TITLE},
-    event::poll_event,
-    layout::centered_rect,
+    input::event::poll_event,
+    ui::layout::centered_rect,
+    utils::constants::{POPUP_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT, ROOT_WARNING, WARNING_TITLE},
 };
 use anyhow::Result;
 use nix::unistd::Uid;

@@ -1,17 +1,28 @@
-pub mod app;
-pub mod cli;
-pub mod clipboard;
-pub mod command;
-pub mod constants;
-pub mod crypto;
-pub mod entry;
-pub mod event;
-pub mod layout;
-pub mod mouse;
-pub mod notification;
-pub mod root;
-pub mod size;
-pub mod totp;
-pub mod ui;
+pub mod core {
+    pub mod app;
+    pub mod crypto;
+    pub mod entry;
+    pub mod totp;
+}
 
-pub use app::App;
+pub mod utils {
+    pub mod cli;
+    pub mod clipboard;
+    pub mod command;
+    pub mod constants;
+}
+
+pub mod input {
+    pub mod event;
+    pub mod mouse;
+    pub mod root;
+}
+
+pub mod ui {
+    pub mod core;
+    pub mod layout;
+    pub mod notification;
+    pub mod size;
+}
+
+pub use core::app::App;

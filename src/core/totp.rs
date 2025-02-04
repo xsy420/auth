@@ -1,6 +1,6 @@
-use crate::constants::{
-    MIN_SECRET_LENGTH, PADDING_BYTE, REMAINDER_ZERO, SECRET_PADDING_BLOCK, SECRET_PAD_CHAR,
-    TOTP_DIGITS, TOTP_PERIOD, TOTP_STEP,
+use crate::utils::constants::{
+    INVALID_KEY_ERROR, MIN_SECRET_LENGTH, PADDING_BYTE, REMAINDER_ZERO, SECRET_PADDING_BLOCK,
+    SECRET_PAD_CHAR, TOTP_DIGITS, TOTP_ERROR, TOTP_PERIOD, TOTP_STEP,
 };
 use anyhow::Result;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -23,7 +23,7 @@ fn normalize_secret(secret: &str) -> String {
 
 fn decode_and_pad_secret(secret: &str) -> Result<Vec<u8>> {
     let decoded = base32::decode(base32::Alphabet::Rfc4648 { padding: true }, secret)
-        .ok_or_else(|| anyhow::anyhow!(crate::constants::INVALID_KEY_ERROR))?;
+        .ok_or_else(|| anyhow::anyhow!(INVALID_KEY_ERROR))?;
 
     Ok(pad_secret_if_needed(decoded))
 }
@@ -49,18 +49,18 @@ fn generate_totp_code(key: Vec<u8>) -> Result<(String, u64)> {
 
 fn create_totp(key: Vec<u8>) -> Result<TOTP> {
     TOTP::new(Algorithm::SHA1, TOTP_DIGITS, TOTP_STEP, TOTP_PERIOD, key)
-        .map_err(|_| anyhow::anyhow!(crate::constants::TOTP_ERROR))
+        .map_err(|_| anyhow::anyhow!(TOTP_ERROR))
 }
 
 fn calculate_remaining_time() -> Result<u64> {
     let now = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .map_err(|_| anyhow::anyhow!(crate::constants::TOTP_ERROR))?
+        .map_err(|_| anyhow::anyhow!(TOTP_ERROR))?
         .as_secs();
     Ok(TOTP_PERIOD - (now % TOTP_PERIOD))
 }
 
 fn generate_code(totp: &TOTP) -> Result<String> {
     totp.generate_current()
-        .map_err(|_| anyhow::anyhow!(crate::constants::TOTP_ERROR))
+        .map_err(|_| anyhow::anyhow!(TOTP_ERROR))
 }

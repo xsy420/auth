@@ -1,4 +1,4 @@
-use crate::constants::EVENT_POLL_DURATION;
+use crate::utils::constants::EVENT_POLL_DURATION;
 use anyhow::Result;
 use ratatui::crossterm::event::{self, Event};
 use std::time::Duration;

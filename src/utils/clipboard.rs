@@ -1,8 +1,8 @@
-use crate::{
+use crate::utils::{
     command::CommandExt,
     constants::{
-        CLIPBOARD_SLEEP_DURATION, WAYLAND_COPY_COMMAND, WAYLAND_DISPLAY, XCLIP_CLIPBOARD_ARG,
-        XCLIP_COMMAND, XCLIP_IN_ARG, XCLIP_SELECTION_ARG,
+        CLIPBOARD_ERROR, CLIPBOARD_SLEEP_DURATION, WAYLAND_COPY_COMMAND, WAYLAND_DISPLAY,
+        XCLIP_CLIPBOARD_ARG, XCLIP_COMMAND, XCLIP_IN_ARG, XCLIP_SELECTION_ARG,
     },
 };
 use anyhow::Result;
@@ -64,6 +64,5 @@ fn try_xclip_copy(text: &str) -> bool {
 
 fn check_clipboard_result(rx: mpsc::Receiver<()>) -> Result<()> {
     thread::sleep(Duration::from_millis(CLIPBOARD_SLEEP_DURATION));
-    rx.try_recv()
-        .map_err(|_| anyhow::anyhow!(crate::constants::CLIPBOARD_ERROR))
+    rx.try_recv().map_err(|_| anyhow::anyhow!(CLIPBOARD_ERROR))
 }

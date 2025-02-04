@@ -1,4 +1,4 @@
-use crate::constants::{TOTAL_PERCENTAGE, VERTICAL_PADDING_DIVISOR};
+use crate::utils::constants::{TOTAL_PERCENTAGE, VERTICAL_PADDING_DIVISOR};
 use ratatui::{
     prelude::*,
     style::{Color, Style},

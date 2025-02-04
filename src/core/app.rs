@@ -1,15 +1,20 @@
 use crate::{
-    clipboard::copy_to_clipboard,
-    constants::{
-        AUTH_DIR_NAME, CLIPBOARD_ERROR, CREATE_DIR_ERROR, CRYPTO_INIT_ERROR, DECRYPT_ERROR,
-        DIRECTORY_ERROR, EMPTY_ENTRY_ERROR, EMPTY_EXPORT_ERROR, ENCRYPTOR_ERROR, ENTRIES_FILE,
-        ENV_VAR_OFFSET, FILE_NOT_EXIST_ERROR, HOME_DIR_ERROR, HOME_PREFIX_LEN, LAST_ENTRY_INDEX,
-        LAST_ENTRY_OFFSET, NAME_FIELD, NEXT_ENTRY_STEP, NO_FILENAME_ERROR, PARSE_ERROR,
-        PATH_SEPARATOR_OFFSET, READ_ERROR, SAVE_ERROR, SECRET_FIELD, SERIALIZE_ERROR,
-        SINGLE_CHAR_PATH, TOML_EXT, TOML_EXT_ERROR, UTF8_ERROR, WRITE_ERROR,
+    core::{
+        crypto::Crypto,
+        entry::{Entries, Entry},
     },
-    crypto::Crypto,
-    entry::{Entries, Entry},
+    input::mouse,
+    utils::{
+        clipboard::copy_to_clipboard,
+        constants::{
+            AUTH_DIR_NAME, CLIPBOARD_ERROR, CREATE_DIR_ERROR, CRYPTO_INIT_ERROR, DECRYPT_ERROR,
+            DIRECTORY_ERROR, EMPTY_ENTRY_ERROR, EMPTY_EXPORT_ERROR, ENCRYPTOR_ERROR, ENTRIES_FILE,
+            ENV_VAR_OFFSET, FILE_NOT_EXIST_ERROR, HOME_DIR_ERROR, HOME_PREFIX_LEN,
+            LAST_ENTRY_INDEX, LAST_ENTRY_OFFSET, NAME_FIELD, NEXT_ENTRY_STEP, NO_FILENAME_ERROR,
+            PARSE_ERROR, PATH_SEPARATOR_OFFSET, READ_ERROR, SAVE_ERROR, SECRET_FIELD,
+            SERIALIZE_ERROR, SINGLE_CHAR_PATH, TOML_EXT, TOML_EXT_ERROR, UTF8_ERROR, WRITE_ERROR,
+        },
+    },
 };
 use anyhow::Result;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
@@ -403,7 +408,7 @@ impl App {
     pub fn handle_events(&mut self, event: Event) -> Result<()> {
         match event {
             Event::Key(key) => self.handle_key_event(key),
-            Event::Mouse(mouse) => crate::mouse::handle_mouse_event(self, mouse),
+            Event::Mouse(mouse) => mouse::handle_mouse_event(self, mouse),
             _ => Ok(()),
         }
     }

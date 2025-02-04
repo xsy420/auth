@@ -1,4 +1,4 @@
-use crate::{constants::FIRST_ENTRY_ROW, App};
+use crate::{core::app::App, utils::constants::FIRST_ENTRY_ROW};
 use anyhow::Result;
 use ratatui::crossterm::event::{MouseEvent, MouseEventKind};
 
