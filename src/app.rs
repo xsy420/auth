@@ -1,12 +1,12 @@
 use crate::{
     clipboard::copy_to_clipboard,
     constants::{
-        CLIPBOARD_ERROR, CREATE_DIR_ERROR, CRYPTO_INIT_ERROR, DECRYPT_ERROR, DIRECTORY_ERROR,
-        EMPTY_ENTRY_ERROR, EMPTY_EXPORT_ERROR, ENCRYPTOR_ERROR, ENV_VAR_OFFSET,
-        FILE_NOT_EXIST_ERROR, HOME_DIR_ERROR, HOME_PREFIX_LEN, LAST_ENTRY_INDEX, LAST_ENTRY_OFFSET,
-        NAME_FIELD, NEXT_ENTRY_STEP, NO_FILENAME_ERROR, PARSE_ERROR, PATH_SEPARATOR_OFFSET,
-        READ_ERROR, SAVE_ERROR, SECRET_FIELD, SERIALIZE_ERROR, SINGLE_CHAR_PATH, TOML_EXT_ERROR,
-        UTF8_ERROR, WRITE_ERROR,
+        AUTH_DIR_NAME, CLIPBOARD_ERROR, CREATE_DIR_ERROR, CRYPTO_INIT_ERROR, DECRYPT_ERROR,
+        DIRECTORY_ERROR, EMPTY_ENTRY_ERROR, EMPTY_EXPORT_ERROR, ENCRYPTOR_ERROR, ENTRIES_FILE,
+        ENV_VAR_OFFSET, FILE_NOT_EXIST_ERROR, HOME_DIR_ERROR, HOME_PREFIX_LEN, LAST_ENTRY_INDEX,
+        LAST_ENTRY_OFFSET, NAME_FIELD, NEXT_ENTRY_STEP, NO_FILENAME_ERROR, PARSE_ERROR,
+        PATH_SEPARATOR_OFFSET, READ_ERROR, SAVE_ERROR, SECRET_FIELD, SERIALIZE_ERROR,
+        SINGLE_CHAR_PATH, TOML_EXT, TOML_EXT_ERROR, UTF8_ERROR, WRITE_ERROR,
     },
     crypto::Crypto,
     entry::{Entries, Entry},
@@ -48,7 +48,7 @@ pub struct App {
 impl App {
     pub fn new() -> Result<Self> {
         let auth_dir = Self::get_auth_directory()?;
-        let entries_path = auth_dir.join("entries.toml");
+        let entries_path = auth_dir.join(ENTRIES_FILE);
         let crypto = Self::initialize_crypto(&auth_dir)?;
         let mut app = Self::create_initial_app(entries_path, crypto);
 
@@ -58,7 +58,7 @@ impl App {
 
     fn get_auth_directory() -> Result<PathBuf> {
         let home = dirs::home_dir().ok_or_else(|| anyhow::anyhow!(HOME_DIR_ERROR))?;
-        let auth_dir = home.join(".local/share/auth");
+        let auth_dir = home.join(AUTH_DIR_NAME);
 
         fs::create_dir_all(&auth_dir).map_err(|_| anyhow::anyhow!(CREATE_DIR_ERROR))?;
 
@@ -347,7 +347,7 @@ impl App {
             return Ok(());
         }
 
-        if path.extension().is_none_or(|ext| ext != "toml") {
+        if path.extension().is_none_or(|ext| ext != TOML_EXT) {
             self.show_error(TOML_EXT_ERROR);
             return Ok(());
         }
@@ -381,8 +381,8 @@ impl App {
             return Ok(path);
         }
 
-        if !path.to_string_lossy().ends_with(".toml") {
-            path.set_extension("toml");
+        if !path.to_string_lossy().ends_with(&format!(".{}", TOML_EXT)) {
+            path.set_extension(TOML_EXT);
         }
         Ok(path)
     }

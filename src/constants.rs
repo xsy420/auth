@@ -76,6 +76,8 @@ pub const XCLIP_CLIPBOARD_ARG: &str = "clipboard";
 pub const XCLIP_IN_ARG: &str = "-in";
 pub const XCLIP_COMMAND: &str = "xclip";
 pub const WAYLAND_COPY_COMMAND: &str = "wl-copy";
+pub const TOML_EXT: &str = "toml";
+pub const WAYLAND_DISPLAY: &str = "WAYLAND_DISPLAY";
 
 pub const ROOT_WARNING: &[&str] = &[
     "Running as root is not supported",

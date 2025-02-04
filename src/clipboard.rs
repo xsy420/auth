@@ -1,8 +1,8 @@
 use crate::{
     command::CommandExt,
     constants::{
-        CLIPBOARD_SLEEP_DURATION, WAYLAND_COPY_COMMAND, XCLIP_CLIPBOARD_ARG, XCLIP_COMMAND,
-        XCLIP_IN_ARG, XCLIP_SELECTION_ARG,
+        CLIPBOARD_SLEEP_DURATION, WAYLAND_COPY_COMMAND, WAYLAND_DISPLAY, XCLIP_CLIPBOARD_ARG,
+        XCLIP_COMMAND, XCLIP_IN_ARG, XCLIP_SELECTION_ARG,
     },
 };
 use anyhow::Result;
@@ -31,7 +31,7 @@ fn try_copy_to_clipboard(text: &str) -> bool {
 }
 
 fn is_wayland_session() -> bool {
-    std::env::var("WAYLAND_DISPLAY").is_ok()
+    std::env::var(WAYLAND_DISPLAY).is_ok()
 }
 
 // I shouldn't have to write these comments but @adamperkowski made me do it.
