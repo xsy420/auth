@@ -1,0 +1,96 @@
+.\" manpage for auth
+.TH "auth" "1" "February 2025" "" "auth manual"
+
+.SH NAME
+auth \- terminal-based TOTP authenticator 🔐
+
+.SH SYNOPSIS
+\fBauth [OPTIONS]\fR
+
+.SH DESCRIPTION
+auth is a terminal user interface (TUI) application that generates Time-based One-Time Password (TOTP) codes for two-factor authentication.
+.br
+Stores encrypted TOTP secrets securely on disk.
+
+.SH OPTIONS
+.TP
+\fB\-r\fR, \fB\-\-no\-root\-check\fR
+Skip the root user check
+
+.TP
+\fB\-s\fR, \fB\-\-no\-size\-check\fR
+Skip the terminal size check
+
+.TP
+\fB\-m\fR, \fB\-\-mouse\fR
+Enable mouse support
+
+.SH CONTROLS
+.TP
+\fBa\fR
+Add a new entry
+
+.TP
+\fBE\fR
+Edit selected entry
+
+.TP
+\fBd\fR
+Delete selected entry
+
+.TP
+\fBi\fR
+Import entries from a TOML file
+
+.TP
+\fBe\fR
+Export entries to a TOML file
+
+.TP
+\fB↑/k\fR
+Move selection up
+
+.TP
+\fB↓/j\fR
+Move selection down
+
+.TP
+\fBEnter\fR
+Copy selected TOTP code
+
+.TP
+\fBTab\fR
+Cycle input fields
+
+.TP
+\fBq\fR
+Quit application
+
+.SH FILES
+.TP
+\fI~/.local/share/auth/entries.toml\fR
+Encrypted storage for TOTP entries
+
+.TP
+\fI~/.local/share/auth/key\fR
+Encryption key file
+
+.SH SECURITY
+TOTP secrets are stored encrypted using the age encryption format.
+.br
+The encryption key is stored separately from the entries file.
+
+.SH REPORTING BUGS
+Report bugs at: https://github.com/nnyyxxxx/auth/issues
+
+.SH COPYRIGHT
+Copyright (c) 2024 Nyx
+.br
+License GPLv2: GNU GPL version 2 <https://gnu.org/licenses/gpl-2.0.html>
+.br
+This is free software: you are free to change and redistribute it.
+.br
+There is NO WARRANTY, to the extent permitted by law.
+
+.SH AUTHOR
+Written by Nyx <nnyyxxxx@protonmail.com>
