@@ -1,6 +1,6 @@
 [package]
 name = "auth"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Nyx <nnyyxxxx@protonmail.com>"]
 license = "GPL-2.0"
 description = "Authenticator TUI made in rust, generate totps on the fly. "
