@@ -188,14 +188,17 @@ impl App {
     }
 
     pub fn delete_entry(&mut self) {
-        if !self.entries.is_empty() {
-            self.entries.remove(self.selected);
-            if self.selected >= self.entries.len() && !self.entries.is_empty() {
-                self.selected = self.entries.len() - LAST_ENTRY_OFFSET;
-            }
-            if self.save_entries().is_err() {
-                self.show_error(&AuthError::SaveError.to_string());
-            }
+        let Some(entries) = (!self.entries.is_empty()).then_some(&mut self.entries) else {
+            return;
+        };
+
+        entries.remove(self.selected);
+        self.selected = self
+            .selected
+            .min(entries.len().saturating_sub(LAST_ENTRY_OFFSET));
+
+        if self.save_entries().is_err() {
+            self.show_error(&AuthError::SaveError.to_string());
         }
     }
 
@@ -305,13 +308,10 @@ impl App {
     }
 
     fn read_file_contents(&mut self, path: &Path) -> String {
-        match fs::read_to_string(path) {
-            Ok(contents) => contents,
-            Err(_) => {
-                self.show_error(&AuthError::ReadError.to_string());
-                String::new()
-            }
-        }
+        fs::read_to_string(path).unwrap_or_else(|_| {
+            self.show_error(&AuthError::ReadError.to_string());
+            String::new()
+        })
     }
 
     fn parse_toml_contents(&mut self, contents: String) -> AuthResult<Entries> {
@@ -319,13 +319,10 @@ impl App {
             return Ok(Entries { entries: vec![] });
         }
 
-        match toml::from_str(&contents) {
-            Ok(entries) => Ok(entries),
-            Err(_) => {
-                self.show_error(&AuthError::ParseError.to_string());
-                Ok(Entries { entries: vec![] })
-            }
-        }
+        Ok(toml::from_str(&contents).unwrap_or_else(|_| {
+            self.show_error(&AuthError::ParseError.to_string());
+            Entries { entries: vec![] }
+        }))
     }
 
     fn merge_and_save_entries(&mut self, entries: Entries) -> AuthResult<()> {
@@ -395,11 +392,10 @@ impl App {
             return Ok(());
         }
 
-        if fs::write(path, contents).is_err() {
+        fs::write(path, contents).map_err(|_| {
             self.show_error(&AuthError::WriteError.to_string());
-            return Ok(());
-        }
-        Ok(())
+            AuthError::WriteError
+        })
     }
 
     pub fn handle_events(&mut self, event: Event) -> AuthResult<()> {
@@ -422,16 +418,7 @@ impl App {
         }
     }
 
-    fn handle_normal_mode(&mut self, key: ratatui::crossterm::event::KeyEvent) -> AuthResult<()> {
-        if self.check_control_quit(key) {
-            return Ok(());
-        }
-
-        self.handle_normal_key(key)?;
-        Ok(())
-    }
-
-    fn handle_normal_key(&mut self, key: ratatui::crossterm::event::KeyEvent) -> AuthResult<()> {
+    fn handle_normal_mode(&mut self, key: KeyEvent) -> AuthResult<()> {
         match key.code {
             KeyCode::Char('q') => self.should_quit = true,
             KeyCode::Char('j') | KeyCode::Down => self.next_entry(),
@@ -447,7 +434,7 @@ impl App {
         Ok(())
     }
 
-    fn check_control_quit(&mut self, key: ratatui::crossterm::event::KeyEvent) -> bool {
+    fn check_control_quit(&mut self, key: KeyEvent) -> bool {
         if matches!(key.code, KeyCode::Char('q') | KeyCode::Char('c'))
             && key.modifiers.contains(KeyModifiers::CONTROL)
         {
@@ -457,7 +444,7 @@ impl App {
         false
     }
 
-    fn handle_entry_mode(&mut self, key: ratatui::crossterm::event::KeyEvent) -> AuthResult<()> {
+    fn handle_entry_mode(&mut self, key: KeyEvent) -> AuthResult<()> {
         match key.code {
             KeyCode::Esc => self.reset_entry_state(),
             KeyCode::Enter => self.process_entry_input()?,
@@ -477,7 +464,7 @@ impl App {
         };
     }
 
-    fn handle_file_mode(&mut self, key: ratatui::crossterm::event::KeyEvent) -> AuthResult<()> {
+    fn handle_file_mode(&mut self, key: KeyEvent) -> AuthResult<()> {
         match key.code {
             KeyCode::Esc => self.reset_file_mode(),
             KeyCode::Enter => self.process_file_mode_input()?,
@@ -510,15 +497,14 @@ impl App {
     }
 
     fn reset_entry_state(&mut self) {
-        let current_mode = self.input_mode.clone();
+        let fields = match self.input_mode {
+            InputMode::Adding => (&mut self.new_entry_name, &mut self.new_entry_secret),
+            _ => (&mut self.edit_entry_name, &mut self.edit_entry_secret),
+        };
+
         self.input_mode = InputMode::Normal;
-        if current_mode == InputMode::Adding {
-            self.new_entry_name.clear();
-            self.new_entry_secret.clear();
-        } else {
-            self.edit_entry_name.clear();
-            self.edit_entry_secret.clear();
-        }
+        fields.0.clear();
+        fields.1.clear();
         self.input_field = NAME_FIELD;
     }
 
@@ -575,14 +561,11 @@ impl App {
     }
 
     fn get_current_field(&mut self) -> &mut String {
-        let is_adding = matches!(self.input_mode, InputMode::Adding);
-        let is_name_field = self.input_field == NAME_FIELD;
-
-        match (is_adding, is_name_field) {
-            (true, true) => &mut self.new_entry_name,
-            (true, false) => &mut self.new_entry_secret,
-            (false, true) => &mut self.edit_entry_name,
-            (false, false) => &mut self.edit_entry_secret,
+        match (self.input_mode.clone(), self.input_field == NAME_FIELD) {
+            (InputMode::Adding, true) => &mut self.new_entry_name,
+            (InputMode::Adding, false) => &mut self.new_entry_secret,
+            (_, true) => &mut self.edit_entry_name,
+            (_, false) => &mut self.edit_entry_secret,
         }
     }
 
@@ -622,27 +605,30 @@ impl App {
     }
 
     fn start_editing(&mut self) {
-        if !self.entries.is_empty() {
-            let entry = &self.entries[self.selected];
-            self.edit_entry_name = entry.name.clone();
-            self.edit_entry_secret = entry.secret.clone();
-            self.input_mode = InputMode::Editing;
-            self.input_field = NAME_FIELD;
-        }
+        let Some(entry) = (!self.entries.is_empty()).then_some(&self.entries[self.selected]) else {
+            return;
+        };
+
+        self.edit_entry_name = entry.name.clone();
+        self.edit_entry_secret = entry.secret.clone();
+        self.input_mode = InputMode::Editing;
+        self.input_field = NAME_FIELD;
     }
 
     fn next_entry(&mut self) {
-        if !self.entries.is_empty() {
-            self.selected = (self.selected + NEXT_ENTRY_STEP) % self.entries.len();
-        }
+        let Some(len) = (!self.entries.is_empty()).then_some(self.entries.len()) else {
+            return;
+        };
+        self.selected = (self.selected + NEXT_ENTRY_STEP) % len;
     }
 
     fn previous_entry(&mut self) {
-        if !self.entries.is_empty() {
-            self.selected = self
-                .selected
-                .checked_sub(LAST_ENTRY_INDEX)
-                .unwrap_or(self.entries.len() - LAST_ENTRY_INDEX);
-        }
+        let Some(len) = (!self.entries.is_empty()).then_some(self.entries.len()) else {
+            return;
+        };
+        self.selected = self
+            .selected
+            .checked_sub(LAST_ENTRY_INDEX)
+            .unwrap_or(len - LAST_ENTRY_INDEX);
     }
 }
