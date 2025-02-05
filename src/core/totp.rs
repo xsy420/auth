@@ -14,6 +14,10 @@ pub fn generate_totp(secret: &str) -> Result<(String, u64)> {
 }
 
 fn normalize_secret(secret: &str) -> String {
+    if secret.is_empty() {
+        return String::new();
+    }
+
     let mut secret = secret.replace(' ', "").to_uppercase();
     while secret.len() % SECRET_PADDING_BLOCK != REMAINDER_ZERO {
         secret.push(SECRET_PAD_CHAR);
@@ -22,6 +26,10 @@ fn normalize_secret(secret: &str) -> String {
 }
 
 fn decode_and_pad_secret(secret: &str) -> Result<Vec<u8>> {
+    if secret.is_empty() {
+        return Err(anyhow::anyhow!(INVALID_KEY_ERROR));
+    }
+
     let decoded = base32::decode(base32::Alphabet::Rfc4648 { padding: true }, secret)
         .ok_or_else(|| anyhow::anyhow!(INVALID_KEY_ERROR))?;
 

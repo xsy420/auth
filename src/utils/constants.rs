@@ -78,6 +78,20 @@ pub const XCLIP_COMMAND: &str = "xclip";
 pub const WAYLAND_COPY_COMMAND: &str = "wl-copy";
 pub const TOML_EXT: &str = "toml";
 pub const WAYLAND_DISPLAY: &str = "WAYLAND_DISPLAY";
+pub const TEST_HOME_FILE: &str = "test.toml";
+pub const TEST_ENV_PATH: &str = "/tmp/test";
+pub const TEST_ENV_VAR: &str = "TEST_PATH";
+pub const TEST_ENV_FILE: &str = "file.toml";
+pub const TEST_ABSOLUTE_PATH: &str = "/absolute/path/file.toml";
+pub const TEST_VALID_NAME: &str = "Test Entry";
+pub const TEST_VALID_SECRET: &str = "JBSWY3DPEHPK3PXP";
+pub const TEST_INVALID_NAME: &str = "Invalid Entry";
+pub const TEST_INVALID_SECRET: &str = "invalid!@#$";
+pub const TEST_PADDED_SECRET: &str = "JBSW";
+pub const TEST_NORMALIZED_SECRET: &str = "jbsw y3dp";
+pub const TEST_CODE_LENGTH: usize = 6;
+pub const TEST_MAX_REMAINING: u64 = 30;
+pub const TEST_MIN_REMAINING: u64 = 1;
 
 pub const ROOT_WARNING: &[&str] = &[
     "Running as root is not supported",
