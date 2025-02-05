@@ -1,8 +1,10 @@
-use crate::{core::app::App, utils::constants::FIRST_ENTRY_ROW};
-use anyhow::Result;
+use crate::{
+    core::app::App,
+    utils::{constants::FIRST_ENTRY_ROW, error::AuthResult},
+};
 use ratatui::crossterm::event::{MouseEvent, MouseEventKind};
 
-pub fn handle_mouse_event(app: &mut App, event: MouseEvent) -> Result<()> {
+pub fn handle_mouse_event(app: &mut App, event: MouseEvent) -> AuthResult<()> {
     match event.kind {
         MouseEventKind::Down(_) => handle_mouse_click(app),
         MouseEventKind::Moved => handle_mouse_hover(app, event.row as usize),
@@ -10,11 +12,11 @@ pub fn handle_mouse_event(app: &mut App, event: MouseEvent) -> Result<()> {
     }
 }
 
-fn handle_mouse_click(app: &mut App) -> Result<()> {
+fn handle_mouse_click(app: &mut App) -> AuthResult<()> {
     app.copy_current_code()
 }
 
-fn handle_mouse_hover(app: &mut App, row: usize) -> Result<()> {
+fn handle_mouse_hover(app: &mut App, row: usize) -> AuthResult<()> {
     if row >= FIRST_ENTRY_ROW && row < app.entries.len() + FIRST_ENTRY_ROW {
         app.selected = row - FIRST_ENTRY_ROW;
     }

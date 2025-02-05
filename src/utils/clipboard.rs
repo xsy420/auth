@@ -1,14 +1,14 @@
 use crate::utils::{
     command::CommandExt,
     constants::{
-        CLIPBOARD_ERROR, CLIPBOARD_SLEEP_DURATION, WAYLAND_COPY_COMMAND, WAYLAND_DISPLAY,
-        XCLIP_CLIPBOARD_ARG, XCLIP_COMMAND, XCLIP_IN_ARG, XCLIP_SELECTION_ARG,
+        CLIPBOARD_SLEEP_DURATION, WAYLAND_COPY_COMMAND, WAYLAND_DISPLAY, XCLIP_CLIPBOARD_ARG,
+        XCLIP_COMMAND, XCLIP_IN_ARG, XCLIP_SELECTION_ARG,
     },
+    error::{AuthError, AuthResult},
 };
-use anyhow::Result;
 use std::{process::Command, sync::mpsc, thread, time::Duration};
 
-pub fn copy_to_clipboard(text: String) -> Result<()> {
+pub fn copy_to_clipboard(text: String) -> AuthResult<()> {
     let (tx, rx) = mpsc::channel();
     spawn_clipboard_thread(text, tx);
     check_clipboard_result(rx)
@@ -62,7 +62,7 @@ fn try_xclip_copy(text: &str) -> bool {
         .is_ok()
 }
 
-fn check_clipboard_result(rx: mpsc::Receiver<()>) -> Result<()> {
+fn check_clipboard_result(rx: mpsc::Receiver<()>) -> AuthResult<()> {
     thread::sleep(Duration::from_millis(CLIPBOARD_SLEEP_DURATION));
-    rx.try_recv().map_err(|_| anyhow::anyhow!(CLIPBOARD_ERROR))
+    rx.try_recv().map_err(|_| AuthError::ClipboardError)
 }

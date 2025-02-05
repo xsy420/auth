@@ -10,6 +10,7 @@ pub mod utils {
     pub mod clipboard;
     pub mod command;
     pub mod constants;
+    pub mod error;
 }
 
 pub mod input {
@@ -26,3 +27,4 @@ pub mod ui {
 }
 
 pub use core::app::App;
+pub use utils::error::{AuthError, AuthResult};

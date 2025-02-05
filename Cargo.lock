@@ -112,12 +112,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "anyhow"
-version = "1.0.95"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34ac096ce696dc2fcabef30516bb13c0a68a11d30131d3df6f04711467681b04"
-
-[[package]]
 name = "arc-swap"
 version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -128,7 +122,6 @@ name = "auth"
 version = "0.2.1"
 dependencies = [
  "age",
- "anyhow",
  "base32 0.5.1",
  "clap",
  "dirs",
@@ -136,6 +129,7 @@ dependencies = [
  "ratatui",
  "secrecy",
  "serde",
+ "thiserror 2.0.11",
  "toml 0.8.19",
  "totp-rs",
 ]

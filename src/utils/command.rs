@@ -1,4 +1,4 @@
-use crate::utils::constants::CLIPBOARD_ERROR;
+use crate::utils::error::AuthError;
 use std::process::Command;
 
 pub trait CommandExt {
@@ -25,7 +25,12 @@ impl CommandExt for Command {
     fn spawn_with_stdin(&mut self) -> std::io::Result<std::process::Child> {
         self.stdin(std::process::Stdio::piped())
             .spawn()
-            .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, CLIPBOARD_ERROR))
+            .map_err(|_| {
+                std::io::Error::new(
+                    std::io::ErrorKind::Other,
+                    AuthError::ClipboardSpawnError.to_string(),
+                )
+            })
     }
 
     fn write_input_to_child(
@@ -39,16 +44,23 @@ impl CommandExt for Command {
         };
 
         let mut stdin = stdin;
-        std::io::Write::write_all(&mut stdin, input)
-            .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, CLIPBOARD_ERROR))
+        std::io::Write::write_all(&mut stdin, input).map_err(|_| {
+            std::io::Error::new(
+                std::io::ErrorKind::Other,
+                AuthError::ClipboardWriteError.to_string(),
+            )
+        })
     }
 
     fn wait_for_child_output(
         &self,
         child: std::process::Child,
     ) -> std::io::Result<std::process::Output> {
-        child
-            .wait_with_output()
-            .map_err(|_| std::io::Error::new(std::io::ErrorKind::Other, CLIPBOARD_ERROR))
+        child.wait_with_output().map_err(|_| {
+            std::io::Error::new(
+                std::io::ErrorKind::Other,
+                AuthError::ClipboardWaitError.to_string(),
+            )
+        })
     }
 }

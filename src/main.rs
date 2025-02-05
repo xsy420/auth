@@ -1,9 +1,8 @@
-use anyhow::Result;
 use auth::{
     core::app::App,
     input::{event, root},
     ui::core::draw,
-    utils::cli,
+    utils::{cli, error::AuthResult},
 };
 use ratatui::crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
@@ -11,7 +10,7 @@ use ratatui::crossterm::{
 };
 use std::io::stdout;
 
-fn main() -> Result<()> {
+fn main() -> AuthResult<()> {
     let args = cli::parse_args();
 
     if !args.no_root_check && root::check_root() {

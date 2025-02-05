@@ -7,16 +7,13 @@ use crate::{
     utils::{
         clipboard::copy_to_clipboard,
         constants::{
-            AUTH_DIR_NAME, CLIPBOARD_ERROR, CREATE_DIR_ERROR, CRYPTO_INIT_ERROR, DECRYPT_ERROR,
-            DIRECTORY_ERROR, EMPTY_ENTRY_ERROR, EMPTY_EXPORT_ERROR, ENCRYPTOR_ERROR, ENTRIES_FILE,
-            ENV_VAR_OFFSET, FILE_NOT_EXIST_ERROR, HOME_DIR_ERROR, HOME_PREFIX_LEN,
-            LAST_ENTRY_INDEX, LAST_ENTRY_OFFSET, NAME_FIELD, NEXT_ENTRY_STEP, NO_FILENAME_ERROR,
-            PARSE_ERROR, PATH_SEPARATOR_OFFSET, READ_ERROR, SAVE_ERROR, SECRET_FIELD,
-            SERIALIZE_ERROR, SINGLE_CHAR_PATH, TOML_EXT, TOML_EXT_ERROR, UTF8_ERROR, WRITE_ERROR,
+            AUTH_DIR_NAME, ENTRIES_FILE, ENV_VAR_OFFSET, HOME_PREFIX_LEN, LAST_ENTRY_INDEX,
+            LAST_ENTRY_OFFSET, NAME_FIELD, NEXT_ENTRY_STEP, PATH_SEPARATOR_OFFSET, SECRET_FIELD,
+            SINGLE_CHAR_PATH, TOML_EXT,
         },
     },
+    AuthError, AuthResult,
 };
-use anyhow::Result;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 use std::{
     env, fs,
@@ -51,7 +48,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new() -> Result<Self> {
+    pub fn new() -> AuthResult<Self> {
         let auth_dir = Self::get_auth_directory()?;
         let entries_path = auth_dir.join(ENTRIES_FILE);
         let crypto = Self::initialize_crypto(&auth_dir)?;
@@ -61,17 +58,17 @@ impl App {
         Ok(app)
     }
 
-    fn get_auth_directory() -> Result<PathBuf> {
-        let home = dirs::home_dir().ok_or_else(|| anyhow::anyhow!(HOME_DIR_ERROR))?;
+    fn get_auth_directory() -> AuthResult<PathBuf> {
+        let home = dirs::home_dir().ok_or(AuthError::HomeDirError)?;
         let auth_dir = home.join(AUTH_DIR_NAME);
 
-        fs::create_dir_all(&auth_dir).map_err(|_| anyhow::anyhow!(CREATE_DIR_ERROR))?;
+        fs::create_dir_all(&auth_dir).map_err(|_| AuthError::CreateDirError)?;
 
         Ok(auth_dir)
     }
 
-    fn initialize_crypto(auth_dir: &Path) -> Result<Crypto> {
-        Crypto::new(auth_dir).map_err(|_| anyhow::anyhow!(CRYPTO_INIT_ERROR))
+    fn initialize_crypto(auth_dir: &Path) -> AuthResult<Crypto> {
+        Crypto::new(auth_dir).map_err(|_| AuthError::CryptoInitError)
     }
 
     fn create_initial_app(entries_path: PathBuf, crypto: Crypto) -> App {
@@ -95,11 +92,11 @@ impl App {
 
     fn try_load_entries(app: &mut App) {
         if app.load_entries().is_err() {
-            app.show_error(READ_ERROR);
+            app.show_error(&AuthError::ReadError.to_string());
         }
     }
 
-    fn load_entries(&mut self) -> Result<()> {
+    fn load_entries(&mut self) -> AuthResult<()> {
         if !self.entries_path.exists() {
             return Ok(());
         }
@@ -112,72 +109,72 @@ impl App {
         Ok(())
     }
 
-    fn read_encrypted_file(&mut self) -> Result<Vec<u8>> {
+    fn read_encrypted_file(&mut self) -> AuthResult<Vec<u8>> {
         fs::read(&self.entries_path).map_err(|_| {
-            self.show_error(READ_ERROR);
-            anyhow::anyhow!(READ_ERROR)
+            self.show_error(&AuthError::ReadError.to_string());
+            AuthError::ReadError
         })
     }
 
-    fn decrypt_data(&mut self, encrypted: &[u8]) -> Result<Vec<u8>> {
+    fn decrypt_data(&mut self, encrypted: &[u8]) -> AuthResult<Vec<u8>> {
         self.crypto.decrypt(encrypted).map_err(|_| {
-            self.show_error(DECRYPT_ERROR);
-            anyhow::anyhow!(DECRYPT_ERROR)
+            self.show_error(&AuthError::DecryptError.to_string());
+            AuthError::DecryptError
         })
     }
 
-    fn parse_utf8(&mut self, data: &[u8]) -> Result<String> {
+    fn parse_utf8(&mut self, data: &[u8]) -> AuthResult<String> {
         String::from_utf8(data.to_vec()).map_err(|_| {
-            self.show_error(UTF8_ERROR);
-            anyhow::anyhow!(UTF8_ERROR)
+            self.show_error(&AuthError::Utf8Error.to_string());
+            AuthError::Utf8Error
         })
     }
 
-    fn parse_entries(&mut self, contents: &str) -> Result<()> {
+    fn parse_entries(&mut self, contents: &str) -> AuthResult<()> {
         let entries = toml::from_str::<Entries>(contents).map_err(|_| {
-            self.show_error(PARSE_ERROR);
-            anyhow::anyhow!(PARSE_ERROR)
+            self.show_error(&AuthError::ParseError.to_string());
+            AuthError::ParseError
         })?;
 
         self.entries = entries.entries;
         Ok(())
     }
 
-    pub fn save_entries(&mut self) -> Result<()> {
+    pub fn save_entries(&mut self) -> AuthResult<()> {
         let contents = self.serialize_entries()?;
         let encrypted = self.encrypt_contents(&contents)?;
         self.write_encrypted_file(&encrypted)?;
         Ok(())
     }
 
-    fn serialize_entries(&mut self) -> Result<String> {
+    fn serialize_entries(&mut self) -> AuthResult<String> {
         let entries = Entries {
             entries: self.entries.clone(),
         };
 
         toml::to_string_pretty(&entries).map_err(|_| {
-            self.show_error(SERIALIZE_ERROR);
-            anyhow::anyhow!(SERIALIZE_ERROR)
+            self.show_error(&AuthError::SerializeError.to_string());
+            AuthError::SerializeError
         })
     }
 
-    fn encrypt_contents(&mut self, contents: &str) -> Result<Vec<u8>> {
+    fn encrypt_contents(&mut self, contents: &str) -> AuthResult<Vec<u8>> {
         self.crypto.encrypt(contents.as_bytes()).map_err(|_| {
-            self.show_error(ENCRYPTOR_ERROR);
-            anyhow::anyhow!(ENCRYPTOR_ERROR)
+            self.show_error(&AuthError::EncryptorError.to_string());
+            AuthError::EncryptorError
         })
     }
 
-    fn write_encrypted_file(&mut self, encrypted: &[u8]) -> Result<()> {
+    fn write_encrypted_file(&mut self, encrypted: &[u8]) -> AuthResult<()> {
         fs::write(&self.entries_path, encrypted).map_err(|_| {
-            self.show_error(WRITE_ERROR);
-            anyhow::anyhow!(WRITE_ERROR)
+            self.show_error(&AuthError::WriteError.to_string());
+            AuthError::WriteError
         })
     }
 
-    pub fn add_entry(&mut self) -> Result<()> {
+    pub fn add_entry(&mut self) -> AuthResult<()> {
         if self.new_entry_name.is_empty() || self.new_entry_secret.is_empty() {
-            self.show_error(EMPTY_ENTRY_ERROR);
+            self.show_error(&AuthError::EmptyEntryError.to_string());
             return Ok(());
         }
         self.entries.push(Entry {
@@ -185,7 +182,7 @@ impl App {
             secret: self.new_entry_secret.clone(),
         });
         if self.save_entries().is_err() {
-            self.show_error(SAVE_ERROR);
+            self.show_error(&AuthError::SaveError.to_string());
         }
         Ok(())
     }
@@ -197,12 +194,12 @@ impl App {
                 self.selected = self.entries.len() - LAST_ENTRY_OFFSET;
             }
             if self.save_entries().is_err() {
-                self.show_error(SAVE_ERROR);
+                self.show_error(&AuthError::SaveError.to_string());
             }
         }
     }
 
-    pub fn copy_current_code(&mut self) -> Result<()> {
+    pub fn copy_current_code(&mut self) -> AuthResult<()> {
         if self.entries.is_empty() {
             return Ok(());
         }
@@ -211,12 +208,12 @@ impl App {
         Ok(())
     }
 
-    fn try_copy_code(&mut self) -> Result<()> {
+    fn try_copy_code(&mut self) -> AuthResult<()> {
         let entry = &self.entries[self.selected];
         let (code, _) = entry.generate_totp_with_time();
 
         if copy_to_clipboard(code).is_err() {
-            self.show_error(CLIPBOARD_ERROR);
+            self.show_error(&AuthError::ClipboardError.to_string());
             return Ok(());
         }
 
@@ -272,7 +269,7 @@ impl App {
             .map(|val| PathBuf::from(val).join(rest.trim_start_matches('/')))
     }
 
-    pub fn import_entries(&mut self) -> Result<()> {
+    pub fn import_entries(&mut self) -> AuthResult<()> {
         if self.path_input.is_empty() {
             return Ok(());
         }
@@ -284,13 +281,13 @@ impl App {
         Ok(())
     }
 
-    fn get_validated_import_path(&mut self) -> Result<PathBuf> {
+    fn get_validated_import_path(&mut self) -> AuthResult<PathBuf> {
         let path = self.expand_path(&self.path_input);
         self.validate_import_path(&path)?;
         Ok(path)
     }
 
-    fn read_and_parse_entries(&mut self, path: &Path) -> Result<Entries> {
+    fn read_and_parse_entries(&mut self, path: &Path) -> AuthResult<Entries> {
         if !self.validate_file_exists(path) {
             return Ok(Entries { entries: vec![] });
         }
@@ -301,7 +298,7 @@ impl App {
 
     fn validate_file_exists(&mut self, path: &Path) -> bool {
         if !path.exists() {
-            self.show_error(FILE_NOT_EXIST_ERROR);
+            self.show_error(&AuthError::FileNotExistError.to_string());
             return false;
         }
         true
@@ -311,13 +308,13 @@ impl App {
         match fs::read_to_string(path) {
             Ok(contents) => contents,
             Err(_) => {
-                self.show_error(READ_ERROR);
+                self.show_error(&AuthError::ReadError.to_string());
                 String::new()
             }
         }
     }
 
-    fn parse_toml_contents(&mut self, contents: String) -> Result<Entries> {
+    fn parse_toml_contents(&mut self, contents: String) -> AuthResult<Entries> {
         if contents.is_empty() {
             return Ok(Entries { entries: vec![] });
         }
@@ -325,49 +322,49 @@ impl App {
         match toml::from_str(&contents) {
             Ok(entries) => Ok(entries),
             Err(_) => {
-                self.show_error(PARSE_ERROR);
+                self.show_error(&AuthError::ParseError.to_string());
                 Ok(Entries { entries: vec![] })
             }
         }
     }
 
-    fn merge_and_save_entries(&mut self, entries: Entries) -> Result<()> {
+    fn merge_and_save_entries(&mut self, entries: Entries) -> AuthResult<()> {
         self.entries.extend(entries.entries);
 
         if self.save_entries().is_err() {
-            self.show_error(SAVE_ERROR);
+            self.show_error(&AuthError::SaveError.to_string());
         }
 
         Ok(())
     }
 
-    fn validate_import_path(&mut self, path: &Path) -> Result<()> {
+    fn validate_import_path(&mut self, path: &Path) -> AuthResult<()> {
         if !path.exists() {
-            self.show_error(FILE_NOT_EXIST_ERROR);
+            self.show_error(&AuthError::FileNotExistError.to_string());
             return Ok(());
         }
 
         if path.is_dir() {
-            self.show_error(DIRECTORY_ERROR);
+            self.show_error(&AuthError::DirectoryError.to_string());
             return Ok(());
         }
 
         if path.extension().is_none_or(|ext| ext != TOML_EXT) {
-            self.show_error(TOML_EXT_ERROR);
+            self.show_error(&AuthError::TomlExtError.to_string());
             return Ok(());
         }
 
         Ok(())
     }
 
-    pub fn export_entries(&mut self) -> Result<()> {
+    pub fn export_entries(&mut self) -> AuthResult<()> {
         if self.path_input.is_empty() {
-            self.show_error(NO_FILENAME_ERROR);
+            self.show_error(&AuthError::NoFilenameError.to_string());
             return Ok(());
         }
 
         if self.entries.is_empty() {
-            self.show_error(EMPTY_EXPORT_ERROR);
+            self.show_error(&AuthError::EmptyExportError.to_string());
             return Ok(());
         }
 
@@ -378,11 +375,11 @@ impl App {
         Ok(())
     }
 
-    fn get_validated_export_path(&mut self) -> Result<PathBuf> {
+    fn get_validated_export_path(&mut self) -> AuthResult<PathBuf> {
         let mut path = self.expand_path(&self.path_input);
 
         if path.is_dir() || self.path_input.ends_with('/') || self.path_input.ends_with('\\') {
-            self.show_error(NO_FILENAME_ERROR);
+            self.show_error(&AuthError::NoFilenameError.to_string());
             return Ok(path);
         }
 
@@ -392,20 +389,20 @@ impl App {
         Ok(path)
     }
 
-    fn write_export_file(&mut self, path: &Path, contents: &str) -> Result<()> {
+    fn write_export_file(&mut self, path: &Path, contents: &str) -> AuthResult<()> {
         if path.is_dir() {
-            self.show_error(DIRECTORY_ERROR);
+            self.show_error(&AuthError::DirectoryError.to_string());
             return Ok(());
         }
 
         if fs::write(path, contents).is_err() {
-            self.show_error(WRITE_ERROR);
+            self.show_error(&AuthError::WriteError.to_string());
             return Ok(());
         }
         Ok(())
     }
 
-    pub fn handle_events(&mut self, event: Event) -> Result<()> {
+    pub fn handle_events(&mut self, event: Event) -> AuthResult<()> {
         match event {
             Event::Key(key) => self.handle_key_event(key),
             Event::Mouse(mouse) => mouse::handle_mouse_event(self, mouse),
@@ -413,7 +410,7 @@ impl App {
         }
     }
 
-    fn handle_key_event(&mut self, key: KeyEvent) -> Result<()> {
+    fn handle_key_event(&mut self, key: KeyEvent) -> AuthResult<()> {
         if self.check_control_quit(key) {
             return Ok(());
         }
@@ -425,7 +422,7 @@ impl App {
         }
     }
 
-    fn handle_normal_mode(&mut self, key: ratatui::crossterm::event::KeyEvent) -> Result<()> {
+    fn handle_normal_mode(&mut self, key: ratatui::crossterm::event::KeyEvent) -> AuthResult<()> {
         if self.check_control_quit(key) {
             return Ok(());
         }
@@ -434,7 +431,7 @@ impl App {
         Ok(())
     }
 
-    fn handle_normal_key(&mut self, key: ratatui::crossterm::event::KeyEvent) -> Result<()> {
+    fn handle_normal_key(&mut self, key: ratatui::crossterm::event::KeyEvent) -> AuthResult<()> {
         match key.code {
             KeyCode::Char('q') => self.should_quit = true,
             KeyCode::Char('j') | KeyCode::Down => self.next_entry(),
@@ -460,7 +457,7 @@ impl App {
         false
     }
 
-    fn handle_entry_mode(&mut self, key: ratatui::crossterm::event::KeyEvent) -> Result<()> {
+    fn handle_entry_mode(&mut self, key: ratatui::crossterm::event::KeyEvent) -> AuthResult<()> {
         match key.code {
             KeyCode::Esc => self.reset_entry_state(),
             KeyCode::Enter => self.process_entry_input()?,
@@ -480,7 +477,7 @@ impl App {
         };
     }
 
-    fn handle_file_mode(&mut self, key: ratatui::crossterm::event::KeyEvent) -> Result<()> {
+    fn handle_file_mode(&mut self, key: ratatui::crossterm::event::KeyEvent) -> AuthResult<()> {
         match key.code {
             KeyCode::Esc => self.reset_file_mode(),
             KeyCode::Enter => self.process_file_mode_input()?,
@@ -498,13 +495,13 @@ impl App {
         self.path_input.clear();
     }
 
-    fn process_file_mode_input(&mut self) -> Result<()> {
+    fn process_file_mode_input(&mut self) -> AuthResult<()> {
         self.handle_file_operation()?;
         self.reset_file_mode();
         Ok(())
     }
 
-    fn handle_file_operation(&mut self) -> Result<()> {
+    fn handle_file_operation(&mut self) -> AuthResult<()> {
         match self.input_mode {
             InputMode::Importing => self.import_entries(),
             InputMode::Exporting => self.export_entries(),
@@ -525,7 +522,7 @@ impl App {
         self.input_field = NAME_FIELD;
     }
 
-    fn process_entry_input(&mut self) -> Result<()> {
+    fn process_entry_input(&mut self) -> AuthResult<()> {
         if self.is_name_field() {
             self.switch_to_secret_field();
             return Ok(());
@@ -537,7 +534,7 @@ impl App {
         self.input_field == NAME_FIELD
     }
 
-    fn handle_final_entry_input(&mut self) -> Result<()> {
+    fn handle_final_entry_input(&mut self) -> AuthResult<()> {
         match self.input_mode {
             InputMode::Adding => self.handle_add_entry()?,
             InputMode::Editing => self.handle_edit_entry()?,
@@ -547,13 +544,13 @@ impl App {
         Ok(())
     }
 
-    fn handle_add_entry(&mut self) -> Result<()> {
+    fn handle_add_entry(&mut self) -> AuthResult<()> {
         self.add_entry()?;
         self.reset_entry_state();
         Ok(())
     }
 
-    fn handle_edit_entry(&mut self) -> Result<()> {
+    fn handle_edit_entry(&mut self) -> AuthResult<()> {
         self.edit_entry()?;
         self.reset_entry_state();
         Ok(())
@@ -589,7 +586,7 @@ impl App {
         }
     }
 
-    fn edit_entry(&mut self) -> Result<()> {
+    fn edit_entry(&mut self) -> AuthResult<()> {
         if self.entries.is_empty() {
             return Ok(());
         }
@@ -603,9 +600,9 @@ impl App {
         Ok(())
     }
 
-    fn validate_edit_entry(&mut self) -> Result<bool> {
+    fn validate_edit_entry(&mut self) -> AuthResult<bool> {
         if self.edit_entry_name.is_empty() || self.edit_entry_secret.is_empty() {
-            self.show_error(EMPTY_ENTRY_ERROR);
+            self.show_error(&AuthError::EmptyEntryError.to_string());
             return Ok(false);
         }
         Ok(true)
@@ -620,7 +617,7 @@ impl App {
 
     fn try_save_entries(&mut self) {
         if self.save_entries().is_err() {
-            self.show_error(SAVE_ERROR);
+            self.show_error(&AuthError::SaveError.to_string());
         }
     }
 

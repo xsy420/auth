@@ -2,8 +2,8 @@ use crate::{
     input::event::poll_event,
     ui::layout::centered_rect,
     utils::constants::{POPUP_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT, ROOT_WARNING, WARNING_TITLE},
+    AuthResult,
 };
-use anyhow::Result;
 use nix::unistd::Uid;
 use ratatui::{
     crossterm::event::Event,
@@ -15,7 +15,7 @@ pub fn check_root() -> bool {
     Uid::effective().is_root()
 }
 
-pub fn show_root_warning() -> Result<()> {
+pub fn show_root_warning() -> AuthResult<()> {
     let mut terminal = ratatui::init();
     terminal.clear()?;
 
@@ -76,7 +76,7 @@ impl Widget for WarningWidget<'_> {
     }
 }
 
-fn render_warning(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>) -> Result<()> {
+fn render_warning(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>) -> AuthResult<()> {
     terminal.draw(|f| {
         let warning = WarningWidget::new(ROOT_WARNING);
         let popup_area = centered_rect(POPUP_WIDTH_PERCENT, POPUP_HEIGHT_PERCENT, f.area());
@@ -87,6 +87,6 @@ fn render_warning(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>) ->
     Ok(())
 }
 
-fn should_exit() -> Result<bool> {
+fn should_exit() -> AuthResult<bool> {
     Ok(matches!(poll_event()?, Some(Event::Key(_))))
 }
