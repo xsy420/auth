@@ -1,6 +1,6 @@
 use auth::{
     core::app::App,
-    input::{event, root},
+    input::{event, linux, root},
     ui::core::draw,
     utils::{cli, error::AuthResult},
 };
@@ -12,6 +12,11 @@ use std::io::stdout;
 
 fn main() -> AuthResult<()> {
     let args = cli::parse_args();
+
+    if !args.no_linux_check && !linux::check_linux() {
+        linux::show_linux_warning()?;
+        return Ok(());
+    }
 
     if !args.no_root_check && root::check_root() {
         root::show_root_warning()?;

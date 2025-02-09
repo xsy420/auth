@@ -7,6 +7,10 @@ pub struct Args {
     #[arg(long, short = 'r')]
     pub no_root_check: bool,
 
+    /// Skip Linux check
+    #[arg(long, short = 'l')]
+    pub no_linux_check: bool,
+
     /// Skip terminal size check
     #[arg(long, short = 's')]
     pub no_size_check: bool,
