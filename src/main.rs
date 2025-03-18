@@ -1,13 +1,10 @@
-use auth::{
-    auth_core::app::App,
-    input::{event, linux, root},
-    ui::core::draw,
-    utils::{cli, error::AuthResult},
-};
-use ratatui::crossterm::{
-    event::{DisableMouseCapture, EnableMouseCapture},
-    execute,
-};
+use auth::auth_core::app::App;
+use auth::input::{event, linux, root};
+use auth::ui::core::draw;
+use auth::utils::cli;
+use auth::utils::error::AuthResult;
+use ratatui::crossterm::event::{DisableMouseCapture, EnableMouseCapture};
+use ratatui::crossterm::execute;
 use std::io::stdout;
 
 fn main() -> AuthResult<()> {

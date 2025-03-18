@@ -1,9 +1,7 @@
 use crate::utils::constants::{TOTAL_PERCENTAGE, VERTICAL_PADDING_DIVISOR};
-use ratatui::{
-    prelude::*,
-    style::{Color, Style},
-    widgets::{Block, BorderType, Borders},
-};
+use ratatui::prelude::*;
+use ratatui::style::{Color, Style};
+use ratatui::widgets::{Block, BorderType, Borders};
 
 pub fn create_block(title: &str) -> Block {
     Block::default()

@@ -1,10 +1,8 @@
-use crate::{
-    AuthError, AuthResult,
-    utils::constants::{
-        MIN_SECRET_LENGTH, PADDING_BYTE, REMAINDER_ZERO, SECRET_PAD_CHAR, SECRET_PADDING_BLOCK,
-        TOTP_DIGITS, TOTP_PERIOD, TOTP_STEP,
-    },
+use crate::utils::constants::{
+    MIN_SECRET_LENGTH, PADDING_BYTE, REMAINDER_ZERO, SECRET_PAD_CHAR, SECRET_PADDING_BLOCK,
+    TOTP_DIGITS, TOTP_PERIOD, TOTP_STEP,
 };
+use crate::{AuthError, AuthResult};
 use std::time::{SystemTime, UNIX_EPOCH};
 use totp_rs::{Algorithm, TOTP};
 

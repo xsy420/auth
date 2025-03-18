@@ -1,10 +1,9 @@
-use auth::{
-    auth_core::app::App,
-    utils::constants::{
-        TEST_ABSOLUTE_PATH, TEST_ENV_FILE, TEST_ENV_PATH, TEST_ENV_VAR, TEST_HOME_FILE,
-    },
+use auth::auth_core::app::App;
+use auth::utils::constants::{
+    TEST_ABSOLUTE_PATH, TEST_ENV_FILE, TEST_ENV_PATH, TEST_ENV_VAR, TEST_HOME_FILE,
 };
-use std::{env, path::PathBuf};
+use std::env;
+use std::path::PathBuf;
 
 #[test]
 fn test_home_path_expansion() {

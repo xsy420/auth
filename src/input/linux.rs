@@ -1,14 +1,12 @@
-use crate::{
-    AuthResult,
-    input::event::poll_event,
-    ui::layout::centered_rect,
-    utils::constants::{LINUX_WARNING, POPUP_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT, WARNING_TITLE},
+use crate::AuthResult;
+use crate::input::event::poll_event;
+use crate::ui::layout::centered_rect;
+use crate::utils::constants::{
+    LINUX_WARNING, POPUP_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT, WARNING_TITLE,
 };
-use ratatui::{
-    crossterm::event::Event,
-    prelude::*,
-    widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget},
-};
+use ratatui::crossterm::event::Event;
+use ratatui::prelude::*;
+use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget};
 
 pub fn check_linux() -> bool {
     cfg!(target_os = "linux")

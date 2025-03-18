@@ -1,9 +1,7 @@
-use auth::{
-    auth_core::totp::generate_totp,
-    utils::constants::{
-        TEST_CODE_LENGTH, TEST_INVALID_SECRET, TEST_MAX_REMAINING, TEST_MIN_REMAINING,
-        TEST_NORMALIZED_SECRET, TEST_PADDED_SECRET, TEST_VALID_SECRET,
-    },
+use auth::auth_core::totp::generate_totp;
+use auth::utils::constants::{
+    TEST_CODE_LENGTH, TEST_INVALID_SECRET, TEST_MAX_REMAINING, TEST_MIN_REMAINING,
+    TEST_NORMALIZED_SECRET, TEST_PADDED_SECRET, TEST_VALID_SECRET,
 };
 
 #[test]

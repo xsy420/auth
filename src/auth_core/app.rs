@@ -1,25 +1,17 @@
-use crate::{
-    AuthError, AuthResult,
-    auth_core::{
-        crypto::Crypto,
-        entry::{Entries, Entry},
-    },
-    input::mouse,
-    utils::{
-        clipboard::copy_to_clipboard,
-        constants::{
-            AUTH_DIR_NAME, ENTRIES_FILE, ENV_VAR_OFFSET, HOME_PREFIX_LEN, LAST_ENTRY_INDEX,
-            LAST_ENTRY_OFFSET, NAME_FIELD, NEXT_ENTRY_STEP, PATH_SEPARATOR_OFFSET, SECRET_FIELD,
-            SINGLE_CHAR_PATH, TOML_EXT,
-        },
-    },
+use crate::auth_core::crypto::Crypto;
+use crate::auth_core::entry::{Entries, Entry};
+use crate::input::mouse;
+use crate::utils::clipboard::copy_to_clipboard;
+use crate::utils::constants::{
+    AUTH_DIR_NAME, ENTRIES_FILE, ENV_VAR_OFFSET, HOME_PREFIX_LEN, LAST_ENTRY_INDEX,
+    LAST_ENTRY_OFFSET, NAME_FIELD, NEXT_ENTRY_STEP, PATH_SEPARATOR_OFFSET, SECRET_FIELD,
+    SINGLE_CHAR_PATH, TOML_EXT,
 };
+use crate::{AuthError, AuthResult};
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
-use std::{
-    env, fs,
-    path::{Path, PathBuf},
-    time::SystemTime,
-};
+use std::path::{Path, PathBuf};
+use std::time::SystemTime;
+use std::{env, fs};
 
 #[derive(PartialEq, Clone)]
 pub enum InputMode {

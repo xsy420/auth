@@ -1,7 +1,6 @@
-use crate::{
-    auth_core::app::App,
-    utils::{constants::FIRST_ENTRY_ROW, error::AuthResult},
-};
+use crate::auth_core::app::App;
+use crate::utils::constants::FIRST_ENTRY_ROW;
+use crate::utils::error::AuthResult;
 use ratatui::crossterm::event::{MouseEvent, MouseEventKind};
 
 pub fn handle_mouse_event(app: &mut App, event: MouseEvent) -> AuthResult<()> {

@@ -1,24 +1,16 @@
-use crate::{
-    auth_core::{
-        app::{App, InputMode},
-        entry::Entry,
-    },
-    ui::{
-        layout::{centered_rect, create_block},
-        notification::get_notification_title,
-        size::check_terminal_size,
-    },
-    utils::constants::{
-        ADD_ENTRY_TITLE, BINDINGS_TITLE, CODE_WIDTH, CURSOR_CHAR, DEFAULT_NAME_WIDTH,
-        EDIT_ENTRY_TITLE, EMPTY_CURSOR, EXPORT_TITLE, HELP_BLOCK_HEIGHT, HELP_TEXT, IMPORT_TITLE,
-        MIN_BLOCK_HEIGHT, NAME_FIELD, NAME_LABEL, NAME_PADDING, PATH_LABEL, POPUP_HEIGHT_PERCENT,
-        POPUP_WIDTH_PERCENT, REMAINING_WIDTH, SECRET_FIELD, SECRET_LABEL,
-    },
+use crate::auth_core::app::{App, InputMode};
+use crate::auth_core::entry::Entry;
+use crate::ui::layout::{centered_rect, create_block};
+use crate::ui::notification::get_notification_title;
+use crate::ui::size::check_terminal_size;
+use crate::utils::constants::{
+    ADD_ENTRY_TITLE, BINDINGS_TITLE, CODE_WIDTH, CURSOR_CHAR, DEFAULT_NAME_WIDTH, EDIT_ENTRY_TITLE,
+    EMPTY_CURSOR, EXPORT_TITLE, HELP_BLOCK_HEIGHT, HELP_TEXT, IMPORT_TITLE, MIN_BLOCK_HEIGHT,
+    NAME_FIELD, NAME_LABEL, NAME_PADDING, PATH_LABEL, POPUP_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT,
+    REMAINING_WIDTH, SECRET_FIELD, SECRET_LABEL,
 };
-use ratatui::{
-    prelude::*,
-    widgets::{Clear, Paragraph},
-};
+use ratatui::prelude::*;
+use ratatui::widgets::{Clear, Paragraph};
 
 pub fn draw(frame: &mut Frame, app: &App, no_size_check: bool) {
     let area = frame.area();

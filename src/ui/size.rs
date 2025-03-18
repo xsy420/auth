@@ -1,5 +1,7 @@
-use crate::{ui::layout::pad_vertical, utils::constants::*};
-use ratatui::{prelude::*, widgets::Paragraph};
+use crate::ui::layout::pad_vertical;
+use crate::utils::constants::*;
+use ratatui::prelude::*;
+use ratatui::widgets::Paragraph;
 
 pub fn check_terminal_size(frame: &mut Frame, area: Rect) -> bool {
     if !is_terminal_too_small(area) {

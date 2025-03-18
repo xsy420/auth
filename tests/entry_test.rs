@@ -1,9 +1,7 @@
-use auth::{
-    auth_core::entry::Entry,
-    utils::constants::{
-        INVALID_LABEL, INVALID_REMAINING_TIME, TEST_CODE_LENGTH, TEST_INVALID_NAME,
-        TEST_INVALID_SECRET, TEST_MAX_REMAINING, TEST_VALID_NAME, TEST_VALID_SECRET,
-    },
+use auth::auth_core::entry::Entry;
+use auth::utils::constants::{
+    INVALID_LABEL, INVALID_REMAINING_TIME, TEST_CODE_LENGTH, TEST_INVALID_NAME,
+    TEST_INVALID_SECRET, TEST_MAX_REMAINING, TEST_VALID_NAME, TEST_VALID_SECRET,
 };
 
 #[test]

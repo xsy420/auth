@@ -1,12 +1,13 @@
-use crate::utils::{
-    command::CommandExt,
-    constants::{
-        CLIPBOARD_SLEEP_DURATION, WAYLAND_COPY_COMMAND, WAYLAND_DISPLAY, XCLIP_CLIPBOARD_ARG,
-        XCLIP_COMMAND, XCLIP_IN_ARG, XCLIP_SELECTION_ARG,
-    },
-    error::{AuthError, AuthResult},
+use crate::utils::command::CommandExt;
+use crate::utils::constants::{
+    CLIPBOARD_SLEEP_DURATION, WAYLAND_COPY_COMMAND, WAYLAND_DISPLAY, XCLIP_CLIPBOARD_ARG,
+    XCLIP_COMMAND, XCLIP_IN_ARG, XCLIP_SELECTION_ARG,
 };
-use std::{process::Command, sync::mpsc, thread, time::Duration};
+use crate::utils::error::{AuthError, AuthResult};
+use std::process::Command;
+use std::sync::mpsc;
+use std::thread;
+use std::time::Duration;
 
 pub fn copy_to_clipboard(text: String) -> AuthResult<()> {
     let (tx, rx) = mpsc::channel();
