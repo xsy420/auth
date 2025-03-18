@@ -202,6 +202,19 @@ impl App {
         }
     }
 
+    pub fn delete_all_entries(&mut self) {
+        if self.entries.is_empty() {
+            return;
+        }
+
+        self.entries.clear();
+        self.selected = 0;
+
+        if self.save_entries().is_err() {
+            self.show_error(&AuthError::SaveError.to_string());
+        }
+    }
+
     pub fn copy_current_code(&mut self) -> AuthResult<()> {
         if self.entries.is_empty() {
             return Ok(());
@@ -425,6 +438,7 @@ impl App {
             KeyCode::Char('k') | KeyCode::Up => self.previous_entry(),
             KeyCode::Char('a') => self.input_mode = InputMode::Adding,
             KeyCode::Char('E') => self.start_editing(),
+            KeyCode::Char('D') => self.delete_all_entries(),
             KeyCode::Char('d') => self.delete_entry(),
             KeyCode::Char('i') => self.input_mode = InputMode::Importing,
             KeyCode::Char('e') => self.input_mode = InputMode::Exporting,
