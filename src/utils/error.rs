@@ -45,9 +45,6 @@ pub enum AuthError {
     #[error("Failed to initialize encryption")]
     CryptoInitError,
 
-    #[error("Could not expand home directory")]
-    HomeDirExpandError,
-
     #[error("Empty entries are not allowed")]
     EmptyEntryError,
 
@@ -65,12 +62,6 @@ pub enum AuthError {
 
     #[error("File must have .toml extension")]
     TomlExtError,
-
-    #[error("Invalid path")]
-    InvalidPathError,
-
-    #[error("Failed to process clipboard operation")]
-    ClipboardProcessError,
 
     #[error("Failed to spawn clipboard process")]
     ClipboardSpawnError,

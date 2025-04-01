@@ -2,7 +2,7 @@
 .TH "auth" "1" "February 2025" "" "auth manual"
 
 .SH NAME
-auth \- terminal-based TOTP authenticator 🔐
+auth \- terminal-based TOTP authenticator
 
 .SH SYNOPSIS
 \fBauth [OPTIONS]\fR
@@ -79,6 +79,15 @@ Encrypted storage for TOTP entries
 \fI~/.local/share/auth/key\fR
 Encryption key file
 
+.SH ENVIRONMENT
+.TP
+\fBAUTH_ENTRIES_DIR\fR
+Override the default directory for storing auth data. If set, auth will use this directory instead of ~/.local/share/auth.
+
+.TP
+\fBAUTH_FILE_BROWSER_DIR\fR
+Override the default starting directory for the file browser. If set, the file browser will open in this directory instead of the home directory when importing or exporting.
+
 .SH SECURITY
 TOTP secrets are stored encrypted using the age encryption format.
 .br
@@ -88,7 +97,7 @@ The encryption key is stored separately from the entries file.
 Report bugs at: https://github.com/nnyyxxxx/auth/issues
 
 .SH COPYRIGHT
-Copyright (c) 2024 Nyx
+Copyright (c) 2025 Nyx
 .br
 License GPLv2: GNU GPL version 2 <https://gnu.org/licenses/gpl-2.0.html>
 .br

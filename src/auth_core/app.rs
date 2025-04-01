@@ -1,17 +1,15 @@
-use crate::auth_core::crypto::Crypto;
-use crate::auth_core::entry::{Entries, Entry};
-use crate::input::mouse;
-use crate::utils::clipboard::copy_to_clipboard;
-use crate::utils::constants::{
-    AUTH_DIR_NAME, ENTRIES_FILE, ENV_VAR_OFFSET, HOME_PREFIX_LEN, LAST_ENTRY_INDEX,
-    LAST_ENTRY_OFFSET, NAME_FIELD, NEXT_ENTRY_STEP, PATH_SEPARATOR_OFFSET, SECRET_FIELD,
-    SINGLE_CHAR_PATH, TOML_EXT,
-};
-use crate::{AuthError, AuthResult};
-use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use std::{env, fs};
+
+use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
+
+use crate::auth_core::crypto::Crypto;
+use crate::auth_core::entry::{Entries, Entry};
+use crate::input::mouse;
+use crate::ui::file_browser::FileBrowser;
+use crate::utils::clipboard::copy_to_clipboard;
+use crate::{AuthError, AuthResult};
 
 #[derive(PartialEq, Clone)]
 pub enum InputMode {
@@ -20,6 +18,7 @@ pub enum InputMode {
     Editing,
     Importing,
     Exporting,
+    FileBrowser,
 }
 
 pub struct App {
@@ -37,12 +36,14 @@ pub struct App {
     pub path_input: String,
     pub error_message: Option<(String, SystemTime)>,
     crypto: Crypto,
+    pub file_browser: FileBrowser,
+    pub file_operation: Option<InputMode>,
 }
 
 impl App {
     pub fn new() -> AuthResult<Self> {
         let auth_dir = Self::get_auth_directory()?;
-        let entries_path = auth_dir.join(ENTRIES_FILE);
+        let entries_path = auth_dir.join("entries.toml");
         let crypto = Self::initialize_crypto(&auth_dir)?;
         let mut app = Self::create_initial_app(entries_path, crypto);
 
@@ -51,8 +52,14 @@ impl App {
     }
 
     fn get_auth_directory() -> AuthResult<PathBuf> {
+        if let Ok(dir) = env::var("AUTH_ENTRIES_DIR") {
+            let auth_dir = PathBuf::from(dir);
+            fs::create_dir_all(&auth_dir).map_err(|_| AuthError::CreateDirError)?;
+            return Ok(auth_dir);
+        }
+
         let home = dirs::home_dir().ok_or(AuthError::HomeDirError)?;
-        let auth_dir = home.join(AUTH_DIR_NAME);
+        let auth_dir = home.join(".local/share/auth");
 
         fs::create_dir_all(&auth_dir).map_err(|_| AuthError::CreateDirError)?;
 
@@ -73,12 +80,14 @@ impl App {
             new_entry_secret: String::new(),
             edit_entry_name: String::new(),
             edit_entry_secret: String::new(),
-            input_field: NAME_FIELD,
+            input_field: 0,
             entries_path,
             copy_notification_time: None,
             path_input: String::new(),
             error_message: None,
             crypto,
+            file_browser: FileBrowser::new(),
+            file_operation: None,
         }
     }
 
@@ -185,9 +194,7 @@ impl App {
         };
 
         entries.remove(self.selected);
-        self.selected = self
-            .selected
-            .min(entries.len().saturating_sub(LAST_ENTRY_OFFSET));
+        self.selected = self.selected.min(entries.len().saturating_sub(1));
 
         if self.save_entries().is_err() {
             self.show_error(&AuthError::SaveError.to_string());
@@ -250,16 +257,16 @@ impl App {
             return PathBuf::from(path);
         };
 
-        if path.len() == SINGLE_CHAR_PATH {
+        if path.len() == 1 {
             return home;
         }
 
-        home.join(&path[HOME_PREFIX_LEN..])
+        home.join(&path[2..])
     }
 
     fn expand_env_path(&self, stripped: &str, original_path: &str) -> PathBuf {
         let var_end = Self::get_var_end(stripped, original_path);
-        let (var, rest) = stripped.split_at(var_end - ENV_VAR_OFFSET);
+        let (var, rest) = stripped.split_at(var_end - 1);
         let expanded_path = Self::expand_env_var(var, rest);
         expanded_path.unwrap_or_else(|| PathBuf::from(original_path))
     }
@@ -267,7 +274,7 @@ impl App {
     fn get_var_end(stripped: &str, original_path: &str) -> usize {
         stripped
             .find('/')
-            .map(|i| i + PATH_SEPARATOR_OFFSET)
+            .map(|i| i + 1)
             .unwrap_or(original_path.len())
     }
 
@@ -351,7 +358,7 @@ impl App {
             return Ok(());
         }
 
-        if path.extension().is_none_or(|ext| ext != TOML_EXT) {
+        if path.extension().is_none_or(|ext| ext != "toml") {
             self.show_error(&AuthError::TomlExtError.to_string());
             return Ok(());
         }
@@ -381,22 +388,17 @@ impl App {
         let mut path = self.expand_path(&self.path_input);
 
         if path.is_dir() || self.path_input.ends_with('/') || self.path_input.ends_with('\\') {
-            self.show_error(&AuthError::NoFilenameError.to_string());
+            path = path.join("auth_backup.toml");
             return Ok(path);
         }
 
-        if !path.to_string_lossy().ends_with(&format!(".{}", TOML_EXT)) {
-            path.set_extension(TOML_EXT);
+        if !path.to_string_lossy().ends_with(".toml") {
+            path.set_extension("toml");
         }
         Ok(path)
     }
 
     fn write_export_file(&mut self, path: &Path, contents: &str) -> AuthResult<()> {
-        if path.is_dir() {
-            self.show_error(&AuthError::DirectoryError.to_string());
-            return Ok(());
-        }
-
         fs::write(path, contents).map_err(|_| {
             self.show_error(&AuthError::WriteError.to_string());
             AuthError::WriteError
@@ -420,6 +422,7 @@ impl App {
             InputMode::Normal => self.handle_normal_mode(key),
             InputMode::Adding | InputMode::Editing => self.handle_entry_mode(key),
             InputMode::Importing | InputMode::Exporting => self.handle_file_mode(key),
+            InputMode::FileBrowser => self.handle_file_browser_mode(key),
         }
     }
 
@@ -428,15 +431,24 @@ impl App {
             KeyCode::Char('q') => self.should_quit = true,
             KeyCode::Char('j') | KeyCode::Down => self.next_entry(),
             KeyCode::Char('k') | KeyCode::Up => self.previous_entry(),
-            KeyCode::Char('a') => self.input_mode = InputMode::Adding,
             KeyCode::Char('E') => self.start_editing(),
+            KeyCode::Char('a') => self.input_mode = InputMode::Adding,
             KeyCode::Char('D') => self.delete_all_entries(),
             KeyCode::Char('d') => self.delete_entry(),
-            KeyCode::Char('i') => self.input_mode = InputMode::Importing,
-            KeyCode::Char('e') => self.input_mode = InputMode::Exporting,
+            KeyCode::Char('i') => {
+                self.file_operation = Some(InputMode::Importing);
+                self.file_browser.reset();
+                self.input_mode = InputMode::FileBrowser;
+            }
+            KeyCode::Char('e') => {
+                self.file_operation = Some(InputMode::Exporting);
+                self.file_browser.reset();
+                self.input_mode = InputMode::FileBrowser;
+            }
             KeyCode::Enter => self.copy_current_code()?,
             _ => {}
         }
+
         Ok(())
     }
 
@@ -464,8 +476,8 @@ impl App {
 
     fn handle_tab_key(&mut self, is_shift: bool) {
         self.input_field = match (self.input_field, is_shift) {
-            (NAME_FIELD, true) | (SECRET_FIELD, false) => NAME_FIELD,
-            (NAME_FIELD, false) | (SECRET_FIELD, true) => SECRET_FIELD,
+            (0, true) | (1, false) => 0,
+            (0, false) | (1, true) => 1,
             _ => unreachable!(),
         };
     }
@@ -511,7 +523,7 @@ impl App {
         self.input_mode = InputMode::Normal;
         fields.0.clear();
         fields.1.clear();
-        self.input_field = NAME_FIELD;
+        self.input_field = 0;
     }
 
     fn process_entry_input(&mut self) -> AuthResult<()> {
@@ -523,7 +535,7 @@ impl App {
     }
 
     fn is_name_field(&self) -> bool {
-        self.input_field == NAME_FIELD
+        self.input_field == 0
     }
 
     fn handle_final_entry_input(&mut self) -> AuthResult<()> {
@@ -549,11 +561,11 @@ impl App {
     }
 
     fn reset_input_field(&mut self) {
-        self.input_field = NAME_FIELD;
+        self.input_field = 0;
     }
 
     fn switch_to_secret_field(&mut self) {
-        self.input_field = SECRET_FIELD;
+        self.input_field = 1;
     }
 
     fn update_entry_field(&mut self, c: char) {
@@ -567,7 +579,7 @@ impl App {
     }
 
     fn get_current_field(&mut self) -> &mut String {
-        match (self.input_mode.clone(), self.input_field == NAME_FIELD) {
+        match (self.input_mode.clone(), self.input_field == 0) {
             (InputMode::Adding, true) => &mut self.new_entry_name,
             (InputMode::Adding, false) => &mut self.new_entry_secret,
             (_, true) => &mut self.edit_entry_name,
@@ -611,30 +623,89 @@ impl App {
     }
 
     fn start_editing(&mut self) {
-        let Some(entry) = (!self.entries.is_empty()).then_some(&self.entries[self.selected]) else {
+        if self.entries.is_empty() {
             return;
-        };
+        }
 
+        let entry = &self.entries[self.selected];
         self.edit_entry_name = entry.name.clone();
         self.edit_entry_secret = entry.secret.clone();
         self.input_mode = InputMode::Editing;
-        self.input_field = NAME_FIELD;
+        self.input_field = 0;
     }
 
     fn next_entry(&mut self) {
         let Some(len) = (!self.entries.is_empty()).then_some(self.entries.len()) else {
             return;
         };
-        self.selected = (self.selected + NEXT_ENTRY_STEP) % len;
+        self.selected = (self.selected + 1) % len;
     }
 
     fn previous_entry(&mut self) {
         let Some(len) = (!self.entries.is_empty()).then_some(self.entries.len()) else {
             return;
         };
-        self.selected = self
-            .selected
-            .checked_sub(LAST_ENTRY_INDEX)
-            .unwrap_or(len - LAST_ENTRY_INDEX);
+        self.selected = self.selected.checked_sub(1).unwrap_or(len - 1);
+    }
+
+    fn handle_file_browser_mode(&mut self, key: KeyEvent) -> AuthResult<()> {
+        match key.code {
+            KeyCode::Char('q') | KeyCode::Esc => self.reset_file_browser_mode(),
+            KeyCode::Up | KeyCode::Char('k') => self.file_browser.move_up(),
+            KeyCode::Down | KeyCode::Char('j') => self.file_browser.move_down(),
+            KeyCode::Char('.') => self.file_browser.toggle_hidden_files(),
+            KeyCode::Char('s') => {
+                if self.file_operation == Some(InputMode::Exporting) {
+                    if self.path_input.is_empty() {
+                        let current_dir = self
+                            .file_browser
+                            .get_current_dir()
+                            .to_string_lossy()
+                            .to_string();
+                        self.path_input = current_dir;
+                    }
+                    let _ = self.process_file_browser_selection();
+                }
+            }
+            KeyCode::Enter => {
+                if let Some(path) = self.file_browser.enter() {
+                    self.path_input = path.to_string_lossy().to_string();
+
+                    if self.file_operation == Some(InputMode::Importing) {
+                        let _ = self.process_file_browser_selection();
+                    }
+                }
+            }
+            _ => {}
+        }
+
+        Ok(())
+    }
+
+    fn reset_file_browser_mode(&mut self) {
+        self.input_mode = InputMode::Normal;
+        self.file_operation = None;
+        self.path_input = String::new();
+    }
+
+    fn process_file_browser_selection(&mut self) -> AuthResult<()> {
+        if let Some(operation) = &self.file_operation {
+            self.input_mode = operation.clone();
+
+            let result = match operation {
+                InputMode::Importing => self.import_entries(),
+                InputMode::Exporting => self.export_entries(),
+                _ => Ok(()),
+            };
+
+            if result.is_err() {
+                // no-op
+            }
+
+            self.input_mode = InputMode::Normal;
+            self.file_operation = None;
+        }
+
+        Ok(())
     }
 }

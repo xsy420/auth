@@ -1,13 +1,17 @@
-use crate::AuthResult;
-use crate::input::event::poll_event;
-use crate::ui::layout::centered_rect;
-use crate::utils::constants::{
-    POPUP_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT, ROOT_WARNING, WARNING_TITLE,
-};
 use nix::unistd::Uid;
 use ratatui::crossterm::event::Event;
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget};
+
+use crate::AuthResult;
+use crate::input::event::poll_event;
+use crate::ui::layout::centered_rect;
+
+pub const ROOT_WARNING: &[&str] = &[
+    "Running as root is not supported",
+    "",
+    "Press any key to exit",
+];
 
 pub fn check_root() -> bool {
     Uid::effective().is_root()
@@ -38,7 +42,7 @@ impl<'a> WarningWidget<'a> {
     pub fn new(text: &'a [&'a str]) -> Self {
         Self {
             text,
-            title: WARNING_TITLE,
+            title: " Warning ",
             style: Style::default().fg(Color::Green),
         }
     }
@@ -77,7 +81,7 @@ impl Widget for WarningWidget<'_> {
 fn render_warning(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>) -> AuthResult<()> {
     terminal.draw(|f| {
         let warning = WarningWidget::new(ROOT_WARNING);
-        let popup_area = centered_rect(POPUP_WIDTH_PERCENT, POPUP_HEIGHT_PERCENT, f.area());
+        let popup_area = centered_rect(60, 20, f.area());
 
         f.render_widget(Clear, popup_area);
         f.render_widget(warning, popup_area);

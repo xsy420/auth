@@ -1,23 +1,19 @@
 use auth::auth_core::totp::generate_totp;
-use auth::utils::constants::{
-    TEST_CODE_LENGTH, TEST_INVALID_SECRET, TEST_MAX_REMAINING, TEST_MIN_REMAINING,
-    TEST_NORMALIZED_SECRET, TEST_PADDED_SECRET, TEST_VALID_SECRET,
-};
 
 #[test]
 fn test_valid_totp_generation() {
-    let result = generate_totp(TEST_VALID_SECRET);
+    let result = generate_totp("JBSWY3DPEHPK3PXP");
     assert!(result.is_ok());
 
     let (code, remaining) = result.unwrap();
-    assert_eq!(code.len(), TEST_CODE_LENGTH);
-    assert!(remaining <= TEST_MAX_REMAINING);
-    assert!(remaining >= TEST_MIN_REMAINING);
+    assert_eq!(code.len(), 6);
+    assert!(remaining <= 30);
+    assert!(remaining >= 1);
 }
 
 #[test]
 fn test_invalid_totp_secret() {
-    let result = generate_totp(TEST_INVALID_SECRET);
+    let result = generate_totp("INVALID!SECRET");
     assert!(result.is_err());
 }
 
@@ -29,20 +25,20 @@ fn test_empty_totp_secret() {
 
 #[test]
 fn test_padded_totp_secret() {
-    let result = generate_totp(TEST_PADDED_SECRET);
+    let result = generate_totp("JBSWY3DPEHPK3PX=");
     assert!(result.is_ok(), "Padded secret should be valid");
 
     let (code, remaining) = result.unwrap();
-    assert_eq!(code.len(), TEST_CODE_LENGTH);
-    assert!(remaining <= TEST_MAX_REMAINING);
+    assert_eq!(code.len(), 6);
+    assert!(remaining <= 30);
 }
 
 #[test]
 fn test_normalized_secret() {
-    let result = generate_totp(TEST_NORMALIZED_SECRET);
+    let result = generate_totp("jbsw y3dp ehpk 3pxp");
     assert!(result.is_ok(), "Normalized secret should be valid");
 
     let (code, remaining) = result.unwrap();
-    assert_eq!(code.len(), TEST_CODE_LENGTH);
-    assert!(remaining <= TEST_MAX_REMAINING);
+    assert_eq!(code.len(), 6);
+    assert!(remaining <= 30);
 }

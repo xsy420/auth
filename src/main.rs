@@ -1,11 +1,12 @@
+use std::io::stdout;
+
 use auth::auth_core::app::App;
 use auth::input::{event, linux, root};
-use auth::ui::core::draw;
+use auth::ui::renderer::draw;
 use auth::utils::cli;
 use auth::utils::error::AuthResult;
 use ratatui::crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use ratatui::crossterm::execute;
-use std::io::stdout;
 
 fn main() -> AuthResult<()> {
     let args = cli::parse_args();

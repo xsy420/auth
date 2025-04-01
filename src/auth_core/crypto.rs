@@ -1,12 +1,13 @@
-use crate::utils::constants::KEY_FILE;
-use crate::{AuthError, AuthResult};
-use age::Encryptor;
-use age::secrecy::ExposeSecret;
-use age::x25519::Identity;
 use std::fs;
 use std::io::Write;
 use std::path::Path;
 use std::str::FromStr;
+
+use age::Encryptor;
+use age::secrecy::ExposeSecret;
+use age::x25519::Identity;
+
+use crate::{AuthError, AuthResult};
 
 pub struct Crypto {
     identity: Identity,
@@ -14,7 +15,7 @@ pub struct Crypto {
 
 impl Crypto {
     pub fn new(auth_dir: &Path) -> AuthResult<Self> {
-        let key_path = auth_dir.join(KEY_FILE);
+        let key_path = auth_dir.join("key");
         let identity = if key_path.exists() {
             let key_str = fs::read_to_string(&key_path)?;
             Identity::from_str(&key_str).map_err(|e| AuthError::InvalidKey(e.to_string()))?

@@ -1,7 +1,15 @@
-use crate::ui::layout::pad_vertical;
-use crate::utils::constants::*;
 use ratatui::prelude::*;
 use ratatui::widgets::Paragraph;
+
+use crate::ui::layout::pad_vertical;
+
+const SIZE_WARNING: &[&str] = &[
+    "Terminal size too small:",
+    "Width = {} Height = {}",
+    "",
+    "Needed to display properly:",
+    "Width = {} Height = {}",
+];
 
 pub fn check_terminal_size(frame: &mut Frame, area: Rect) -> bool {
     if !is_terminal_too_small(area) {
@@ -13,7 +21,7 @@ pub fn check_terminal_size(frame: &mut Frame, area: Rect) -> bool {
 }
 
 fn is_terminal_too_small(area: Rect) -> bool {
-    area.width < MIN_WIDTH || area.height < MIN_HEIGHT
+    area.width < 110 || area.height < 31
 }
 
 fn create_warning_text(area: Rect) -> Vec<Line<'static>> {

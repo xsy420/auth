@@ -1,30 +1,26 @@
 use auth::auth_core::entry::Entry;
-use auth::utils::constants::{
-    INVALID_LABEL, INVALID_REMAINING_TIME, TEST_CODE_LENGTH, TEST_INVALID_NAME,
-    TEST_INVALID_SECRET, TEST_MAX_REMAINING, TEST_VALID_NAME, TEST_VALID_SECRET,
-};
 
 #[test]
 fn test_valid_entry_totp() {
     let entry = Entry {
-        name: TEST_VALID_NAME.to_string(),
-        secret: TEST_VALID_SECRET.to_string(),
+        name: "Test Entry".to_string(),
+        secret: "JBSWY3DPEHPK3PXP".to_string(),
     };
 
     let (code, remaining) = entry.generate_totp_with_time();
-    assert_eq!(code.len(), TEST_CODE_LENGTH);
+    assert_eq!(code.len(), 6);
     assert!(code.chars().all(|c| c.is_ascii_digit()));
-    assert!(remaining <= TEST_MAX_REMAINING);
+    assert!(remaining <= 30);
 }
 
 #[test]
 fn test_invalid_entry_totp() {
     let entry = Entry {
-        name: TEST_INVALID_NAME.to_string(),
-        secret: TEST_INVALID_SECRET.to_string(),
+        name: "Invalid Entry".to_string(),
+        secret: "INVALID!SECRET".to_string(),
     };
 
     let (code, remaining) = entry.generate_totp_with_time();
-    assert_eq!(code, INVALID_LABEL);
-    assert_eq!(remaining, INVALID_REMAINING_TIME);
+    assert_eq!(code, "Invalid");
+    assert_eq!(remaining, 0);
 }

@@ -9,7 +9,6 @@ pub mod utils {
     pub mod cli;
     pub mod clipboard;
     pub mod command;
-    pub mod constants;
     pub mod error;
 }
 
@@ -21,9 +20,10 @@ pub mod input {
 }
 
 pub mod ui {
-    pub mod core;
+    pub mod file_browser;
     pub mod layout;
     pub mod notification;
+    pub mod renderer;
     pub mod size;
 }
 

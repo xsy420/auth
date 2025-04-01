@@ -1,16 +1,20 @@
+use ratatui::prelude::*;
+use ratatui::widgets::{Clear, Paragraph};
+
 use crate::auth_core::app::{App, InputMode};
 use crate::auth_core::entry::Entry;
+use crate::ui::file_browser::draw_file_browser;
 use crate::ui::layout::{centered_rect, create_block};
 use crate::ui::notification::get_notification_title;
 use crate::ui::size::check_terminal_size;
-use crate::utils::constants::{
-    ADD_ENTRY_TITLE, BINDINGS_TITLE, CODE_WIDTH, CURSOR_CHAR, DEFAULT_NAME_WIDTH, EDIT_ENTRY_TITLE,
-    EMPTY_CURSOR, EXPORT_TITLE, HELP_BLOCK_HEIGHT, HELP_TEXT, IMPORT_TITLE, MIN_BLOCK_HEIGHT,
-    NAME_FIELD, NAME_LABEL, NAME_PADDING, PATH_LABEL, POPUP_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT,
-    REMAINING_WIDTH, SECRET_FIELD, SECRET_LABEL,
-};
-use ratatui::prelude::*;
-use ratatui::widgets::{Clear, Paragraph};
+
+const HELP_TEXT: &str = "a: add  E: edit  d: del  i: import  e: export  ↑/k: up  ↓/j: down  enter: copy  q: quit  tab: cycle fields";
+
+const FILE_BROWSER_HELP_TEXT: &str =
+    "↑/k: up  ↓/j: down  enter: select  .: toggle hidden  q/esc: cancel";
+
+const EXPORT_HELP_TEXT: &str =
+    "↑/k: up  ↓/j: down  enter: select  .: toggle hidden  s: save  q/esc: cancel";
 
 pub fn draw(frame: &mut Frame, app: &App, no_size_check: bool) {
     let area = frame.area();
@@ -21,17 +25,11 @@ pub fn draw(frame: &mut Frame, app: &App, no_size_check: bool) {
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Min(MIN_BLOCK_HEIGHT),
-                Constraint::Length(HELP_BLOCK_HEIGHT),
-            ]
-            .as_ref(),
-        )
+        .constraints([Constraint::Min(3), Constraint::Length(3)].as_ref())
         .split(area);
 
     draw_main_block(frame, app, chunks[0]);
-    draw_help_block(frame, chunks[1]);
+    draw_help_block(frame, app, chunks[1]);
     draw_popups(frame, app, area);
 }
 
@@ -57,11 +55,7 @@ fn create_entry_lines(app: &App) -> Vec<Line> {
 }
 
 fn get_max_name_width(entries: &[Entry]) -> usize {
-    entries
-        .iter()
-        .map(|e| e.name.len())
-        .max()
-        .unwrap_or(DEFAULT_NAME_WIDTH)
+    entries.iter().map(|e| e.name.len()).max().unwrap_or(0)
 }
 
 fn create_formatted_lines(entries: &[Entry], selected: usize, max_width: usize) -> Vec<Line> {
@@ -89,23 +83,36 @@ fn get_line_style(is_selected: bool) -> Style {
 fn format_entry_text(entry: &Entry, max_width: usize) -> String {
     let (code, remaining) = entry.generate_totp_with_time();
     format!(
-        "{:<width$} {:>CODE_WIDTH$} ({:>REMAINING_WIDTH$}s)",
+        "{:<width$} {:>6} ({:>1}s)",
         entry.name,
         code,
         remaining,
-        width = max_width + NAME_PADDING
+        width = max_width + 2
     )
 }
 
-fn draw_help_block(frame: &mut Frame, area: Rect) {
-    let help_block = create_block(BINDINGS_TITLE);
-    let help_text = vec![Line::from(HELP_TEXT)];
+fn draw_help_block(frame: &mut Frame, app: &App, area: Rect) {
+    let help_block = create_block(" Bindings ");
+    let help_text = get_help_text(app);
 
-    let help_widget = Paragraph::new(help_text)
+    let help_widget = Paragraph::new(vec![help_text])
         .block(help_block)
         .alignment(Alignment::Center);
 
     frame.render_widget(help_widget, area);
+}
+
+fn get_help_text(app: &App) -> Line<'static> {
+    match app.input_mode {
+        InputMode::FileBrowser => {
+            if app.file_operation == Some(InputMode::Exporting) {
+                Line::from(EXPORT_HELP_TEXT)
+            } else {
+                Line::from(FILE_BROWSER_HELP_TEXT)
+            }
+        }
+        _ => Line::from(HELP_TEXT),
+    }
 }
 
 fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
@@ -113,13 +120,14 @@ fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
         InputMode::Adding => draw_add_popup(frame, app, area),
         InputMode::Importing | InputMode::Exporting => draw_file_popup(frame, app, area),
         InputMode::Editing => draw_edit_popup(frame, app, area),
+        InputMode::FileBrowser => draw_file_browser_popup(frame, app, area),
         _ => {}
     }
 }
 
 fn draw_add_popup(frame: &mut Frame, app: &App, area: Rect) {
     let popup = create_entry_popup(
-        ADD_ENTRY_TITLE,
+        " Add Entry ",
         &app.new_entry_name,
         &app.new_entry_secret,
         app.input_field,
@@ -129,7 +137,7 @@ fn draw_add_popup(frame: &mut Frame, app: &App, area: Rect) {
 
 fn draw_edit_popup(frame: &mut Frame, app: &App, area: Rect) {
     let popup = create_entry_popup(
-        EDIT_ENTRY_TITLE,
+        " Edit Entry ",
         &app.edit_entry_name,
         &app.edit_entry_secret,
         app.input_field,
@@ -150,16 +158,8 @@ fn create_entry_popup<'a>(
 }
 
 fn create_cursor_indicators(input_field: usize) -> (String, String) {
-    let name_cursor = if input_field == NAME_FIELD {
-        CURSOR_CHAR
-    } else {
-        EMPTY_CURSOR
-    };
-    let secret_cursor = if input_field == SECRET_FIELD {
-        CURSOR_CHAR
-    } else {
-        EMPTY_CURSOR
-    };
+    let name_cursor = if input_field == 0 { "|" } else { "" };
+    let secret_cursor = if input_field == 1 { "|" } else { "" };
     (name_cursor.to_string(), secret_cursor.to_string())
 }
 
@@ -169,10 +169,10 @@ fn create_entry_popup_lines<'a>(
     (name_cursor, secret_cursor): &(String, String),
 ) -> Vec<Line<'a>> {
     vec![
-        Line::from(NAME_LABEL),
+        Line::from("Name:"),
         Line::from(format!("{}{}", name, name_cursor)),
         Line::from(""),
-        Line::from(SECRET_LABEL),
+        Line::from("Secret:"),
         Line::from(format!("{}{}", secret, secret_cursor)),
     ]
 }
@@ -185,22 +185,30 @@ fn draw_file_popup(frame: &mut Frame, app: &App, area: Rect) {
 
 fn get_file_popup_title(input_mode: &InputMode) -> &'static str {
     match input_mode {
-        InputMode::Importing => IMPORT_TITLE,
-        InputMode::Exporting => EXPORT_TITLE,
+        InputMode::Importing => " Import ",
+        InputMode::Exporting => " Export ",
         _ => unreachable!(),
     }
 }
 
 fn create_file_popup<'a>(title: &'a str, path: &'a str) -> Paragraph<'a> {
-    let lines = vec![
-        Line::from(PATH_LABEL),
-        Line::from(format!("{}{}", path, CURSOR_CHAR)),
-    ];
+    let lines = vec![Line::from("Path:"), Line::from(format!("{}{}", path, "|"))];
+
     Paragraph::new(lines).block(create_block(title))
 }
 
 fn render_centered_popup(frame: &mut Frame, popup: Paragraph, area: Rect) {
-    let popup_area = centered_rect(POPUP_WIDTH_PERCENT, POPUP_HEIGHT_PERCENT, area);
+    let popup_area = centered_rect(60, 20, area);
     frame.render_widget(Clear, popup_area);
     frame.render_widget(popup, popup_area);
+}
+
+fn draw_file_browser_popup(frame: &mut Frame, app: &App, area: Rect) {
+    let title = match app.file_operation {
+        Some(InputMode::Importing) => " Select File to Import ",
+        Some(InputMode::Exporting) => " Select Location to Export ",
+        _ => " File Browser ",
+    };
+
+    draw_file_browser(frame, app, &app.file_browser, title, area);
 }

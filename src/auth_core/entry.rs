@@ -1,6 +1,6 @@
-use crate::auth_core::totp::generate_totp;
-use crate::utils::constants::{INVALID_LABEL, INVALID_REMAINING_TIME};
 use serde::{Deserialize, Serialize};
+
+use crate::auth_core::totp::generate_totp;
 
 #[derive(Serialize, Deserialize)]
 pub struct Entries {
@@ -17,7 +17,7 @@ impl Entry {
     pub fn generate_totp_with_time(&self) -> (String, u64) {
         match generate_totp(&self.secret) {
             Ok(result) => result,
-            Err(_) => (INVALID_LABEL.to_string(), INVALID_REMAINING_TIME),
+            Err(_) => ("Invalid".to_string(), 0),
         }
     }
 }

@@ -1,10 +1,11 @@
-use crate::AuthResult;
-use crate::utils::constants::EVENT_POLL_DURATION;
-use ratatui::crossterm::event::{self, Event};
 use std::time::Duration;
 
+use ratatui::crossterm::event::{self, Event};
+
+use crate::AuthResult;
+
 pub fn poll_event() -> AuthResult<Option<Event>> {
-    if event::poll(Duration::from_millis(EVENT_POLL_DURATION))? {
+    if event::poll(Duration::from_millis(50))? {
         Ok(Some(event::read()?))
     } else {
         Ok(None)

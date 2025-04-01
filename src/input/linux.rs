@@ -1,12 +1,12 @@
-use crate::AuthResult;
-use crate::input::event::poll_event;
-use crate::ui::layout::centered_rect;
-use crate::utils::constants::{
-    LINUX_WARNING, POPUP_HEIGHT_PERCENT, POPUP_WIDTH_PERCENT, WARNING_TITLE,
-};
 use ratatui::crossterm::event::Event;
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, BorderType, Borders, Clear, Paragraph, Widget};
+
+use crate::AuthResult;
+use crate::input::event::poll_event;
+use crate::ui::layout::centered_rect;
+
+const LINUX_WARNING: &[&str] = &["Only Linux is supported", "", "Press any key to exit"];
 
 pub fn check_linux() -> bool {
     cfg!(target_os = "linux")
@@ -29,7 +29,9 @@ pub fn show_linux_warning() -> AuthResult<()> {
 
 pub struct WarningWidget<'a> {
     text: &'a [&'a str],
+
     title: &'a str,
+
     style: Style,
 }
 
@@ -37,7 +39,7 @@ impl<'a> WarningWidget<'a> {
     pub fn new(text: &'a [&'a str]) -> Self {
         Self {
             text,
-            title: WARNING_TITLE,
+            title: " Warning ",
             style: Style::default().fg(Color::Green),
         }
     }
@@ -66,7 +68,7 @@ impl Widget for WarningWidget<'_> {
 fn render_warning(terminal: &mut Terminal<CrosstermBackend<std::io::Stdout>>) -> AuthResult<()> {
     terminal.draw(|f| {
         let warning = WarningWidget::new(LINUX_WARNING);
-        let popup_area = centered_rect(POPUP_WIDTH_PERCENT, POPUP_HEIGHT_PERCENT, f.area());
+        let popup_area = centered_rect(60, 20, f.area());
 
         f.render_widget(Clear, popup_area);
         f.render_widget(warning, popup_area);
