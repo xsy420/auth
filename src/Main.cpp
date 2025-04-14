@@ -1,4 +1,5 @@
-#include "Auth.hpp"
+#include "auth/Color.hpp"
+#include "auth/Cli.hpp"
 #include <iostream>
 #include <clocale>
 
@@ -9,7 +10,7 @@ int main(int argc, char* argv[]) {
         CAuthCLI cli;
         return cli.processCommand(argc, argv) ? 0 : 1;
     } catch (const std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << CColor::RED << "Error: " << e.what() << CColor::RESET << std::endl;
         return 1;
     }
 }

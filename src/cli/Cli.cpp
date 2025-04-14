@@ -1,4 +1,7 @@
-#include "Auth.hpp"
+#include "auth/Cli.hpp"
+#include "auth/Color.hpp"
+#include "auth/Totp.hpp"
+#include "auth/Import.hpp"
 #include <iostream>
 #include <filesystem>
 #include <pwd.h>
@@ -26,19 +29,19 @@ CAuthCLI::CAuthCLI() {
 }
 
 void CAuthCLI::printUsage() {
-    std::cout << "Usage: auth [command] [options]\n\n";
-    std::cout << "Commands:\n";
-    std::cout << "  add <name> <secret> [digits] [period]  Add a new TOTP entry\n";
-    std::cout << "  list                                   List all entries\n";
-    std::cout << "  generate <name>                        Generate TOTP code for specific entry\n";
-    std::cout << "  remove <name or id>                    Remove an entry\n";
-    std::cout << "  info <name>                            Show details for an entry\n";
-    std::cout << "  import <file>                          Import entries from TOML file\n";
-    std::cout << "  export <file>                          Export entries to TOML file\n";
-    std::cout << "  help                                   Show this help message\n";
-    std::cout << "\nOptions:\n";
-    std::cout << "  digits   Number of digits in the code (default: 6)\n";
-    std::cout << "  period   Time period in seconds (default: 30)\n";
+    std::cout << CColor::BOLD << "Usage: " << CColor::CYAN << "auth" << CColor::RESET << " [command] [options]\n\n";
+    std::cout << CColor::BOLD << "Commands:" << CColor::RESET << "\n";
+    std::cout << "  " << CColor::GREEN << "add" << CColor::RESET << "      <n> <secret> [digits] [period]     Add a new TOTP entry\n";
+    std::cout << "  " << CColor::GREEN << "list" << CColor::RESET << "                                        List all entries\n";
+    std::cout << "  " << CColor::GREEN << "generate" << CColor::RESET << " <n>                                Generate TOTP code for specific entry\n";
+    std::cout << "  " << CColor::GREEN << "remove" << CColor::RESET << "   <name or id>                       Remove an entry\n";
+    std::cout << "  " << CColor::GREEN << "info" << CColor::RESET << "     <n>                                Show details for an entry\n";
+    std::cout << "  " << CColor::GREEN << "import" << CColor::RESET << "   <file>                             Import entries from TOML file\n";
+    std::cout << "  " << CColor::GREEN << "export" << CColor::RESET << "   <file>                             Export entries to TOML file\n";
+    std::cout << "  " << CColor::GREEN << "help" << CColor::RESET << "                                        Show this help message\n";
+    std::cout << "\n" << CColor::BOLD << "Options:" << CColor::RESET << "\n";
+    std::cout << "  " << CColor::YELLOW << "digits" << CColor::RESET << "   Number of digits in the code (default: 6)\n";
+    std::cout << "  " << CColor::YELLOW << "period" << CColor::RESET << "   Time period in seconds (default: 30)\n";
 }
 
 bool CAuthCLI::processCommand(int argc, char* argv[]) {
@@ -78,8 +81,8 @@ bool CAuthCLI::processCommand(int argc, char* argv[]) {
 
 bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
     if (args.size() < 2) {
-        std::cerr << "Error: Not enough arguments for add command\n";
-        std::cerr << "Usage: auth add <name> <secret> [digits] [period]\n";
+        std::cerr << CColor::RED << "Error: Not enough arguments for add command" << CColor::RESET << "\n";
+        std::cerr << "Usage: auth add <n> <secret> [digits] [period]\n";
         return false;
     }
 
@@ -92,7 +95,7 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
         try {
             digits = std::stoi(args[2]);
         } catch (const std::exception& e) {
-            std::cerr << "Error: Invalid digits value\n";
+            std::cerr << CColor::RED << "Error: Invalid digits value" << CColor::RESET << "\n";
             return false;
         }
     }
@@ -101,7 +104,7 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
         try {
             period = std::stoi(args[3]);
         } catch (const std::exception& e) {
-            std::cerr << "Error: Invalid period value\n";
+            std::cerr << CColor::RED << "Error: Invalid period value" << CColor::RESET << "\n";
             return false;
         }
     }
@@ -113,17 +116,17 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
     entry.period = period;
 
     if (m_db->addEntry(entry)) {
-        std::cout << "Added new entry: " << name << "\n";
+        std::cout << CColor::GREEN << "Added new entry: " << name << CColor::RESET << "\n";
         return true;
     } else {
-        std::cerr << "Error: Failed to add entry\n";
+        std::cerr << CColor::RED << "Error: Failed to add entry" << CColor::RESET << "\n";
         return false;
     }
 }
 
 bool CAuthCLI::commandRemove(const std::vector<std::string>& args) {
     if (args.empty()) {
-        std::cerr << "Error: Missing argument for remove command\n";
+        std::cerr << CColor::RED << "Error: Missing argument for remove command" << CColor::RESET << "\n";
         std::cerr << "Usage: auth remove <name or id>\n";
         return false;
     }
@@ -135,14 +138,14 @@ bool CAuthCLI::commandRemove(const std::vector<std::string>& args) {
     try {
         uint64_t id = std::stoull(nameOrId);
         if (m_db->removeEntry(id)) {
-            std::cout << "Removed entry with ID: " << id << "\n";
+            std::cout << CColor::GREEN << "Removed entry with ID: " << id << CColor::RESET << "\n";
             return true;
         }
     } catch (const std::exception&) {
         for (const auto& entry : entries) {
             if (entry.name == nameOrId) {
                 if (m_db->removeEntry(entry.id)) {
-                    std::cout << "Removed entry: " << nameOrId << "\n";
+                    std::cout << CColor::GREEN << "Removed entry: " << nameOrId << CColor::RESET << "\n";
                     return true;
                 }
                 found = true;
@@ -152,9 +155,9 @@ bool CAuthCLI::commandRemove(const std::vector<std::string>& args) {
     }
 
     if (!found)
-        std::cerr << "Error: Entry not found: " << nameOrId << "\n";
+        std::cerr << CColor::RED << "Error: Entry not found: " << nameOrId << CColor::RESET << "\n";
     else
-        std::cerr << "Error: Failed to remove entry\n";
+        std::cerr << CColor::RED << "Error: Failed to remove entry" << CColor::RESET << "\n";
 
     return false;
 }
@@ -163,7 +166,7 @@ bool CAuthCLI::commandList() {
     auto entries = m_db->getEntries();
 
     if (entries.empty()) {
-        std::cout << "No entries found\n";
+        std::cout << CColor::YELLOW << "No entries found" << CColor::RESET << "\n";
         return true;
     }
 
@@ -177,22 +180,27 @@ bool CAuthCLI::commandList() {
     time_t now             = time(nullptr);
     int    periodRemaining = 30 - (now % 30);
 
+    std::cout << CColor::BOLD << std::left << std::setw(5) << "ID" << std::setw(maxNameLength + 2) << "NAME" << "CODE" << CColor::RESET << "\n";
+
+    std::cout << std::string(5 + maxNameLength + 8, '-') << "\n";
+
     for (const auto& entry : entries) {
         CTOTP       totp(entry.secret, entry.digits, entry.period);
         std::string code = totp.generate();
 
-        std::cout << std::left << std::setw(5) << entry.id << std::setw(maxNameLength + 2) << entry.name << code << "\n";
+        std::cout << CColor::CYAN << std::left << std::setw(5) << entry.id << CColor::RESET << CColor::GREEN << std::setw(maxNameLength + 2) << entry.name << CColor::RESET
+                  << CColor::BOLD << CColor::YELLOW << code << CColor::RESET << "\n";
     }
 
-    std::cout << "\nExpires in " << periodRemaining << "s\n";
+    std::cout << "\n" << CColor::MAGENTA << "Expires in " << periodRemaining << "s" << CColor::RESET << "\n";
 
     return true;
 }
 
 bool CAuthCLI::commandGenerate(const std::vector<std::string>& args) {
     if (args.empty()) {
-        std::cerr << "Error: Missing argument for generate command\n";
-        std::cerr << "Usage: auth generate <name>\n";
+        std::cerr << CColor::RED << "Error: Missing argument for generate command" << CColor::RESET << "\n";
+        std::cerr << "Usage: auth generate <n>\n";
         return false;
     }
 
@@ -204,19 +212,19 @@ bool CAuthCLI::commandGenerate(const std::vector<std::string>& args) {
             CTOTP       totp(entry.secret, entry.digits, entry.period);
             std::string code = totp.generate();
 
-            std::cout << code << std::endl;
+            std::cout << CColor::YELLOW << code << CColor::RESET << std::endl;
             return true;
         }
     }
 
-    std::cerr << "Error: Entry not found: " << name << "\n";
+    std::cerr << CColor::RED << "Error: Entry not found: " << name << CColor::RESET << "\n";
     return false;
 }
 
 bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
     if (args.empty()) {
-        std::cerr << "Error: Missing argument for info command\n";
-        std::cerr << "Usage: auth info <name>\n";
+        std::cerr << CColor::RED << "Error: Missing argument for info command" << CColor::RESET << "\n";
+        std::cerr << "Usage: auth info <n>\n";
         return false;
     }
 
@@ -225,11 +233,11 @@ bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
 
     for (const auto& entry : entries) {
         if (entry.name == name) {
-            std::cout << "Name:   " << entry.name << "\n";
-            std::cout << "ID:     " << entry.id << "\n";
-            std::cout << "Secret: " << entry.secret << "\n";
-            std::cout << "Digits: " << entry.digits << "\n";
-            std::cout << "Period: " << entry.period << "s\n";
+            std::cout << CColor::BOLD << "Name:   " << CColor::RESET << CColor::GREEN << entry.name << CColor::RESET << "\n";
+            std::cout << CColor::BOLD << "ID:     " << CColor::RESET << CColor::CYAN << entry.id << CColor::RESET << "\n";
+            std::cout << CColor::BOLD << "Secret: " << CColor::RESET << entry.secret << "\n";
+            std::cout << CColor::BOLD << "Digits: " << CColor::RESET << entry.digits << "\n";
+            std::cout << CColor::BOLD << "Period: " << CColor::RESET << entry.period << "s\n";
 
             CTOTP       totp(entry.secret, entry.digits, entry.period);
             std::string code = totp.generate();
@@ -237,40 +245,36 @@ bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
             time_t      now             = time(nullptr);
             int         periodRemaining = entry.period - (now % entry.period);
 
-            std::cout << "Code:   " << code << " (expires in " << periodRemaining << "s)\n";
+            std::cout << CColor::BOLD << "Code:   " << CColor::RESET << CColor::YELLOW << code << CColor::RESET << " (expires in " << CColor::MAGENTA << periodRemaining << "s"
+                      << CColor::RESET << ")\n";
             return true;
         }
     }
 
-    std::cerr << "Error: Entry not found: " << name << "\n";
+    std::cerr << CColor::RED << "Error: Entry not found: " << name << CColor::RESET << "\n";
     return false;
 }
 
 bool CAuthCLI::commandImport(const std::vector<std::string>& args) {
     if (args.empty()) {
-        std::cerr << "Error: Missing file path for import command\n";
+        std::cerr << CColor::RED << "Error: Missing argument for import command" << CColor::RESET << "\n";
         std::cerr << "Usage: auth import <file>\n";
         return false;
     }
 
     std::string filepath = args[0];
-    if (!std::filesystem::exists(filepath)) {
-        std::cerr << "Error: File not found: " << filepath << "\n";
-        return false;
-    }
-
     if (importEntriesFromToml(filepath, *m_db)) {
-        std::cout << "Entries imported successfully\n";
+        std::cout << CColor::GREEN << "Successfully imported entries from " << filepath << CColor::RESET << "\n";
         return true;
     } else {
-        std::cerr << "Error: Failed to import entries\n";
+        std::cerr << CColor::RED << "Error: Failed to import entries from " << filepath << CColor::RESET << "\n";
         return false;
     }
 }
 
 bool CAuthCLI::commandExport(const std::vector<std::string>& args) {
     if (args.empty()) {
-        std::cerr << "Error: Missing file path for export command\n";
+        std::cerr << CColor::RED << "Error: Missing argument for export command" << CColor::RESET << "\n";
         std::cerr << "Usage: auth export <file>\n";
         return false;
     }
@@ -279,10 +283,10 @@ bool CAuthCLI::commandExport(const std::vector<std::string>& args) {
     auto        entries  = m_db->getEntries();
 
     if (exportEntriesToToml(filepath, entries)) {
-        std::cout << "Entries exported to " << filepath << "\n";
+        std::cout << CColor::GREEN << "Successfully exported " << entries.size() << " entries to " << filepath << CColor::RESET << "\n";
         return true;
     } else {
-        std::cerr << "Error: Failed to export entries\n";
+        std::cerr << CColor::RED << "Error: Failed to export entries to " << filepath << CColor::RESET << "\n";
         return false;
     }
 }
