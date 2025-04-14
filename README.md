@@ -4,13 +4,9 @@ A simple terminal-based authenticator CLI written in CPP that generates TOTP cod
 
 ## Installation
 
-### Arch Linux
+### Releases
 
-Auth is available on the [AUR](https://aur.archlinux.org/packages/auth-tui)
-
-```bash
-paru -S auth-tui
-```
+Yoink the binary from https://github.com/nnyyxxxx/auth/releases/latest
 
 ### Building
 
