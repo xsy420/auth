@@ -38,6 +38,7 @@ void CAuthCLI::printUsage() {
     std::cout << "  " << CColor::GREEN << "info" << CColor::RESET << "     <n>                                Show details for an entry\n";
     std::cout << "  " << CColor::GREEN << "import" << CColor::RESET << "   <file>                             Import entries from TOML file\n";
     std::cout << "  " << CColor::GREEN << "export" << CColor::RESET << "   <file>                             Export entries to TOML file\n";
+    std::cout << "  " << CColor::GREEN << "wipe" << CColor::RESET << "                                        Wipe database\n";
     std::cout << "  " << CColor::GREEN << "help" << CColor::RESET << "                                        Show this help message\n";
     std::cout << "\n" << CColor::BOLD << "Options:" << CColor::RESET << "\n";
     std::cout << "  " << CColor::YELLOW << "digits" << CColor::RESET << "   Number of digits in the code (default: 6)\n";
@@ -71,6 +72,8 @@ bool CAuthCLI::processCommand(int argc, char* argv[]) {
         return commandImport(args);
     else if (command == "export")
         return commandExport(args);
+    else if (command == "wipe")
+        return commandWipe();
     else if (command == "help") {
         printUsage();
         return true;
@@ -82,7 +85,7 @@ bool CAuthCLI::processCommand(int argc, char* argv[]) {
 
 bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
     if (args.size() < 2) {
-        std::cerr << CColor::RED << "Error: Not enough arguments for add command" << CColor::RESET << "\n";
+        std::cerr << CColor::RED << "Not enough arguments for add command" << CColor::RESET << "\n";
         std::cerr << "Usage: auth add <n> <secret> [digits] [period]\n";
         return false;
     }
@@ -96,11 +99,11 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
         try {
             digits = std::stoi(args[2]);
             if (digits < 6 || digits > 8) {
-                std::cerr << CColor::RED << "Error: Digits must be between 6 and 8" << CColor::RESET << "\n";
+                std::cerr << CColor::RED << "Digits must be between 6 and 8" << CColor::RESET << "\n";
                 return false;
             }
         } catch (const std::exception& e) {
-            std::cerr << CColor::RED << "Error: Invalid digits value" << CColor::RESET << "\n";
+            std::cerr << CColor::RED << "Invalid digits value" << CColor::RESET << "\n";
             return false;
         }
     }
@@ -109,18 +112,18 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
         try {
             period = std::stoi(args[3]);
             if (period == 0) {
-                std::cerr << CColor::RED << "Error: Period cannot be 0" << CColor::RESET << "\n";
+                std::cerr << CColor::RED << "Period cannot be 0" << CColor::RESET << "\n";
                 return false;
             }
         } catch (const std::exception& e) {
-            std::cerr << CColor::RED << "Error: Invalid period value" << CColor::RESET << "\n";
+            std::cerr << CColor::RED << "Invalid period value" << CColor::RESET << "\n";
             return false;
         }
     }
 
     for (char c : secret) {
         if (c != ' ' && c != '-' && !std::isalnum(c)) {
-            std::cerr << CColor::RED << "Error: Secret contains invalid characters" << CColor::RESET << "\n";
+            std::cerr << CColor::RED << "Secret contains invalid characters" << CColor::RESET << "\n";
             return false;
         }
     }
@@ -135,14 +138,14 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
         std::cout << CColor::GREEN << "Added new entry: " << name << CColor::RESET << "\n";
         return true;
     } else {
-        std::cerr << CColor::RED << "Error: Failed to add entry" << CColor::RESET << "\n";
+        std::cerr << CColor::RED << "Failed to add entry" << CColor::RESET << "\n";
         return false;
     }
 }
 
 bool CAuthCLI::commandRemove(const std::vector<std::string>& args) {
     if (args.empty()) {
-        std::cerr << CColor::RED << "Error: Missing argument for remove command" << CColor::RESET << "\n";
+        std::cerr << CColor::RED << "Missing argument for remove command" << CColor::RESET << "\n";
         std::cerr << "Usage: auth remove <name or id>\n";
         return false;
     }
@@ -171,9 +174,9 @@ bool CAuthCLI::commandRemove(const std::vector<std::string>& args) {
     }
 
     if (!found)
-        std::cerr << CColor::RED << "Error: Entry not found: " << nameOrId << CColor::RESET << "\n";
+        std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
     else
-        std::cerr << CColor::RED << "Error: Failed to remove entry" << CColor::RESET << "\n";
+        std::cerr << CColor::RED << "Failed to remove entry" << CColor::RESET << "\n";
 
     return false;
 }
@@ -217,7 +220,7 @@ bool CAuthCLI::commandList() {
 
 bool CAuthCLI::commandGenerate(const std::vector<std::string>& args) {
     if (args.empty()) {
-        std::cerr << CColor::RED << "Error: Missing argument for generate command" << CColor::RESET << "\n";
+        std::cerr << CColor::RED << "Missing argument for generate command" << CColor::RESET << "\n";
         std::cerr << "Usage: auth generate <n>\n";
         return false;
     }
@@ -235,13 +238,13 @@ bool CAuthCLI::commandGenerate(const std::vector<std::string>& args) {
         }
     }
 
-    std::cerr << CColor::RED << "Error: Entry not found: " << name << CColor::RESET << "\n";
+    std::cerr << CColor::RED << "Entry not found: " << name << CColor::RESET << "\n";
     return false;
 }
 
 bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
     if (args.empty()) {
-        std::cerr << CColor::RED << "Error: Missing argument for info command" << CColor::RESET << "\n";
+        std::cerr << CColor::RED << "Missing argument for info command" << CColor::RESET << "\n";
         std::cerr << "Usage: auth info <n>\n";
         return false;
     }
@@ -269,13 +272,13 @@ bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
         }
     }
 
-    std::cerr << CColor::RED << "Error: Entry not found: " << name << CColor::RESET << "\n";
+    std::cerr << CColor::RED << "Entry not found: " << name << CColor::RESET << "\n";
     return false;
 }
 
 bool CAuthCLI::commandImport(const std::vector<std::string>& args) {
     if (args.empty()) {
-        std::cerr << CColor::RED << "Error: Missing argument for import command" << CColor::RESET << "\n";
+        std::cerr << CColor::RED << "Missing argument for import command" << CColor::RESET << "\n";
         std::cerr << "Usage: auth import <file>\n";
         return false;
     }
@@ -285,14 +288,14 @@ bool CAuthCLI::commandImport(const std::vector<std::string>& args) {
         std::cout << CColor::GREEN << "Successfully imported entries from " << filepath << CColor::RESET << "\n";
         return true;
     } else {
-        std::cerr << CColor::RED << "Error: Failed to import entries from " << filepath << CColor::RESET << "\n";
+        std::cerr << CColor::RED << "Failed to import entries from " << filepath << CColor::RESET << "\n";
         return false;
     }
 }
 
 bool CAuthCLI::commandExport(const std::vector<std::string>& args) {
     if (args.empty()) {
-        std::cerr << CColor::RED << "Error: Missing argument for export command" << CColor::RESET << "\n";
+        std::cerr << CColor::RED << "Missing argument for export command" << CColor::RESET << "\n";
         std::cerr << "Usage: auth export <file>\n";
         return false;
     }
@@ -304,7 +307,26 @@ bool CAuthCLI::commandExport(const std::vector<std::string>& args) {
         std::cout << CColor::GREEN << "Successfully exported " << entries.size() << " entries to " << filepath << CColor::RESET << "\n";
         return true;
     } else {
-        std::cerr << CColor::RED << "Error: Failed to export entries to " << filepath << CColor::RESET << "\n";
+        std::cerr << CColor::RED << "Failed to export entries to " << filepath << CColor::RESET << "\n";
+        return false;
+    }
+}
+
+bool CAuthCLI::commandWipe() {
+    std::string homeDir = getHomeDir();
+    if (homeDir.empty()) {
+        std::cerr << CColor::RED << "Could not find home directory" << CColor::RESET << "\n";
+        return false;
+    }
+
+    std::string dbPath = homeDir + "/.local/share/auth/db.toml";
+
+    try {
+        std::filesystem::remove(dbPath);
+        std::cout << CColor::GREEN << "Database wiped successfully" << CColor::RESET << "\n";
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << CColor::RED << "Error wiping database: " << e.what() << CColor::RESET << "\n";
         return false;
     }
 }

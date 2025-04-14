@@ -17,7 +17,7 @@ bool importEntriesFromToml(const std::string& filepath, IAuthDB& db) {
 
         auto entriesArray = tbl["entries"].as_array();
         if (!entriesArray) {
-            std::cerr << CColor::RED << "Error: Missing 'entries' array in TOML file" << CColor::RESET << std::endl;
+            std::cerr << CColor::RED << "Missing 'entries' array in TOML file" << CColor::RESET << std::endl;
             return false;
         }
 

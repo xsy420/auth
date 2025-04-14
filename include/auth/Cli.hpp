@@ -20,6 +20,7 @@ class CAuthCLI {
     bool                     commandInfo(const std::vector<std::string>& args);
     bool                     commandImport(const std::vector<std::string>& args);
     bool                     commandExport(const std::vector<std::string>& args);
+    bool                     commandWipe();
 
     std::unique_ptr<IAuthDB> m_db;
 };
