@@ -87,6 +87,11 @@ Storage file for TOTP entries
 .SH SECURITY
 TOTP secrets are stored locally on disk.
 
+.SH ENVIRONMENT
+.TP
+.B AUTH_DATABASE_DIR
+Specifies the directory where the database file (db.toml) is stored. If this variable is not set, the default location $HOME/.local/share/auth/ is used.
+
 .SH REPORTING BUGS
 Report bugs at: https://github.com/nnyyxxxx/auth/issues
 

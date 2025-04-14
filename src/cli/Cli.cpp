@@ -18,14 +18,26 @@ std::string CAuthCLI::getHomeDir() const {
 }
 
 CAuthCLI::CAuthCLI() {
-    std::string homeDir = getHomeDir();
-    if (!homeDir.empty()) {
-        std::string dbPath = homeDir + "/.local/share/auth/db.toml";
-        m_db               = std::make_unique<CFileAuthDB>(dbPath);
+    const char* dbDir = getenv("AUTH_DATABASE_DIR");
+    std::string dbPath;
 
-        if (!m_db->load())
-            m_db->save();
+    if (dbDir)
+        dbPath = std::string(dbDir) + "/db.toml";
+    else {
+        std::string homeDir = getHomeDir();
+        if (homeDir.empty())
+            return;
+
+        dbPath = homeDir + "/.local/share/auth/db.toml";
     }
+
+    const std::filesystem::path configPath = std::filesystem::path(dbPath).parent_path();
+    if (!std::filesystem::exists(configPath))
+        std::filesystem::create_directories(configPath);
+
+    m_db = std::make_unique<CFileAuthDB>(dbPath);
+    if (!m_db->load())
+        m_db->save();
 }
 
 void CAuthCLI::printUsage() {
@@ -333,13 +345,20 @@ bool CAuthCLI::commandWipe() {
         m_db->removeEntry(id);
     }
 
-    std::string homeDir = getHomeDir();
-    if (homeDir.empty()) {
-        std::cerr << CColor::RED << "Could not find home directory" << CColor::RESET << "\n";
-        return false;
-    }
+    std::string dbPath;
+    const char* dbDir = getenv("AUTH_DATABASE_DIR");
 
-    std::string dbPath = homeDir + "/.local/share/auth/db.toml";
+    if (dbDir)
+        dbPath = std::string(dbDir) + "/db.toml";
+    else {
+        std::string homeDir = getHomeDir();
+        if (homeDir.empty()) {
+            std::cerr << CColor::RED << "Could not find home directory" << CColor::RESET << "\n";
+            return false;
+        }
+
+        dbPath = homeDir + "/.local/share/auth/db.toml";
+    }
 
     try {
         if (std::filesystem::exists(dbPath))
