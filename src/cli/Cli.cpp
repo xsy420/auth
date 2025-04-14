@@ -303,6 +303,11 @@ bool CAuthCLI::commandExport(const std::vector<std::string>& args) {
     std::string filepath = args[0];
     auto        entries  = m_db->getEntries();
 
+    if (entries.empty()) {
+        std::cerr << CColor::RED << "No entries to export" << CColor::RESET << "\n";
+        return false;
+    }
+
     if (exportEntriesToToml(filepath, entries)) {
         std::cout << CColor::GREEN << "Successfully exported " << entries.size() << " entries to " << filepath << CColor::RESET << "\n";
         return true;

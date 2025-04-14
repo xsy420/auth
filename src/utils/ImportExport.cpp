@@ -58,6 +58,9 @@ bool importEntriesFromToml(const std::string& filepath, IAuthDB& db) {
 }
 
 bool exportEntriesToToml(const std::string& filepath, const std::vector<SAuthEntry>& entries) {
+    if (entries.empty())
+        return false;
+
     try {
         toml::table root;
         toml::array entriesArray;
