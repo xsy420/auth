@@ -324,6 +324,15 @@ bool CAuthCLI::commandWipe() {
         return false;
     }
 
+    std::vector<uint64_t> ids;
+    for (const auto& entry : entries) {
+        ids.push_back(entry.id);
+    }
+
+    for (auto id : ids) {
+        m_db->removeEntry(id);
+    }
+
     std::string homeDir = getHomeDir();
     if (homeDir.empty()) {
         std::cerr << CColor::RED << "Could not find home directory" << CColor::RESET << "\n";
@@ -333,7 +342,8 @@ bool CAuthCLI::commandWipe() {
     std::string dbPath = homeDir + "/.local/share/auth/db.toml";
 
     try {
-        std::filesystem::remove(dbPath);
+        if (std::filesystem::exists(dbPath))
+            std::filesystem::remove(dbPath);
         std::cout << CColor::GREEN << "Database wiped successfully" << CColor::RESET << "\n";
         return true;
     } catch (const std::exception& e) {

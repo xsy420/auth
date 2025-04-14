@@ -54,6 +54,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(tomlplusplus)
 
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG v3.8.1
+)
+FetchContent_MakeAvailable(Catch2)
+
 find_package(Threads REQUIRED)
 
 pkg_check_modules(
@@ -71,6 +78,31 @@ target_link_libraries(
   PkgConfig::deps
   Threads::Threads
   tomlplusplus::tomlplusplus)
+
+file(GLOB_RECURSE LIBSRCFILES "src/core/*.cpp" "src/db/*.cpp" "src/utils/*.cpp" "src/cli/*.cpp")
+add_library(AuthLib STATIC ${LIBSRCFILES})
+target_link_libraries(
+  AuthLib
+  PkgConfig::deps
+  Threads::Threads
+  tomlplusplus::tomlplusplus)
+
+enable_testing()
+include(CTest)
+include(Catch)
+
+configure_file(tests/misc/TestEntries.toml tests/misc/TestEntries.toml COPYONLY)
+
+file(GLOB_RECURSE TESTFILES "tests/*.cpp")
+add_executable(AuthTests ${TESTFILES})
+target_link_libraries(
+  AuthTests
+  AuthLib
+  Catch2::Catch2WithMain)
+
+add_custom_target(run_tests COMMAND AuthTests)
+
+catch_discover_tests(AuthTests)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

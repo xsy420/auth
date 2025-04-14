@@ -12,15 +12,16 @@ class CAuthCLI {
     bool processCommand(int argc, char* argv[]);
     void printUsage();
 
-  private:
-    bool                     commandAdd(const std::vector<std::string>& args);
-    bool                     commandRemove(const std::vector<std::string>& args);
-    bool                     commandList();
-    bool                     commandGenerate(const std::vector<std::string>& args);
-    bool                     commandInfo(const std::vector<std::string>& args);
-    bool                     commandImport(const std::vector<std::string>& args);
-    bool                     commandExport(const std::vector<std::string>& args);
-    bool                     commandWipe();
-
+  protected:
     std::unique_ptr<IAuthDB> m_db;
+
+  private:
+    bool commandAdd(const std::vector<std::string>& args);
+    bool commandRemove(const std::vector<std::string>& args);
+    bool commandList();
+    bool commandGenerate(const std::vector<std::string>& args);
+    bool commandInfo(const std::vector<std::string>& args);
+    bool commandImport(const std::vector<std::string>& args);
+    bool commandExport(const std::vector<std::string>& args);
+    bool commandWipe();
 };
