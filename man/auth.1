@@ -1,0 +1,94 @@
+.\" manpage for auth
+.TH "auth" "1" "April 2025" "" "auth manual"
+
+.SH NAME
+auth \- command-line TOTP authenticator
+
+.SH SYNOPSIS
+\fBauth\fR [\fICOMMAND\fR] [\fIOPTIONS\fR]
+
+.SH DESCRIPTION
+A simple terminal-based authenticator CLI written in CPP that generates TOTP codes.
+
+.SH COMMANDS
+.TP
+\fBadd\fR <name> <secret> [digits] [period]
+Add a new TOTP entry with the specified name and secret
+.br
+Optional parameters:
+.br
+\- digits: Number of digits in the code (default: 6, range: 6-8)
+.br
+\- period: Time period in seconds (default: 30)
+
+.TP
+\fBlist\fR
+List all entries with their current TOTP codes
+
+.TP
+\fBgenerate\fR <name>
+Generate and show the TOTP code for a specific entry
+
+.TP
+\fBremove\fR <name or id>
+Remove an entry specified by name or ID
+
+.TP
+\fBinfo\fR <name>
+Show information for a specific entry
+
+.TP
+\fBimport\fR <file>
+Import entries from a TOML file
+
+.TP
+\fBexport\fR <file>
+Export entries to a TOML file
+
+.TP
+\fBwipe\fR
+Delete all entries from the database
+
+.TP
+\fBhelp\fR
+Show usage information
+
+.SH EXAMPLES
+.TP
+Add a new entry:
+.br
+\fBauth add\fR "Gmail" "JBSWY3DPEHPK3PXP"
+
+.TP
+Add an entry with 8 digits and 60-second period:
+.br
+\fBauth add\fR "Work VPN" "JBSWY3DPEHPK3PXP" 8 60
+
+.TP
+Generate a code for an entry:
+.br
+\fBauth generate\fR "Gmail"
+
+.TP
+List all entries:
+.br
+\fBauth list\fR
+
+.TP
+Remove an entry:
+.br
+\fBauth remove\fR "Gmail"
+
+.SH FILES
+.TP
+\fI~/.local/share/auth/db.toml\fR
+Storage file for TOTP entries
+
+.SH SECURITY
+TOTP secrets are stored locally on disk.
+
+.SH REPORTING BUGS
+Report bugs at: https://github.com/nnyyxxxx/auth/issues
+
+.SH AUTHOR
+Written by Nyx <nnyyxxxx@protonmail.com>
