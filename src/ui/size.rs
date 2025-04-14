@@ -3,6 +3,9 @@ use ratatui::widgets::Paragraph;
 
 use crate::ui::layout::pad_vertical;
 
+const MIN_WIDTH: u16 = 110;
+const MIN_HEIGHT: u16 = 30;
+
 const SIZE_WARNING: &[&str] = &[
     "Terminal size too small:",
     "Width = {} Height = {}",
@@ -21,20 +24,29 @@ pub fn check_terminal_size(frame: &mut Frame, area: Rect) -> bool {
 }
 
 fn is_terminal_too_small(area: Rect) -> bool {
-    area.width < 110 || area.height < 31
+    area.width < MIN_WIDTH || area.height < MIN_HEIGHT
 }
 
 fn create_warning_text(area: Rect) -> Vec<Line<'static>> {
     SIZE_WARNING
         .iter()
-        .map(|&s| format_warning_line(s, area.width))
+        .enumerate()
+        .map(|(i, &s)| {
+            if i == 4 {
+                format_warning_line(s, MIN_WIDTH, MIN_HEIGHT)
+            } else {
+                format_warning_line(s, area.width, area.height)
+            }
+        })
         .collect()
 }
 
-fn format_warning_line(text: &str, width: u16) -> Line<'static> {
-    let text = match text.contains("{}") {
-        true => text.replace("{}", &width.to_string()),
-        false => text.to_string(),
+fn format_warning_line(text: &str, width: u16, height: u16) -> Line<'static> {
+    let text = if text.contains("{}") {
+        text.replacen("{}", &width.to_string(), 1)
+            .replacen("{}", &height.to_string(), 1)
+    } else {
+        text.to_string()
     };
     Line::from(text)
 }
