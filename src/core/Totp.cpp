@@ -1,4 +1,4 @@
-#include "auth/Totp.hpp"
+#include "Totp.hpp"
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
 #include <ctime>

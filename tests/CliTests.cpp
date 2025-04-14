@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include "auth/tests/TestCli.hpp"
+#include "helpers/TestCli.hpp"
 #include <algorithm>
 #include <cctype>
 #include <regex>

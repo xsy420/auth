@@ -1,7 +1,7 @@
 #pragma once
 
-#include "auth/Cli.hpp"
-#include "auth/tests/MockDb.hpp"
+#include "../../src/cli/Cli.hpp"
+#include "../mocks/MockDb.hpp"
 #include <sstream>
 #include <memory>
 #include <string>

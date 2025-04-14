@@ -1,5 +1,5 @@
-#include "auth/Color.hpp"
-#include "auth/Cli.hpp"
+#include "core/Color.hpp"
+#include "cli/Cli.hpp"
 #include <iostream>
 #include <clocale>
 

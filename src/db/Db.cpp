@@ -1,4 +1,4 @@
-#include "auth/Db.hpp"
+#include "Db.hpp"
 #include <fstream>
 #include <iostream>
 #include <filesystem>

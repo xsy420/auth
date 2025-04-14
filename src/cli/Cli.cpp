@@ -1,7 +1,7 @@
-#include "auth/Cli.hpp"
-#include "auth/Color.hpp"
-#include "auth/Totp.hpp"
-#include "auth/Import.hpp"
+#include "Cli.hpp"
+#include "../core/Color.hpp"
+#include "../core/Totp.hpp"
+#include "../utils/ImportExport.hpp"
 #include <iostream>
 #include <filesystem>
 #include <pwd.h>

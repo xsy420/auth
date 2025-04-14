@@ -1,9 +1,9 @@
-#include "auth/Import.hpp"
+#include "ImportExport.hpp"
 #include <toml++/toml.h>
 #include <fstream>
 #include <iostream>
 #include <filesystem>
-#include "auth/Color.hpp"
+#include "../core/Color.hpp"
 
 bool importEntriesFromToml(const std::string& filepath, IAuthDB& db) {
     try {

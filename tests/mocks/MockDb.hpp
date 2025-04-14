@@ -1,6 +1,6 @@
 #pragma once
 
-#include "auth/Db.hpp"
+#include "../../src/db/Db.hpp"
 #include <vector>
 #include <string>
 

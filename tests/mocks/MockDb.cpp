@@ -1,4 +1,4 @@
-#include "auth/tests/MockDb.hpp"
+#include "MockDb.hpp"
 #include <algorithm>
 #include <filesystem>
 

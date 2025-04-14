@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include "auth/Totp.hpp"
+#include "../src/core/Totp.hpp"
 #include <string>
 
 TEST_CASE("TOTP constructor sets correct default values", "[totp]") {

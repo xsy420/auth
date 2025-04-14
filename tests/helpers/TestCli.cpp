@@ -1,4 +1,4 @@
-#include "auth/tests/TestCli.hpp"
+#include "TestCli.hpp"
 #include <iostream>
 #include <filesystem>
 #include <cstdlib>

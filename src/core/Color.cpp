@@ -1,4 +1,4 @@
-#include "auth/Color.hpp"
+#include "Color.hpp"
 
 const std::string CColor::RESET   = "\033[0m";
 const std::string CColor::RED     = "\033[31m";
