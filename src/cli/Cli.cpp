@@ -10,7 +10,7 @@
 #include <iomanip>
 #include <sstream>
 
-std::string getHomeDir() {
+std::string CAuthCLI::getHomeDir() const {
     const char* homeDir = getenv("HOME");
     if (homeDir == nullptr)
         homeDir = getpwuid(getuid())->pw_dir;

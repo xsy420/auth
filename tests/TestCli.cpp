@@ -1,5 +1,6 @@
 #include "auth/tests/TestCli.hpp"
 #include <iostream>
+#include <filesystem>
 
 CTestAuthCLI::CTestAuthCLI() : CAuthCLI() {
     m_db = std::make_unique<CMockAuthDB>();
@@ -7,6 +8,10 @@ CTestAuthCLI::CTestAuthCLI() : CAuthCLI() {
 
 CMockAuthDB* CTestAuthCLI::getMockDb() {
     return static_cast<CMockAuthDB*>(m_db.get());
+}
+
+std::string CTestAuthCLI::getHomeDir() const {
+    return "/tmp/auth_test_home";
 }
 
 bool CTestAuthCLI::runCommand(const std::string& command, const std::vector<std::string>& args) {

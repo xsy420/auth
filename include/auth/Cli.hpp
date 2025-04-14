@@ -8,12 +8,14 @@
 class CAuthCLI {
   public:
     CAuthCLI();
+    virtual ~CAuthCLI() = default;
 
     bool processCommand(int argc, char* argv[]);
     void printUsage();
 
   protected:
     std::unique_ptr<IAuthDB> m_db;
+    virtual std::string      getHomeDir() const;
 
   private:
     bool commandAdd(const std::vector<std::string>& args);

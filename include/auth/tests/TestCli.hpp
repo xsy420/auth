@@ -17,6 +17,9 @@ class CTestAuthCLI : public CAuthCLI {
     std::string  getStderr() const;
     void         resetCapture();
 
+  protected:
+    std::string getHomeDir() const override;
+
   private:
     std::stringstream m_stdoutCapture;
     std::stringstream m_stderrCapture;
