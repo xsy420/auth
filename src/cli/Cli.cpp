@@ -45,8 +45,10 @@ void CAuthCLI::printUsage() {
 }
 
 bool CAuthCLI::processCommand(int argc, char* argv[]) {
-    if (argc < 2)
-        return commandList();
+    if (argc < 2) {
+        printUsage();
+        return true;
+    }
 
     std::string              command = argv[1];
     std::vector<std::string> args;
