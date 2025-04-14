@@ -1,0 +1,7 @@
+prefix=@PREFIX@
+includedir=@INCLUDEDIR@
+
+Name: Auth
+Description: A TOTP Authenticator CLI
+Version: @AUTH_VERSION@
+Cflags: -I${includedir}/auth

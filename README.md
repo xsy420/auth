@@ -17,18 +17,13 @@ paru -S auth-tui
 Prebuilt binaries can be found in the [releases](https://github.com/nnyyxxxx/auth/releases) page
 
 ```bash
-curl -fsSL https://github.com/nnyyxxxx/auth/releases/latest/download/auth -o auth
-chmod +x auth
-sudo mv auth /usr/bin
+placeholder
 ```
 
 ### Building
 
-The built binary will be located inside of `target/release/`, Then it can be placed in `/usr/bin/`.
+The built binary will be located inside of `placeholder`, Then it can be placed in `/usr/bin/`.
 
 ```bash
-sudo pacman -S --needed rust git base-devel
-git clone https://github.com/nnyyxxxx/auth.git
-cd auth
-cargo build --release
+placeholder
 ```
