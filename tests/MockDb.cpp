@@ -48,12 +48,12 @@ void CMockAuthDB::reset() {
     m_nextId = 1;
 }
 
-CTemporaryFileFixture::CTemporaryFileFixture() : m_tempDbPath("/tmp/auth_test_db.toml") {
-    std::filesystem::remove(m_tempDbPath);
+CTemporaryFileFixture::CTemporaryFileFixture() : m_tempDbPath("/tmp/auth_test_dir/auth_test_db.toml") {
+    std::filesystem::create_directories("/tmp/auth_test_dir");
 }
 
 CTemporaryFileFixture::~CTemporaryFileFixture() {
-    std::filesystem::remove(m_tempDbPath);
+    std::filesystem::remove_all("/tmp/auth_test_dir");
 }
 
 std::string CTemporaryFileFixture::getDbPath() const {

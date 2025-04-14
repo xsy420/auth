@@ -6,6 +6,16 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <filesystem>
+
+class CTestEnvSetup {
+  public:
+    CTestEnvSetup();
+    ~CTestEnvSetup();
+
+  private:
+    std::string m_origDbDir;
+};
 
 class CTestAuthCLI : public CAuthCLI {
   public:
@@ -16,9 +26,6 @@ class CTestAuthCLI : public CAuthCLI {
     std::string  getStdout() const;
     std::string  getStderr() const;
     void         resetCapture();
-
-  protected:
-    std::string getHomeDir() const override;
 
   private:
     std::stringstream m_stdoutCapture;

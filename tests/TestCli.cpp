@@ -1,6 +1,30 @@
 #include "auth/tests/TestCli.hpp"
 #include <iostream>
 #include <filesystem>
+#include <cstdlib>
+#include <string>
+
+static CTestEnvSetup g_testEnvSetup;
+
+CTestEnvSetup::CTestEnvSetup() {
+    const char* envVal = getenv("AUTH_DATABASE_DIR");
+    if (envVal)
+        m_origDbDir = envVal;
+
+    const char* testDbDir = "/tmp/auth_test_dir";
+
+    if (!std::filesystem::exists(testDbDir))
+        std::filesystem::create_directories(testDbDir);
+
+    setenv("AUTH_DATABASE_DIR", testDbDir, 1);
+}
+
+CTestEnvSetup::~CTestEnvSetup() {
+    if (!m_origDbDir.empty())
+        setenv("AUTH_DATABASE_DIR", m_origDbDir.c_str(), 1);
+    else
+        unsetenv("AUTH_DATABASE_DIR");
+}
 
 CTestAuthCLI::CTestAuthCLI() : CAuthCLI() {
     m_db = std::make_unique<CMockAuthDB>();
@@ -8,10 +32,6 @@ CTestAuthCLI::CTestAuthCLI() : CAuthCLI() {
 
 CMockAuthDB* CTestAuthCLI::getMockDb() {
     return static_cast<CMockAuthDB*>(m_db.get());
-}
-
-std::string CTestAuthCLI::getHomeDir() const {
-    return "/tmp/auth_test_home";
 }
 
 bool CTestAuthCLI::runCommand(const std::string& command, const std::vector<std::string>& args) {
