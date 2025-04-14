@@ -95,6 +95,10 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
     if (args.size() >= 3) {
         try {
             digits = std::stoi(args[2]);
+            if (digits < 6 || digits > 8) {
+                std::cerr << CColor::RED << "Error: Digits must be between 6 and 8" << CColor::RESET << "\n";
+                return false;
+            }
         } catch (const std::exception& e) {
             std::cerr << CColor::RED << "Error: Invalid digits value" << CColor::RESET << "\n";
             return false;
@@ -104,8 +108,19 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
     if (args.size() >= 4) {
         try {
             period = std::stoi(args[3]);
+            if (period == 0) {
+                std::cerr << CColor::RED << "Error: Period cannot be 0" << CColor::RESET << "\n";
+                return false;
+            }
         } catch (const std::exception& e) {
             std::cerr << CColor::RED << "Error: Invalid period value" << CColor::RESET << "\n";
+            return false;
+        }
+    }
+
+    for (char c : secret) {
+        if (c != ' ' && c != '-' && !std::isalnum(c)) {
+            std::cerr << CColor::RED << "Error: Secret contains invalid characters" << CColor::RESET << "\n";
             return false;
         }
     }
@@ -179,7 +194,9 @@ bool CAuthCLI::commandList() {
     }
 
     time_t now             = time(nullptr);
-    int    periodRemaining = 30 - (now % 30);
+    int    periodRemaining = 0;
+    if (!entries.empty() && entries[0].period > 0)
+        periodRemaining = entries[0].period - (now % entries[0].period);
 
     std::cout << CColor::BOLD << std::left << std::setw(5) << "ID" << std::setw(maxNameLength + 2) << "NAME" << "CODE" << CColor::RESET << "\n";
 

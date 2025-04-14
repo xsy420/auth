@@ -41,7 +41,10 @@ std::vector<uint8_t>  decodeBase32(const std::string& input) {
     return result;
 }
 
-CTOTP::CTOTP(const std::string& secret, uint32_t digits, uint32_t period) : m_secret(secret), m_digits(digits), m_period(period) {}
+CTOTP::CTOTP(const std::string& secret, uint32_t digits, uint32_t period) : m_secret(secret), m_digits(digits), m_period(period) {
+    if (m_period == 0)
+        m_period = 30;
+}
 
 std::string CTOTP::generate() const {
     std::vector<uint8_t> key = decodeBase32(m_secret);

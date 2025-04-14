@@ -55,11 +55,10 @@ bool CFileAuthDB::load() {
 
             if (auto id = entryTable->get("id"))
                 authEntry.id = static_cast<uint64_t>(id->as_integer()->get());
-            else {
-                m_nextId     = std::max(m_nextId, authEntry.id + 1);
+            else
                 authEntry.id = m_nextId++;
-            }
 
+            m_nextId = std::max(m_nextId, authEntry.id + 1);
             m_entries.push_back(authEntry);
         }
 

@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
+#include "auth/Color.hpp"
 
 bool importEntriesFromToml(const std::string& filepath, IAuthDB& db) {
     try {
@@ -10,13 +11,13 @@ bool importEntriesFromToml(const std::string& filepath, IAuthDB& db) {
         try {
             tbl = toml::parse_file(filepath);
         } catch (const toml::parse_error& err) {
-            std::cerr << "Error parsing TOML: " << err << std::endl;
+            std::cerr << CColor::RED << "Error parsing TOML: " << err << CColor::RESET << std::endl;
             return false;
         }
 
         auto entriesArray = tbl["entries"].as_array();
         if (!entriesArray) {
-            std::cerr << "Error: Missing 'entries' array in TOML file" << std::endl;
+            std::cerr << CColor::RED << "Error: Missing 'entries' array in TOML file" << CColor::RESET << std::endl;
             return false;
         }
 
@@ -49,10 +50,9 @@ bool importEntriesFromToml(const std::string& filepath, IAuthDB& db) {
                 importCount++;
         }
 
-        std::cout << "Imported " << importCount << " entries" << std::endl;
         return importCount > 0;
     } catch (const std::exception& e) {
-        std::cerr << "Error importing entries: " << e.what() << std::endl;
+        std::cerr << CColor::RED << "Error importing entries: " << e.what() << CColor::RESET << std::endl;
         return false;
     }
 }
@@ -85,7 +85,7 @@ bool exportEntriesToToml(const std::string& filepath, const std::vector<SAuthEnt
         file << root;
         return true;
     } catch (const std::exception& e) {
-        std::cerr << "Error exporting entries: " << e.what() << std::endl;
+        std::cerr << CColor::RED << "Error exporting entries: " << e.what() << CColor::RESET << std::endl;
         return false;
     }
 }
