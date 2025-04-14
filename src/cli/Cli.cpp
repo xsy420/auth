@@ -76,7 +76,6 @@ bool CAuthCLI::processCommand(int argc, char* argv[]) {
         return true;
     } else {
         std::cerr << "Unknown command: " << command << "\n";
-        printUsage();
         return false;
     }
 }
