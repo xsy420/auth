@@ -318,6 +318,12 @@ bool CAuthCLI::commandExport(const std::vector<std::string>& args) {
 }
 
 bool CAuthCLI::commandWipe() {
+    auto entries = m_db->getEntries();
+    if (entries.empty()) {
+        std::cerr << CColor::RED << "No entries to wipe" << CColor::RESET << "\n";
+        return false;
+    }
+
     std::string homeDir = getHomeDir();
     if (homeDir.empty()) {
         std::cerr << CColor::RED << "Could not find home directory" << CColor::RESET << "\n";
