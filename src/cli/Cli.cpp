@@ -223,7 +223,6 @@ bool CAuthCLI::commandList() {
                   << CColor::BOLD << CColor::YELLOW << std::setw(8) << code << CColor::RESET << " " << CColor::MAGENTA << periodRemaining << "s" << CColor::RESET << "\n";
     }
 
-    std::cout << "\n";
     return true;
 }
 
