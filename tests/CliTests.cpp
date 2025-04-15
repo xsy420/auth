@@ -199,6 +199,137 @@ TEST_CASE("CLI info command", "[cli]") {
     }
 }
 
+TEST_CASE("CLI edit command", "[cli]") {
+    CTestAuthCLI cli;
+
+    SECTION("Edit entry by name") {
+        cli.getMockDb()->addEntry({"TestEntry", "SECRET123", 6, 30});
+
+        REQUIRE(cli.runCommand("edit", {"TestEntry", "UpdatedEntry", "NEWSECRET", "8", "60"}));
+        std::string output = cli.getStdout();
+        REQUIRE(contains(output, "Updated entry"));
+
+        auto entries = cli.getMockDb()->getEntries();
+        REQUIRE(entries.size() == 1);
+        REQUIRE(entries[0].name == "UpdatedEntry");
+        REQUIRE(entries[0].secret == "NEWSECRET");
+        REQUIRE(entries[0].digits == 8);
+        REQUIRE(entries[0].period == 60);
+    }
+
+    SECTION("Edit entry by ID") {
+        cli.getMockDb()->addEntry({"TestEntry", "SECRET123", 6, 30});
+        auto entries = cli.getMockDb()->getEntries();
+        auto id      = std::to_string(entries[0].id);
+
+        REQUIRE(cli.runCommand("edit", {id, "UpdatedEntry", "NEWSECRET", "8", "60"}));
+
+        entries = cli.getMockDb()->getEntries();
+        REQUIRE(entries.size() == 1);
+        REQUIRE(entries[0].name == "UpdatedEntry");
+        REQUIRE(entries[0].secret == "NEWSECRET");
+        REQUIRE(entries[0].digits == 8);
+        REQUIRE(entries[0].period == 60);
+    }
+
+    SECTION("Edit only name") {
+        cli.getMockDb()->addEntry({"TestEntry", "SECRET123", 6, 30});
+
+        REQUIRE(cli.runCommand("edit", {"TestEntry", "UpdatedName"}));
+
+        auto entries = cli.getMockDb()->getEntries();
+        REQUIRE(entries.size() == 1);
+        REQUIRE(entries[0].name == "UpdatedName");
+        REQUIRE(entries[0].secret == "SECRET123");
+        REQUIRE(entries[0].digits == 6);
+        REQUIRE(entries[0].period == 30);
+    }
+
+    SECTION("Edit only secret") {
+        cli.getMockDb()->addEntry({"TestEntry", "SECRET123", 6, 30});
+
+        REQUIRE(cli.runCommand("edit", {"TestEntry", "", "NEWSECRET"}));
+
+        auto entries = cli.getMockDb()->getEntries();
+        REQUIRE(entries.size() == 1);
+        REQUIRE(entries[0].name == "TestEntry");
+        REQUIRE(entries[0].secret == "NEWSECRET");
+        REQUIRE(entries[0].digits == 6);
+        REQUIRE(entries[0].period == 30);
+    }
+
+    SECTION("Edit only digits") {
+        cli.getMockDb()->addEntry({"TestEntry", "SECRET123", 6, 30});
+
+        REQUIRE(cli.runCommand("edit", {"TestEntry", "", "", "8"}));
+
+        auto entries = cli.getMockDb()->getEntries();
+        REQUIRE(entries.size() == 1);
+        REQUIRE(entries[0].name == "TestEntry");
+        REQUIRE(entries[0].secret == "SECRET123");
+        REQUIRE(entries[0].digits == 8);
+        REQUIRE(entries[0].period == 30);
+    }
+
+    SECTION("Edit only period") {
+        cli.getMockDb()->addEntry({"TestEntry", "SECRET123", 6, 30});
+
+        REQUIRE(cli.runCommand("edit", {"TestEntry", "", "", "", "60"}));
+
+        auto entries = cli.getMockDb()->getEntries();
+        REQUIRE(entries.size() == 1);
+        REQUIRE(entries[0].name == "TestEntry");
+        REQUIRE(entries[0].secret == "SECRET123");
+        REQUIRE(entries[0].digits == 6);
+        REQUIRE(entries[0].period == 60);
+    }
+
+    SECTION("Invalid digits") {
+        cli.getMockDb()->addEntry({"TestEntry", "SECRET123", 6, 30});
+
+        REQUIRE_FALSE(cli.runCommand("edit", {"TestEntry", "", "", "9"}));
+        std::string error = cli.getStderr();
+        REQUIRE(contains(error, "Digits must be between 6 and 8"));
+
+        auto entries = cli.getMockDb()->getEntries();
+        REQUIRE(entries[0].digits == 6);
+    }
+
+    SECTION("Invalid period") {
+        cli.getMockDb()->addEntry({"TestEntry", "SECRET123", 6, 30});
+
+        REQUIRE_FALSE(cli.runCommand("edit", {"TestEntry", "", "", "", "0"}));
+        std::string error = cli.getStderr();
+        REQUIRE(contains(error, "Period cannot be 0"));
+
+        auto entries = cli.getMockDb()->getEntries();
+        REQUIRE(entries[0].period == 30);
+    }
+
+    SECTION("Invalid secret") {
+        cli.getMockDb()->addEntry({"TestEntry", "SECRET123", 6, 30});
+
+        REQUIRE_FALSE(cli.runCommand("edit", {"TestEntry", "", "INVALID!@#"}));
+        std::string error = cli.getStderr();
+        REQUIRE(contains(error, "Secret contains invalid characters"));
+
+        auto entries = cli.getMockDb()->getEntries();
+        REQUIRE(entries[0].secret == "SECRET123");
+    }
+
+    SECTION("Missing arguments") {
+        REQUIRE_FALSE(cli.runCommand("edit"));
+        std::string error = cli.getStderr();
+        REQUIRE(contains(error, "Missing arguments"));
+    }
+
+    SECTION("Non-existent entry") {
+        REQUIRE_FALSE(cli.runCommand("edit", {"NonExistent", "UpdatedName"}));
+        std::string error = cli.getStderr();
+        REQUIRE(contains(error, "Entry not found"));
+    }
+}
+
 TEST_CASE("CLI wipe command", "[cli]") {
     CTestAuthCLI cli;
 

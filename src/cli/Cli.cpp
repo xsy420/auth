@@ -43,15 +43,16 @@ CAuthCLI::CAuthCLI() {
 void CAuthCLI::printUsage() {
     std::cout << CColor::BOLD << "Usage: " << CColor::CYAN << "auth" << CColor::RESET << " [command] [options]\n\n";
     std::cout << CColor::BOLD << "Commands:" << CColor::RESET << "\n";
-    std::cout << "  " << CColor::GREEN << "add" << CColor::RESET << "      <n> <secret> [digits] [period]     Add a new TOTP entry\n";
-    std::cout << "  " << CColor::GREEN << "list" << CColor::RESET << "                                        List all entries\n";
-    std::cout << "  " << CColor::GREEN << "generate" << CColor::RESET << " <n>                                Generate TOTP code for specific entry\n";
-    std::cout << "  " << CColor::GREEN << "remove" << CColor::RESET << "   <name or id>                       Remove an entry\n";
-    std::cout << "  " << CColor::GREEN << "info" << CColor::RESET << "     <n>                                Show details for an entry\n";
-    std::cout << "  " << CColor::GREEN << "import" << CColor::RESET << "   <file>                             Import entries from TOML file\n";
-    std::cout << "  " << CColor::GREEN << "export" << CColor::RESET << "   <file>                             Export entries to TOML file\n";
-    std::cout << "  " << CColor::GREEN << "wipe" << CColor::RESET << "                                        Wipe database\n";
-    std::cout << "  " << CColor::GREEN << "help" << CColor::RESET << "                                        Show this help message\n";
+    std::cout << "  " << CColor::GREEN << "add" << CColor::RESET << "      <n> <secret> [digits] [period]                   Add a new TOTP entry\n";
+    std::cout << "  " << CColor::GREEN << "list" << CColor::RESET << "                                                      List all entries\n";
+    std::cout << "  " << CColor::GREEN << "generate" << CColor::RESET << " <n>                                              Generate TOTP code for specific entry\n";
+    std::cout << "  " << CColor::GREEN << "remove" << CColor::RESET << "   <name or id>                                     Remove an entry\n";
+    std::cout << "  " << CColor::GREEN << "info" << CColor::RESET << "     <n>                                              Show details for an entry\n";
+    std::cout << "  " << CColor::GREEN << "edit" << CColor::RESET << "     <name or id> [name] [secret] [digits] [period]   Edit an entry\n";
+    std::cout << "  " << CColor::GREEN << "import" << CColor::RESET << "   <file>                                           Import entries from TOML file\n";
+    std::cout << "  " << CColor::GREEN << "export" << CColor::RESET << "   <file>                                           Export entries to TOML file\n";
+    std::cout << "  " << CColor::GREEN << "wipe" << CColor::RESET << "                                                      Wipe database\n";
+    std::cout << "  " << CColor::GREEN << "help" << CColor::RESET << "                                                      Show this help message\n";
     std::cout << "\n" << CColor::BOLD << "Options:" << CColor::RESET << "\n";
     std::cout << "  " << CColor::YELLOW << "digits" << CColor::RESET << "   Number of digits in the code (default: 6)\n";
     std::cout << "  " << CColor::YELLOW << "period" << CColor::RESET << "   Time period in seconds (default: 30)\n";
@@ -80,6 +81,8 @@ bool CAuthCLI::processCommand(int argc, char* argv[]) {
         return commandGenerate(args);
     else if (command == "info")
         return commandInfo(args);
+    else if (command == "edit")
+        return commandEdit(args);
     else if (command == "import")
         return commandImport(args);
     else if (command == "export")
@@ -282,6 +285,95 @@ bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
     std::cout << CColor::BOLD << "Code:   " << CColor::RESET << CColor::YELLOW << code << CColor::RESET << " (expires in " << CColor::MAGENTA << periodRemaining << "s"
               << CColor::RESET << ")\n";
     return true;
+}
+
+bool CAuthCLI::commandEdit(const std::vector<std::string>& args) {
+    if (args.empty()) {
+        std::cerr << CColor::RED << "Missing arguments for edit command" << CColor::RESET << "\n";
+        std::cerr << "Usage: auth edit <name or id> [name] [secret] [digits] [period]\n";
+        return false;
+    }
+
+    std::string nameOrId = args[0];
+    auto        entries  = m_db->getEntries();
+    SAuthEntry  entryToEdit;
+    bool        found = false;
+
+    try {
+        uint64_t id = std::stoull(nameOrId);
+        auto     it = std::ranges::find_if(entries, [id](const SAuthEntry& entry) { return entry.id == id; });
+
+        if (it != entries.end()) {
+            entryToEdit = *it;
+            found       = true;
+        }
+    } catch (const std::exception&) {
+        auto it = std::ranges::find_if(entries, [&nameOrId](const SAuthEntry& entry) { return entry.name == nameOrId; });
+
+        if (it != entries.end()) {
+            entryToEdit = *it;
+            found       = true;
+        }
+    }
+
+    if (!found) {
+        std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
+        return false;
+    }
+
+    std::string originalName = entryToEdit.name;
+
+    if (args.size() > 1 && !args[1].empty())
+        entryToEdit.name = args[1];
+
+    if (args.size() > 2 && !args[2].empty()) {
+        std::string secret = args[2];
+
+        for (char c : secret) {
+            if (c != ' ' && c != '-' && !std::isalnum(c)) {
+                std::cerr << CColor::RED << "Secret contains invalid characters" << CColor::RESET << "\n";
+                return false;
+            }
+        }
+
+        entryToEdit.secret = secret;
+    }
+
+    if (args.size() > 3 && !args[3].empty()) {
+        try {
+            uint32_t digits = std::stoi(args[3]);
+            if (digits < 6 || digits > 8) {
+                std::cerr << CColor::RED << "Digits must be between 6 and 8" << CColor::RESET << "\n";
+                return false;
+            }
+            entryToEdit.digits = digits;
+        } catch (const std::exception& e) {
+            std::cerr << CColor::RED << "Invalid digits value" << CColor::RESET << "\n";
+            return false;
+        }
+    }
+
+    if (args.size() > 4 && !args[4].empty()) {
+        try {
+            uint32_t period = std::stoi(args[4]);
+            if (period == 0) {
+                std::cerr << CColor::RED << "Period cannot be 0" << CColor::RESET << "\n";
+                return false;
+            }
+            entryToEdit.period = period;
+        } catch (const std::exception& e) {
+            std::cerr << CColor::RED << "Invalid period value" << CColor::RESET << "\n";
+            return false;
+        }
+    }
+
+    if (m_db->updateEntry(entryToEdit)) {
+        std::cout << CColor::GREEN << "Updated entry: " << originalName << CColor::RESET << "\n";
+        return true;
+    } else {
+        std::cerr << CColor::RED << "Failed to update entry" << CColor::RESET << "\n";
+        return false;
+    }
 }
 
 bool CAuthCLI::commandImport(const std::vector<std::string>& args) {
