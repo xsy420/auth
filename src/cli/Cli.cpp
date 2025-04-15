@@ -207,25 +207,23 @@ bool CAuthCLI::commandList() {
         maxNameLength = std::max(maxNameLength, entry.name.length());
     }
 
-    time_t now             = time(nullptr);
-    int    periodRemaining = 0;
-    if (!entries.empty() && entries[0].period > 0)
-        periodRemaining = entries[0].period - (now % entries[0].period);
+    std::cout << CColor::BOLD << std::left << std::setw(5) << "ID" << std::setw(maxNameLength + 2) << "NAME" << "CODE" << "    EXPIRES" << CColor::RESET << "\n";
 
-    std::cout << CColor::BOLD << std::left << std::setw(5) << "ID" << std::setw(maxNameLength + 2) << "NAME" << "CODE" << CColor::RESET << "\n";
+    std::cout << std::string(5 + maxNameLength + 8 + 14, '-') << "\n";
 
-    std::cout << std::string(5 + maxNameLength + 8, '-') << "\n";
+    time_t now = time(nullptr);
 
     for (const auto& entry : entries) {
         CTOTP       totp(entry.secret, entry.digits, entry.period);
         std::string code = totp.generate();
 
+        int         periodRemaining = entry.period - (now % entry.period);
+
         std::cout << CColor::CYAN << std::left << std::setw(5) << entry.id << CColor::RESET << CColor::GREEN << std::setw(maxNameLength + 2) << entry.name << CColor::RESET
-                  << CColor::BOLD << CColor::YELLOW << code << CColor::RESET << "\n";
+                  << CColor::BOLD << CColor::YELLOW << std::setw(8) << code << CColor::RESET << " " << CColor::MAGENTA << periodRemaining << "s" << CColor::RESET << "\n";
     }
 
-    std::cout << "\n" << CColor::MAGENTA << "Expires in " << periodRemaining << "s" << CColor::RESET << "\n";
-
+    std::cout << "\n";
     return true;
 }
 
