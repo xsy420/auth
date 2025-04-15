@@ -6,7 +6,7 @@ A simple terminal-based authenticator CLI written in CPP that generates TOTP cod
 
 ### Releases
 
-Yoink the binary from https://github.com/nnyyxxxx/auth/releases/latest
+Yoink the binary from the [releases page](https://github.com/nnyyxxxx/auth/releases/latest)
 
 ### Building
 
