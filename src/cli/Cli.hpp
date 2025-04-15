@@ -1,6 +1,6 @@
 #pragma once
 
-#include "db/Db.hpp"
+#include "../db/Db.hpp"
 #include <memory>
 #include <string>
 #include <vector>
