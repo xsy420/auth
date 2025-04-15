@@ -1,0 +1,6 @@
+[submodule "subprojects/tomlplusplus"]
+	path = subprojects/tomlplusplus
+	url = https://github.com/marzer/tomlplusplus.git
+[submodule "subprojects/catch2"]
+	path = subprojects/catch2
+	url = https://github.com/catchorg/Catch2.git

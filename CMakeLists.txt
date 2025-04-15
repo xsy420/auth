@@ -46,20 +46,8 @@ add_compile_options(
 set(CMAKE_EXECUTABLE_ENABLE_EXPORTS TRUE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
-include(FetchContent)
-FetchContent_Declare(
-  tomlplusplus
-  GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
-  GIT_TAG v3.4.0
-)
-FetchContent_MakeAvailable(tomlplusplus)
-
-FetchContent_Declare(
-  Catch2
-  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-  GIT_TAG v3.8.1
-)
-FetchContent_MakeAvailable(Catch2)
+add_subdirectory(subprojects/tomlplusplus)
+add_subdirectory(subprojects/catch2)
 
 find_package(Threads REQUIRED)
 
