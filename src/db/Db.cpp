@@ -14,59 +14,57 @@ bool CFileAuthDB::load() {
     if (!std::filesystem::exists(m_path))
         return false;
 
+    toml::table tbl;
     try {
-        toml::table tbl;
-        try {
-            tbl = toml::parse_file(m_path);
-        } catch (const toml::parse_error& err) {
-            std::cerr << "Error parsing TOML: " << err << std::endl;
-            return false;
-        }
-
-        m_entries.clear();
-        m_nextId = 1;
-
-        auto entries = tbl["entries"].as_array();
-        if (!entries)
-            return false;
-
-        for (const auto& entry : *entries) {
-            auto entryTable = entry.as_table();
-            if (!entryTable)
-                continue;
-
-            SAuthEntry authEntry;
-
-            if (auto name = entryTable->get("name"))
-                authEntry.name = name->as_string()->get();
-            else
-                continue;
-
-            if (auto secret = entryTable->get("secret"))
-                authEntry.secret = secret->as_string()->get();
-            else
-                continue;
-
-            if (auto digits = entryTable->get("digits"))
-                authEntry.digits = static_cast<uint32_t>(digits->as_integer()->get());
-
-            if (auto period = entryTable->get("period"))
-                authEntry.period = static_cast<uint32_t>(period->as_integer()->get());
-
-            if (auto id = entryTable->get("id"))
-                authEntry.id = static_cast<uint64_t>(id->as_integer()->get());
-            else
-                authEntry.id = m_nextId++;
-
-            m_nextId = std::max(m_nextId, authEntry.id + 1);
-            m_entries.push_back(authEntry);
-        }
-
-        return true;
+        tbl = toml::parse_file(m_path);
+    } catch (const toml::parse_error& err) {
+        std::cerr << "Error parsing TOML: " << err << std::endl;
+        return false;
     } catch (const std::exception& e) {
         std::cerr << "Error loading database: " << e.what() << std::endl;
         return false;
     }
+
+    m_entries.clear();
+    m_nextId = 1;
+
+    auto entries = tbl["entries"].as_array();
+    if (!entries)
+        return false;
+
+    for (const auto& entry : *entries) {
+        auto entryTable = entry.as_table();
+        if (!entryTable)
+            continue;
+
+        SAuthEntry authEntry;
+
+        auto       name = entryTable->get("name");
+        if (!name)
+            continue;
+        authEntry.name = name->as_string()->get();
+
+        auto secret = entryTable->get("secret");
+        if (!secret)
+            continue;
+        authEntry.secret = secret->as_string()->get();
+
+        if (auto digits = entryTable->get("digits"))
+            authEntry.digits = static_cast<uint32_t>(digits->as_integer()->get());
+
+        if (auto period = entryTable->get("period"))
+            authEntry.period = static_cast<uint32_t>(period->as_integer()->get());
+
+        if (auto id = entryTable->get("id"))
+            authEntry.id = static_cast<uint64_t>(id->as_integer()->get());
+        else
+            authEntry.id = m_nextId++;
+
+        m_nextId = std::max(m_nextId, authEntry.id + 1);
+        m_entries.push_back(authEntry);
+    }
+
+    return true;
 }
 
 bool CFileAuthDB::save() {

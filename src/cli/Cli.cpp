@@ -165,7 +165,6 @@ bool CAuthCLI::commandRemove(const std::vector<std::string>& args) {
     std::string nameOrId = args[0];
     auto        entries  = m_db->getEntries();
 
-    bool        found = false;
     try {
         uint64_t id = std::stoull(nameOrId);
         if (m_db->removeEntry(id)) {
@@ -173,23 +172,23 @@ bool CAuthCLI::commandRemove(const std::vector<std::string>& args) {
             return true;
         }
     } catch (const std::exception&) {
-        for (const auto& entry : entries) {
-            if (entry.name == nameOrId) {
-                if (m_db->removeEntry(entry.id)) {
-                    std::cout << CColor::GREEN << "Removed entry: " << nameOrId << CColor::RESET << "\n";
-                    return true;
-                }
-                found = true;
-                break;
-            }
-        }
+        // no-op
     }
 
-    if (!found)
-        std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
-    else
-        std::cerr << CColor::RED << "Failed to remove entry" << CColor::RESET << "\n";
+    for (const auto& entry : entries) {
+        if (entry.name != nameOrId)
+            continue;
 
+        if (m_db->removeEntry(entry.id)) {
+            std::cout << CColor::GREEN << "Removed entry: " << nameOrId << CColor::RESET << "\n";
+            return true;
+        }
+
+        std::cerr << CColor::RED << "Failed to remove entry" << CColor::RESET << "\n";
+        return false;
+    }
+
+    std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
     return false;
 }
 
@@ -240,18 +239,18 @@ bool CAuthCLI::commandGenerate(const std::vector<std::string>& args) {
     std::string name    = args[0];
     auto        entries = m_db->getEntries();
 
-    for (const auto& entry : entries) {
-        if (entry.name == name) {
-            CTOTP       totp(entry.secret, entry.digits, entry.period);
-            std::string code = totp.generate();
+    auto        it = std::ranges::find_if(entries, [&name](const SAuthEntry& entry) { return entry.name == name; });
 
-            std::cout << CColor::YELLOW << code << CColor::RESET << std::endl;
-            return true;
-        }
+    if (it == entries.end()) {
+        std::cerr << CColor::RED << "Entry not found: " << name << CColor::RESET << "\n";
+        return false;
     }
 
-    std::cerr << CColor::RED << "Entry not found: " << name << CColor::RESET << "\n";
-    return false;
+    CTOTP       totp(it->secret, it->digits, it->period);
+    std::string code = totp.generate();
+
+    std::cout << CColor::YELLOW << code << CColor::RESET << std::endl;
+    return true;
 }
 
 bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
@@ -264,28 +263,28 @@ bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
     std::string name    = args[0];
     auto        entries = m_db->getEntries();
 
-    for (const auto& entry : entries) {
-        if (entry.name == name) {
-            std::cout << CColor::BOLD << "Name:   " << CColor::RESET << CColor::GREEN << entry.name << CColor::RESET << "\n";
-            std::cout << CColor::BOLD << "ID:     " << CColor::RESET << CColor::CYAN << entry.id << CColor::RESET << "\n";
-            std::cout << CColor::BOLD << "Secret: " << CColor::RESET << entry.secret << "\n";
-            std::cout << CColor::BOLD << "Digits: " << CColor::RESET << entry.digits << "\n";
-            std::cout << CColor::BOLD << "Period: " << CColor::RESET << entry.period << "s\n";
+    auto        it = std::ranges::find_if(entries, [&name](const SAuthEntry& entry) { return entry.name == name; });
 
-            CTOTP       totp(entry.secret, entry.digits, entry.period);
-            std::string code = totp.generate();
-
-            time_t      now             = time(nullptr);
-            int         periodRemaining = entry.period - (now % entry.period);
-
-            std::cout << CColor::BOLD << "Code:   " << CColor::RESET << CColor::YELLOW << code << CColor::RESET << " (expires in " << CColor::MAGENTA << periodRemaining << "s"
-                      << CColor::RESET << ")\n";
-            return true;
-        }
+    if (it == entries.end()) {
+        std::cerr << CColor::RED << "Entry not found: " << name << CColor::RESET << "\n";
+        return false;
     }
 
-    std::cerr << CColor::RED << "Entry not found: " << name << CColor::RESET << "\n";
-    return false;
+    std::cout << CColor::BOLD << "Name:   " << CColor::RESET << CColor::GREEN << it->name << CColor::RESET << "\n";
+    std::cout << CColor::BOLD << "ID:     " << CColor::RESET << CColor::CYAN << it->id << CColor::RESET << "\n";
+    std::cout << CColor::BOLD << "Secret: " << CColor::RESET << it->secret << "\n";
+    std::cout << CColor::BOLD << "Digits: " << CColor::RESET << it->digits << "\n";
+    std::cout << CColor::BOLD << "Period: " << CColor::RESET << it->period << "s\n";
+
+    CTOTP       totp(it->secret, it->digits, it->period);
+    std::string code = totp.generate();
+
+    time_t      now             = time(nullptr);
+    int         periodRemaining = it->period - (now % it->period);
+
+    std::cout << CColor::BOLD << "Code:   " << CColor::RESET << CColor::YELLOW << code << CColor::RESET << " (expires in " << CColor::MAGENTA << periodRemaining << "s"
+              << CColor::RESET << ")\n";
+    return true;
 }
 
 bool CAuthCLI::commandImport(const std::vector<std::string>& args) {
@@ -336,13 +335,8 @@ bool CAuthCLI::commandWipe() {
         return false;
     }
 
-    std::vector<uint64_t> ids;
     for (const auto& entry : entries) {
-        ids.push_back(entry.id);
-    }
-
-    for (auto id : ids) {
-        m_db->removeEntry(id);
+        m_db->removeEntry(entry.id);
     }
 
     std::string dbPath;
@@ -356,13 +350,13 @@ bool CAuthCLI::commandWipe() {
             std::cerr << CColor::RED << "Could not find home directory" << CColor::RESET << "\n";
             return false;
         }
-
         dbPath = homeDir + "/.local/share/auth/db.toml";
     }
 
     try {
         if (std::filesystem::exists(dbPath))
             std::filesystem::remove(dbPath);
+
         std::cout << CColor::GREEN << "Database wiped successfully" << CColor::RESET << "\n";
         return true;
     } catch (const std::exception& e) {
