@@ -38,6 +38,20 @@ Remove an entry specified by name or ID
 Show information for a specific entry
 
 .TP
+\fBedit\fR <name or id> [name] [secret] [digits] [period]
+Edit an entry specified by name or ID
+.br
+To update only specific fields, use empty strings ("") for fields you want to leave unchanged:
+.br
+\- Edit only the name: \fBauth edit\fR "Gmail" "New Name"
+.br
+\- Edit only the secret: \fBauth edit\fR "Gmail" "" "NEWSECRET"
+.br
+\- Edit only the digits: \fBauth edit\fR "Gmail" "" "" "8"
+.br
+\- Edit only the period: \fBauth edit\fR "Gmail" "" "" "" "60"
+
+.TP
 \fBimport\fR <file>
 Import entries from a TOML file
 
@@ -78,6 +92,11 @@ List all entries:
 Remove an entry:
 .br
 \fBauth remove\fR "Gmail"
+
+.TP
+Edit only the period of an entry:
+.br
+\fBauth edit\fR "Gmail" "" "" "" "45"
 
 .SH FILES
 .TP

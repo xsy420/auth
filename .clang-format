@@ -1,7 +1,3 @@
-# Copyright (C) 2022-2025 vaxerski
-# Licensed under BSD 3-Clause License
-# .clang-format: https://github.com/hyprwm/Hyprland/blob/main/.clang-format
-# LICENSE: https://github.com/hyprwm/Hyprland/blob/main/LICENSE
 ---
 Language: Cpp
 BasedOnStyle: LLVM

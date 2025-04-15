@@ -1,9 +1,3 @@
-# Copyright (C) 2022-2025 vaxerski
-# Licensed under BSD 3-Clause License
-# Makefile: https://github.com/hyprwm/Hyprland/blob/main/Makefile
-# LICENSE: https://github.com/hyprwm/Hyprland/blob/main/LICENSE
-# Partially trimmed down for this project
-
 PREFIX = /usr/local
 
 stub:
