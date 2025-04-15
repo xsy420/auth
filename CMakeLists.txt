@@ -79,7 +79,8 @@ target_link_libraries(
   Threads::Threads
   tomlplusplus::tomlplusplus)
 
-file(GLOB_RECURSE LIBSRCFILES "src/core/*.cpp" "src/db/*.cpp" "src/utils/*.cpp" "src/cli/*.cpp")
+set(LIBSRCFILES ${SRCFILES})
+list(REMOVE_ITEM LIBSRCFILES "${CMAKE_CURRENT_SOURCE_DIR}/src/Main.cpp")
 add_library(AuthLib STATIC ${LIBSRCFILES})
 target_link_libraries(
   AuthLib
