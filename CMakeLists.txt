@@ -137,8 +137,6 @@ target_link_libraries(
   AuthLib
   Catch2::Catch2WithMain)
 
-add_custom_target(run_tests COMMAND AuthTests)
-
 catch_discover_tests(AuthTests)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
