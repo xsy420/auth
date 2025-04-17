@@ -460,10 +460,6 @@ bool CAuthCLI::commandWipe() {
         return false;
     }
 
-    for (const auto& entry : entries) {
-        m_db->removeEntry(entry.id);
-    }
-
     std::string dbPath;
     const char* dbDir = getenv("AUTH_DATABASE_DIR");
 
@@ -478,6 +474,14 @@ bool CAuthCLI::commandWipe() {
         dbPath = homeDir + "/.local/share/auth/auth.db";
     }
 
-    std::cout << CColor::GREEN << "Database wiped successfully" << CColor::RESET << "\n";
-    return true;
+    try {
+        if (std::filesystem::exists(dbPath))
+            std::filesystem::remove(dbPath);
+
+        std::cout << CColor::GREEN << "Database wiped successfully" << CColor::RESET << "\n";
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << CColor::RED << "Error wiping database: " << e.what() << CColor::RESET << "\n";
+        return false;
+    }
 }
