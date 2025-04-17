@@ -44,9 +44,9 @@ void CAuthCLI::printUsage() {
     std::cout << CColor::BOLD << "Commands:" << CColor::RESET << "\n";
     std::cout << "  " << CColor::GREEN << "add" << CColor::RESET << "      <n> <secret> [digits] [period]                   Add a new TOTP entry\n";
     std::cout << "  " << CColor::GREEN << "list" << CColor::RESET << "                                                      List all entries\n";
-    std::cout << "  " << CColor::GREEN << "generate" << CColor::RESET << " <n>                                              Generate TOTP code for specific entry\n";
+    std::cout << "  " << CColor::GREEN << "generate" << CColor::RESET << " <name or id>                                     Generate TOTP code for specific entry\n";
     std::cout << "  " << CColor::GREEN << "remove" << CColor::RESET << "   <name or id>                                     Remove an entry\n";
-    std::cout << "  " << CColor::GREEN << "info" << CColor::RESET << "     <n>                                              Show details for an entry\n";
+    std::cout << "  " << CColor::GREEN << "info" << CColor::RESET << "     <name or id>                                     Show details for an entry\n";
     std::cout << "  " << CColor::GREEN << "edit" << CColor::RESET << "     <name or id> [name] [secret] [digits] [period]   Edit an entry\n";
     std::cout << "  " << CColor::GREEN << "import" << CColor::RESET << "   <file> [format]                                  Import entries from file (format: toml, json)\n";
     std::cout << "  " << CColor::GREEN << "export" << CColor::RESET << "   <file> [format]                                  Export entries to file   (format: toml, json)\n";
@@ -232,21 +232,38 @@ bool CAuthCLI::commandList() {
 bool CAuthCLI::commandGenerate(const std::vector<std::string>& args) {
     if (args.empty()) {
         std::cerr << CColor::RED << "Missing argument for generate command" << CColor::RESET << "\n";
-        std::cerr << "Usage: auth generate <n>\n";
+        std::cerr << "Usage: auth generate <name or id>\n";
         return false;
     }
 
-    std::string name    = args[0];
-    auto        entries = m_db->getEntries();
+    std::string nameOrId = args[0];
+    auto        entries  = m_db->getEntries();
+    SAuthEntry  entry;
+    bool        found = false;
 
-    auto        it = std::ranges::find_if(entries, [&name](const SAuthEntry& entry) { return entry.name == name; });
+    try {
+        uint64_t id = std::stoull(nameOrId);
+        auto     it = std::ranges::find_if(entries, [id](const SAuthEntry& e) { return e.id == id; });
 
-    if (it == entries.end()) {
-        std::cerr << CColor::RED << "Entry not found: " << name << CColor::RESET << "\n";
+        if (it != entries.end()) {
+            entry = *it;
+            found = true;
+        }
+    } catch (const std::exception&) {
+        auto it = std::ranges::find_if(entries, [&nameOrId](const SAuthEntry& e) { return e.name == nameOrId; });
+
+        if (it != entries.end()) {
+            entry = *it;
+            found = true;
+        }
+    }
+
+    if (!found) {
+        std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
         return false;
     }
 
-    CTOTP       totp(it->secret, it->digits, it->period);
+    CTOTP       totp(entry.secret, entry.digits, entry.period);
     std::string code = totp.generate();
 
     std::cout << CColor::YELLOW << code << CColor::RESET << std::endl;
@@ -256,31 +273,48 @@ bool CAuthCLI::commandGenerate(const std::vector<std::string>& args) {
 bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
     if (args.empty()) {
         std::cerr << CColor::RED << "Missing argument for info command" << CColor::RESET << "\n";
-        std::cerr << "Usage: auth info <n>\n";
+        std::cerr << "Usage: auth info <name or id>\n";
         return false;
     }
 
-    std::string name    = args[0];
-    auto        entries = m_db->getEntries();
+    std::string nameOrId = args[0];
+    auto        entries  = m_db->getEntries();
+    SAuthEntry  entry;
+    bool        found = false;
 
-    auto        it = std::ranges::find_if(entries, [&name](const SAuthEntry& entry) { return entry.name == name; });
+    try {
+        uint64_t id = std::stoull(nameOrId);
+        auto     it = std::ranges::find_if(entries, [id](const SAuthEntry& e) { return e.id == id; });
 
-    if (it == entries.end()) {
-        std::cerr << CColor::RED << "Entry not found: " << name << CColor::RESET << "\n";
+        if (it != entries.end()) {
+            entry = *it;
+            found = true;
+        }
+    } catch (const std::exception&) {
+        auto it = std::ranges::find_if(entries, [&nameOrId](const SAuthEntry& e) { return e.name == nameOrId; });
+
+        if (it != entries.end()) {
+            entry = *it;
+            found = true;
+        }
+    }
+
+    if (!found) {
+        std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
         return false;
     }
 
-    std::cout << CColor::BOLD << "Name:   " << CColor::RESET << CColor::GREEN << it->name << CColor::RESET << "\n";
-    std::cout << CColor::BOLD << "ID:     " << CColor::RESET << CColor::CYAN << it->id << CColor::RESET << "\n";
-    std::cout << CColor::BOLD << "Secret: " << CColor::RESET << it->secret << "\n";
-    std::cout << CColor::BOLD << "Digits: " << CColor::RESET << it->digits << "\n";
-    std::cout << CColor::BOLD << "Period: " << CColor::RESET << it->period << "s\n";
+    std::cout << CColor::BOLD << "Name:   " << CColor::RESET << CColor::GREEN << entry.name << CColor::RESET << "\n";
+    std::cout << CColor::BOLD << "ID:     " << CColor::RESET << CColor::CYAN << entry.id << CColor::RESET << "\n";
+    std::cout << CColor::BOLD << "Secret: " << CColor::RESET << entry.secret << "\n";
+    std::cout << CColor::BOLD << "Digits: " << CColor::RESET << entry.digits << "\n";
+    std::cout << CColor::BOLD << "Period: " << CColor::RESET << entry.period << "s\n";
 
-    CTOTP       totp(it->secret, it->digits, it->period);
+    CTOTP       totp(entry.secret, entry.digits, entry.period);
     std::string code = totp.generate();
 
     time_t      now             = time(nullptr);
-    int         periodRemaining = it->period - (now % it->period);
+    int         periodRemaining = entry.period - (now % entry.period);
 
     std::cout << CColor::BOLD << "Code:   " << CColor::RESET << CColor::YELLOW << code << CColor::RESET << " (expires in " << CColor::MAGENTA << periodRemaining << "s"
               << CColor::RESET << ")\n";
