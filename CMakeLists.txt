@@ -60,41 +60,59 @@ endif()
 find_package(PkgConfig REQUIRED)
 find_package(Threads REQUIRED)
 
-set(SQLITE_AMALGAMATION_DIR "${CMAKE_BINARY_DIR}/sqlite_amalgamation")
-file(MAKE_DIRECTORY ${SQLITE_AMALGAMATION_DIR})
+pkg_check_modules(sqlite_dep IMPORTED_TARGET sqlite3)
 
-add_custom_command(
-  OUTPUT "${SQLITE_AMALGAMATION_DIR}/sqlite3.c" "${SQLITE_AMALGAMATION_DIR}/sqlite3.h"
-  COMMAND ${CMAKE_COMMAND} -E make_directory "${SQLITE_AMALGAMATION_DIR}"
-  COMMAND cd "${CMAKE_SOURCE_DIR}/subprojects/sqlite" && ./configure && make sqlite3.c
-  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/subprojects/sqlite/sqlite3.c" "${SQLITE_AMALGAMATION_DIR}/"
-  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/subprojects/sqlite/sqlite3.h" "${SQLITE_AMALGAMATION_DIR}/"
-  COMMENT "Generating SQLite amalgamation files"
-  VERBATIM
-)
+if(NOT sqlite_dep_FOUND)
+  message(STATUS "System SQLite3 not found, falling back to subproject")
+  set(SQLITE_AMALGAMATION_DIR "${CMAKE_BINARY_DIR}/sqlite_amalgamation")
+  file(MAKE_DIRECTORY ${SQLITE_AMALGAMATION_DIR})
 
-add_custom_target(sqlite3_amalgamation DEPENDS
-  "${SQLITE_AMALGAMATION_DIR}/sqlite3.c"
-  "${SQLITE_AMALGAMATION_DIR}/sqlite3.h")
+  add_custom_command(
+    OUTPUT "${SQLITE_AMALGAMATION_DIR}/sqlite3.c" "${SQLITE_AMALGAMATION_DIR}/sqlite3.h"
+    COMMAND ${CMAKE_COMMAND} -E make_directory "${SQLITE_AMALGAMATION_DIR}"
+    COMMAND cd "${CMAKE_SOURCE_DIR}/subprojects/sqlite" && ./configure && make sqlite3.c
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/subprojects/sqlite/sqlite3.c" "${SQLITE_AMALGAMATION_DIR}/"
+    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/subprojects/sqlite/sqlite3.h" "${SQLITE_AMALGAMATION_DIR}/"
+    COMMENT "Generating SQLite amalgamation files"
+    VERBATIM
+  )
 
-add_library(sqlite3 STATIC "${SQLITE_AMALGAMATION_DIR}/sqlite3.c")
-add_dependencies(sqlite3 sqlite3_amalgamation)
-target_compile_options(sqlite3 PRIVATE
-  -DSQLITE_ENABLE_COLUMN_METADATA=1
-  -DSQLITE_THREADSAFE=1
-  -DSQLITE_ENABLE_FTS4=1
-  -DSQLITE_ENABLE_FTS5=1
-  -DSQLITE_ENABLE_JSON1=1
-  -DSQLITE_ENABLE_RTREE=1
-  -w
-)
-set_target_properties(sqlite3 PROPERTIES
-  POSITION_INDEPENDENT_CODE ON)
-target_include_directories(sqlite3 PUBLIC "${SQLITE_AMALGAMATION_DIR}")
+  add_custom_target(sqlite3_amalgamation DEPENDS
+    "${SQLITE_AMALGAMATION_DIR}/sqlite3.c"
+    "${SQLITE_AMALGAMATION_DIR}/sqlite3.h")
+
+  add_library(sqlite3 STATIC "${SQLITE_AMALGAMATION_DIR}/sqlite3.c")
+  add_dependencies(sqlite3 sqlite3_amalgamation)
+  target_compile_options(sqlite3 PRIVATE
+    -DSQLITE_ENABLE_COLUMN_METADATA=1
+    -DSQLITE_THREADSAFE=1
+    -DSQLITE_ENABLE_FTS4=1
+    -DSQLITE_ENABLE_FTS5=1
+    -DSQLITE_ENABLE_JSON1=1
+    -DSQLITE_ENABLE_RTREE=1
+    -w
+  )
+  set_target_properties(sqlite3 PROPERTIES
+    POSITION_INDEPENDENT_CODE ON)
+  target_include_directories(sqlite3 PUBLIC "${SQLITE_AMALGAMATION_DIR}")
+else()
+  message(STATUS "Found system SQLite3: ${sqlite_dep_VERSION}")
+  add_library(sqlite3 ALIAS PkgConfig::sqlite_dep)
+endif()
 
 add_subdirectory(subprojects/tomlplusplus)
 add_subdirectory(subprojects/catch2)
-add_subdirectory(subprojects/nlohmann_json EXCLUDE_FROM_ALL)
+
+pkg_check_modules(json_dep IMPORTED_TARGET nlohmann_json)
+
+if(NOT json_dep_FOUND)
+  message(STATUS "System nlohmann_json not found, falling back to subproject")
+  add_subdirectory(subprojects/nlohmann_json EXCLUDE_FROM_ALL)
+else()
+  message(STATUS "Found system nlohmann_json: ${json_dep_VERSION}")
+  add_library(nlohmann_json::nlohmann_json ALIAS PkgConfig::json_dep)
+endif()
+
 pkg_check_modules(
   deps
   REQUIRED
