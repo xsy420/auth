@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <sqlite3.h>
 
 struct SAuthEntry {
     std::string name;
@@ -18,7 +19,6 @@ class IAuthDB {
     virtual ~IAuthDB() = default;
 
     virtual bool                    load()                               = 0;
-    virtual bool                    save()                               = 0;
     virtual std::vector<SAuthEntry> getEntries()                         = 0;
     virtual bool                    addEntry(const SAuthEntry& entry)    = 0;
     virtual bool                    removeEntry(uint64_t id)             = 0;
@@ -28,16 +28,19 @@ class IAuthDB {
 class CFileAuthDB : public IAuthDB {
   public:
     CFileAuthDB(const std::string& path);
+    ~CFileAuthDB() override;
 
     bool                    load() override;
-    bool                    save() override;
     std::vector<SAuthEntry> getEntries() override;
     bool                    addEntry(const SAuthEntry& entry) override;
     bool                    removeEntry(uint64_t id) override;
     bool                    updateEntry(const SAuthEntry& entry) override;
 
   private:
-    std::string             m_path;
-    std::vector<SAuthEntry> m_entries;
-    uint64_t                m_nextId = 1;
+    bool        initializeDb();
+    void        closeDb();
+
+    std::string m_path;
+    sqlite3*    m_db     = nullptr;
+    uint64_t    m_nextId = 1;
 };

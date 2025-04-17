@@ -9,7 +9,6 @@ class CMockAuthDB : public IAuthDB {
     CMockAuthDB() = default;
 
     bool                    load() override;
-    bool                    save() override;
     std::vector<SAuthEntry> getEntries() override;
     bool                    addEntry(const SAuthEntry& entry) override;
     bool                    removeEntry(uint64_t id) override;

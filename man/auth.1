@@ -52,12 +52,16 @@ To update only specific fields, use empty strings ("") for fields you want to le
 \- Edit only the period: \fBauth edit\fR "Gmail" "" "" "" "60"
 
 .TP
-\fBimport\fR <file>
-Import entries from a TOML file
+\fBimport\fR <file> [format]
+Import entries from a file
+.br
+Supported formats: toml, json (default: toml)
 
 .TP
-\fBexport\fR <file>
-Export entries to a TOML file
+\fBexport\fR <file> [format]
+Export entries to a file
+.br
+Supported formats: toml, json (default: toml)
 
 .TP
 \fBwipe\fR
@@ -98,10 +102,20 @@ Edit only the period of an entry:
 .br
 \fBauth edit\fR "Gmail" "" "" "" "45"
 
+.TP
+Export entries to JSON:
+.br
+\fBauth export\fR "backup.json" "json"
+
+.TP
+Import entries from TOML:
+.br
+\fBauth import\fR "backup.toml" "toml"
+
 .SH FILES
 .TP
-\fI~/.local/share/auth/db.toml\fR
-Storage file for TOTP entries
+\fI~/.local/share/auth/auth.db\fR
+SQLite database file for TOTP entries
 
 .SH SECURITY
 TOTP secrets are stored locally on disk.
@@ -109,7 +123,7 @@ TOTP secrets are stored locally on disk.
 .SH ENVIRONMENT
 .TP
 .B AUTH_DATABASE_DIR
-Specifies the directory where the database file (db.toml) is stored. If this variable is not set, the default location $HOME/.local/share/auth/ is used.
+Specifies the directory where the database file (auth.db) is stored. If this variable is not set, the default location $HOME/.local/share/auth/ is used.
 
 .SH REPORTING BUGS
 Report bugs at: https://github.com/nnyyxxxx/auth/issues

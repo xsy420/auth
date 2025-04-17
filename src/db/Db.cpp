@@ -1,8 +1,7 @@
 #include "Db.hpp"
-#include <fstream>
 #include <iostream>
 #include <filesystem>
-#include <toml++/toml.h>
+#include <algorithm>
 
 CFileAuthDB::CFileAuthDB(const std::string& path) : m_path(path) {
     const std::filesystem::path configPath = std::filesystem::path(path).parent_path();
@@ -10,122 +9,154 @@ CFileAuthDB::CFileAuthDB(const std::string& path) : m_path(path) {
         std::filesystem::create_directories(configPath);
 }
 
-bool CFileAuthDB::load() {
-    if (!std::filesystem::exists(m_path))
-        return false;
+CFileAuthDB::~CFileAuthDB() {
+    closeDb();
+}
 
-    toml::table tbl;
-    try {
-        tbl = toml::parse_file(m_path);
-    } catch (const toml::parse_error& err) {
-        std::cerr << "Error parsing TOML: " << err << std::endl;
-        return false;
-    } catch (const std::exception& e) {
-        std::cerr << "Error loading database: " << e.what() << std::endl;
+bool CFileAuthDB::initializeDb() {
+    if (m_db)
+        return true;
+
+    int rc = sqlite3_open(m_path.c_str(), &m_db);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Cannot open database: " << sqlite3_errmsg(m_db) << std::endl;
+        closeDb();
         return false;
     }
 
-    m_entries.clear();
-    m_nextId = 1;
+    const char* createTableSQL = "CREATE TABLE IF NOT EXISTS auth_entries ("
+                                 "id INTEGER PRIMARY KEY AUTOINCREMENT,"
+                                 "name TEXT NOT NULL,"
+                                 "secret TEXT NOT NULL,"
+                                 "digits INTEGER DEFAULT 6,"
+                                 "period INTEGER DEFAULT 30);";
 
-    auto entries = tbl["entries"].as_array();
-    if (!entries)
+    char*       errMsg = nullptr;
+    rc                 = sqlite3_exec(m_db, createTableSQL, nullptr, nullptr, &errMsg);
+
+    if (rc != SQLITE_OK) {
+        std::cerr << "SQL error: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+        closeDb();
         return false;
-
-    for (const auto& entry : *entries) {
-        auto entryTable = entry.as_table();
-        if (!entryTable)
-            continue;
-
-        SAuthEntry authEntry;
-
-        auto       name = entryTable->get("name");
-        if (!name)
-            continue;
-        authEntry.name = name->as_string()->get();
-
-        auto secret = entryTable->get("secret");
-        if (!secret)
-            continue;
-        authEntry.secret = secret->as_string()->get();
-
-        if (auto digits = entryTable->get("digits"))
-            authEntry.digits = static_cast<uint32_t>(digits->as_integer()->get());
-
-        if (auto period = entryTable->get("period"))
-            authEntry.period = static_cast<uint32_t>(period->as_integer()->get());
-
-        if (auto id = entryTable->get("id"))
-            authEntry.id = static_cast<uint64_t>(id->as_integer()->get());
-        else
-            authEntry.id = m_nextId++;
-
-        m_nextId = std::max(m_nextId, authEntry.id + 1);
-        m_entries.push_back(authEntry);
     }
 
     return true;
 }
 
-bool CFileAuthDB::save() {
-    try {
-        toml::table root;
-        toml::array entriesArray;
-
-        for (const auto& entry : m_entries) {
-            toml::table entryTable;
-            entryTable.insert("name", entry.name);
-            entryTable.insert("secret", entry.secret);
-            entryTable.insert("digits", static_cast<int64_t>(entry.digits));
-            entryTable.insert("period", static_cast<int64_t>(entry.period));
-            entryTable.insert("id", static_cast<int64_t>(entry.id));
-
-            entriesArray.push_back(entryTable);
-        }
-
-        root.insert("entries", entriesArray);
-
-        std::ofstream file(m_path);
-        if (!file.is_open())
-            return false;
-
-        file << root;
-        return true;
-    } catch (const std::exception& e) {
-        std::cerr << "Error saving database: " << e.what() << std::endl;
-        return false;
+void CFileAuthDB::closeDb() {
+    if (m_db) {
+        sqlite3_close(m_db);
+        m_db = nullptr;
     }
+}
+
+bool CFileAuthDB::load() {
+    return initializeDb();
 }
 
 std::vector<SAuthEntry> CFileAuthDB::getEntries() {
-    return m_entries;
+    std::vector<SAuthEntry> entries;
+
+    if (!initializeDb())
+        return entries;
+
+    const char*   sql  = "SELECT id, name, secret, digits, period FROM auth_entries;";
+    sqlite3_stmt* stmt = nullptr;
+
+    int           rc = sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << std::endl;
+        return entries;
+    }
+
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        SAuthEntry entry;
+        entry.id = sqlite3_column_int64(stmt, 0);
+
+        const char* name   = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
+        const char* secret = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
+
+        entry.name   = name ? name : "";
+        entry.secret = secret ? secret : "";
+        entry.digits = sqlite3_column_int(stmt, 3);
+        entry.period = sqlite3_column_int(stmt, 4);
+
+        entries.push_back(entry);
+
+        m_nextId = std::max(m_nextId, entry.id + 1);
+    }
+
+    sqlite3_finalize(stmt);
+    return entries;
 }
 
 bool CFileAuthDB::addEntry(const SAuthEntry& entry) {
-    SAuthEntry newEntry = entry;
-    newEntry.id         = m_nextId++;
-    m_entries.push_back(newEntry);
-    return save();
+    if (!initializeDb())
+        return false;
+
+    const char*   sql  = "INSERT INTO auth_entries (name, secret, digits, period) VALUES (?, ?, ?, ?);";
+    sqlite3_stmt* stmt = nullptr;
+
+    int           rc = sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << std::endl;
+        return false;
+    }
+
+    sqlite3_bind_text(stmt, 1, entry.name.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, entry.secret.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 3, entry.digits);
+    sqlite3_bind_int(stmt, 4, entry.period);
+
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    return rc == SQLITE_DONE;
 }
 
 bool CFileAuthDB::removeEntry(uint64_t id) {
-    auto it = std::ranges::find_if(m_entries, [id](const SAuthEntry& entry) { return entry.id == id; });
+    if (!initializeDb())
+        return false;
 
-    if (it != m_entries.end()) {
-        m_entries.erase(it);
-        return save();
+    const char*   sql  = "DELETE FROM auth_entries WHERE id = ?;";
+    sqlite3_stmt* stmt = nullptr;
+
+    int           rc = sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << std::endl;
+        return false;
     }
 
-    return false;
+    sqlite3_bind_int64(stmt, 1, id);
+
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    return rc == SQLITE_DONE;
 }
 
 bool CFileAuthDB::updateEntry(const SAuthEntry& entry) {
-    auto it = std::ranges::find_if(m_entries, [&entry](const SAuthEntry& e) { return e.id == entry.id; });
+    if (!initializeDb())
+        return false;
 
-    if (it != m_entries.end()) {
-        *it = entry;
-        return save();
+    const char*   sql  = "UPDATE auth_entries SET name = ?, secret = ?, digits = ?, period = ? WHERE id = ?;";
+    sqlite3_stmt* stmt = nullptr;
+
+    int           rc = sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << std::endl;
+        return false;
     }
 
-    return false;
+    sqlite3_bind_text(stmt, 1, entry.name.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, entry.secret.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_int(stmt, 3, entry.digits);
+    sqlite3_bind_int(stmt, 4, entry.period);
+    sqlite3_bind_int64(stmt, 5, entry.id);
+
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    return rc == SQLITE_DONE;
 }

@@ -6,10 +6,6 @@ bool CMockAuthDB::load() {
     return true;
 }
 
-bool CMockAuthDB::save() {
-    return true;
-}
-
 std::vector<SAuthEntry> CMockAuthDB::getEntries() {
     return m_entries;
 }
@@ -48,7 +44,7 @@ void CMockAuthDB::reset() {
     m_nextId = 1;
 }
 
-CTemporaryFileFixture::CTemporaryFileFixture() : m_tempDbPath("/tmp/auth_test_dir/auth_test_db.toml") {
+CTemporaryFileFixture::CTemporaryFileFixture() : m_tempDbPath("/tmp/auth_test_dir/auth_test_db.db") {
     std::filesystem::create_directories("/tmp/auth_test_dir");
 }
 

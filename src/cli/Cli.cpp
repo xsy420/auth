@@ -22,13 +22,13 @@ CAuthCLI::CAuthCLI() {
     std::string dbPath;
 
     if (dbDir)
-        dbPath = std::string(dbDir) + "/db.toml";
+        dbPath = std::string(dbDir) + "/auth.db";
     else {
         std::string homeDir = getHomeDir();
         if (homeDir.empty())
             return;
 
-        dbPath = homeDir + "/.local/share/auth/db.toml";
+        dbPath = homeDir + "/.local/share/auth/auth.db";
     }
 
     const std::filesystem::path configPath = std::filesystem::path(dbPath).parent_path();
@@ -36,8 +36,7 @@ CAuthCLI::CAuthCLI() {
         std::filesystem::create_directories(configPath);
 
     m_db = std::make_unique<CFileAuthDB>(dbPath);
-    if (!m_db->load())
-        m_db->save();
+    m_db->load();
 }
 
 void CAuthCLI::printUsage() {
@@ -49,13 +48,14 @@ void CAuthCLI::printUsage() {
     std::cout << "  " << CColor::GREEN << "remove" << CColor::RESET << "   <name or id>                                     Remove an entry\n";
     std::cout << "  " << CColor::GREEN << "info" << CColor::RESET << "     <n>                                              Show details for an entry\n";
     std::cout << "  " << CColor::GREEN << "edit" << CColor::RESET << "     <name or id> [name] [secret] [digits] [period]   Edit an entry\n";
-    std::cout << "  " << CColor::GREEN << "import" << CColor::RESET << "   <file>                                           Import entries from TOML file\n";
-    std::cout << "  " << CColor::GREEN << "export" << CColor::RESET << "   <file>                                           Export entries to TOML file\n";
+    std::cout << "  " << CColor::GREEN << "import" << CColor::RESET << "   <file> [format]                                  Import entries from file (format: toml, json)\n";
+    std::cout << "  " << CColor::GREEN << "export" << CColor::RESET << "   <file> [format]                                  Export entries to file   (format: toml, json)\n";
     std::cout << "  " << CColor::GREEN << "wipe" << CColor::RESET << "                                                      Wipe database\n";
     std::cout << "  " << CColor::GREEN << "help" << CColor::RESET << "                                                      Show this help message\n";
     std::cout << "\n" << CColor::BOLD << "Options:" << CColor::RESET << "\n";
     std::cout << "  " << CColor::YELLOW << "digits" << CColor::RESET << "   Number of digits in the code (default: 6)\n";
     std::cout << "  " << CColor::YELLOW << "period" << CColor::RESET << "   Time period in seconds (default: 30)\n";
+    std::cout << "  " << CColor::YELLOW << "format" << CColor::RESET << "   File format for import/export: toml or json (default: toml)\n";
 }
 
 bool CAuthCLI::processCommand(int argc, char* argv[]) {
@@ -379,12 +379,30 @@ bool CAuthCLI::commandEdit(const std::vector<std::string>& args) {
 bool CAuthCLI::commandImport(const std::vector<std::string>& args) {
     if (args.empty()) {
         std::cerr << CColor::RED << "Missing argument for import command" << CColor::RESET << "\n";
-        std::cerr << "Usage: auth import <file>\n";
+        std::cerr << "Usage: auth import <file> [format]\n";
+        std::cerr << "Supported formats: toml, json (default: toml)\n";
         return false;
     }
 
     std::string filepath = args[0];
-    if (importEntriesFromToml(filepath, *m_db)) {
+    EFileFormat format   = EFileFormat::TOML;
+
+    if (args.size() > 1) {
+        std::string formatStr = args[1];
+        std::transform(formatStr.begin(), formatStr.end(), formatStr.begin(), [](unsigned char c) { return std::tolower(c); });
+
+        if (formatStr == "json")
+            format = EFileFormat::JSON;
+        else if (formatStr == "toml")
+            format = EFileFormat::TOML;
+        else {
+            std::cerr << CColor::RED << "Unsupported format: " << formatStr << CColor::RESET << "\n";
+            std::cerr << "Supported formats: toml, json\n";
+            return false;
+        }
+    }
+
+    if (importEntries(filepath, *m_db, format)) {
         std::cout << CColor::GREEN << "Successfully imported entries from " << filepath << CColor::RESET << "\n";
         return true;
     } else {
@@ -396,19 +414,37 @@ bool CAuthCLI::commandImport(const std::vector<std::string>& args) {
 bool CAuthCLI::commandExport(const std::vector<std::string>& args) {
     if (args.empty()) {
         std::cerr << CColor::RED << "Missing argument for export command" << CColor::RESET << "\n";
-        std::cerr << "Usage: auth export <file>\n";
+        std::cerr << "Usage: auth export <file> [format]\n";
+        std::cerr << "Supported formats: toml, json (default: toml)\n";
         return false;
     }
 
     std::string filepath = args[0];
-    auto        entries  = m_db->getEntries();
+    EFileFormat format   = EFileFormat::TOML;
+
+    if (args.size() > 1) {
+        std::string formatStr = args[1];
+        std::transform(formatStr.begin(), formatStr.end(), formatStr.begin(), [](unsigned char c) { return std::tolower(c); });
+
+        if (formatStr == "json")
+            format = EFileFormat::JSON;
+        else if (formatStr == "toml")
+            format = EFileFormat::TOML;
+        else {
+            std::cerr << CColor::RED << "Unsupported format: " << formatStr << CColor::RESET << "\n";
+            std::cerr << "Supported formats: toml, json\n";
+            return false;
+        }
+    }
+
+    auto entries = m_db->getEntries();
 
     if (entries.empty()) {
         std::cerr << CColor::RED << "No entries to export" << CColor::RESET << "\n";
         return false;
     }
 
-    if (exportEntriesToToml(filepath, entries)) {
+    if (exportEntries(filepath, entries, format)) {
         std::cout << CColor::GREEN << "Successfully exported " << entries.size() << " entries to " << filepath << CColor::RESET << "\n";
         return true;
     } else {
@@ -432,24 +468,16 @@ bool CAuthCLI::commandWipe() {
     const char* dbDir = getenv("AUTH_DATABASE_DIR");
 
     if (dbDir)
-        dbPath = std::string(dbDir) + "/db.toml";
+        dbPath = std::string(dbDir) + "/auth.db";
     else {
         std::string homeDir = getHomeDir();
         if (homeDir.empty()) {
             std::cerr << CColor::RED << "Could not find home directory" << CColor::RESET << "\n";
             return false;
         }
-        dbPath = homeDir + "/.local/share/auth/db.toml";
+        dbPath = homeDir + "/.local/share/auth/auth.db";
     }
 
-    try {
-        if (std::filesystem::exists(dbPath))
-            std::filesystem::remove(dbPath);
-
-        std::cout << CColor::GREEN << "Database wiped successfully" << CColor::RESET << "\n";
-        return true;
-    } catch (const std::exception& e) {
-        std::cerr << CColor::RED << "Error wiping database: " << e.what() << CColor::RESET << "\n";
-        return false;
-    }
+    std::cout << CColor::GREEN << "Database wiped successfully" << CColor::RESET << "\n";
+    return true;
 }

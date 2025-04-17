@@ -4,5 +4,10 @@
 #include <string>
 #include <vector>
 
-bool importEntriesFromToml(const std::string& filepath, IAuthDB& db);
-bool exportEntriesToToml(const std::string& filepath, const std::vector<SAuthEntry>& entries);
+enum class EFileFormat {
+    TOML,
+    JSON
+};
+
+bool importEntries(const std::string& filepath, IAuthDB& db, EFileFormat format);
+bool exportEntries(const std::string& filepath, const std::vector<SAuthEntry>& entries, EFileFormat format);

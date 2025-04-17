@@ -96,7 +96,7 @@ TEST_CASE_METHOD(CTemporaryFileFixture, "Database handles missing file", "[db]")
     CFileAuthDB db(getDbPath());
 
     bool        loadResult = db.load();
-    REQUIRE_FALSE(loadResult);
+    REQUIRE(loadResult);
 
     auto entries = db.getEntries();
     REQUIRE(entries.empty());
@@ -105,7 +105,7 @@ TEST_CASE_METHOD(CTemporaryFileFixture, "Database handles missing file", "[db]")
 TEST_CASE_METHOD(CTemporaryFileFixture, "Database handles corrupted file", "[db]") {
     {
         std::ofstream file(getDbPath());
-        file << "This is not valid TOML syntax";
+        file << "This is not valid database content";
     }
 
     CFileAuthDB db(getDbPath());
