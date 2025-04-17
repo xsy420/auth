@@ -12,7 +12,7 @@ A simple terminal-based authenticator CLI written in CPP that generates TOTP cod
 
 .SH COMMANDS
 .TP
-\fBadd\fR <name> <secret> [digits] [period]
+\fBadd\fR <n> <secret> [digits] [period]
 Add a new TOTP entry with the specified name and secret
 .br
 Optional parameters:
@@ -26,7 +26,7 @@ Optional parameters:
 List all entries with their current TOTP codes
 
 .TP
-\fBgenerate\fR <name>
+\fBgenerate\fR <name or id>
 Generate and show the TOTP code for a specific entry
 
 .TP
@@ -34,7 +34,7 @@ Generate and show the TOTP code for a specific entry
 Remove an entry specified by name or ID
 
 .TP
-\fBinfo\fR <name>
+\fBinfo\fR <name or id>
 Show information for a specific entry
 
 .TP
