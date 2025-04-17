@@ -1,0 +1,25 @@
+{
+    "entries": [
+        {
+            "name": "Test Entry 1",
+            "secret": "JBSWY3DPEHPK3PXP",
+            "digits": 6,
+            "period": 30,
+            "id": 1
+        },
+        {
+            "name": "Test Entry 2",
+            "secret": "HXDMVJECJJWSRB3HWIZR4IFUGFTMXBOZ",
+            "digits": 8,
+            "period": 60,
+            "id": 2
+        },
+        {
+            "name": "Test Entry 3",
+            "secret": "GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ",
+            "digits": 7,
+            "period": 45,
+            "id": 3
+        }
+    ]
+}

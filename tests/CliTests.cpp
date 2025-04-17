@@ -444,3 +444,106 @@ TEST_CASE("CLI export command", "[cli]") {
         std::filesystem::remove(tempFile);
     }
 }
+
+TEST_CASE("CLI JSON import command", "[cli][json]") {
+    CTestAuthCLI cli;
+
+    SECTION("Import from JSON test file") {
+        REQUIRE(cli.getMockDb()->getEntries().empty());
+
+        REQUIRE(cli.runCommand("import", {"tests/misc/TestEntries.json", "json"}));
+
+        auto entries = cli.getMockDb()->getEntries();
+        REQUIRE(entries.size() == 3);
+
+        auto it1 = std::ranges::find_if(entries, [](const SAuthEntry& e) { return e.name == "Test Entry 1"; });
+        REQUIRE(it1 != entries.end());
+        REQUIRE(it1->secret == "JBSWY3DPEHPK3PXP");
+        REQUIRE(it1->digits == 6);
+        REQUIRE(it1->period == 30);
+
+        auto it2 = std::ranges::find_if(entries, [](const SAuthEntry& e) { return e.name == "Test Entry 2"; });
+        REQUIRE(it2 != entries.end());
+        REQUIRE(it2->digits == 8);
+        REQUIRE(it2->period == 60);
+
+        auto it3 = std::ranges::find_if(entries, [](const SAuthEntry& e) { return e.name == "Test Entry 3"; });
+        REQUIRE(it3 != entries.end());
+        REQUIRE(it3->digits == 7);
+        REQUIRE(it3->period == 45);
+    }
+
+    SECTION("Import with invalid format") {
+        REQUIRE_FALSE(cli.runCommand("import", {"tests/misc/TestEntries.json", "invalid"}));
+        std::string error = cli.getStderr();
+        REQUIRE(contains(error, "Supported formats: toml, json"));
+    }
+}
+
+TEST_CASE("CLI JSON export command", "[cli][json]") {
+    CTestAuthCLI cli;
+    std::string  tempFile = "/tmp/auth_test_export.json";
+
+    std::filesystem::remove(tempFile);
+
+    SECTION("Export to JSON file") {
+        cli.getMockDb()->addEntry({"Export Test 1", "ABCDEFGHIJKLMNOP", 6, 30});
+        cli.getMockDb()->addEntry({"Export Test 2", "QRSTUVWXYZ234567", 8, 60});
+
+        REQUIRE(cli.runCommand("export", {tempFile, "json"}));
+
+        REQUIRE(std::filesystem::exists(tempFile));
+
+        CTestAuthCLI cli2;
+        REQUIRE(cli2.runCommand("import", {tempFile, "json"}));
+
+        auto entries = cli2.getMockDb()->getEntries();
+        REQUIRE(entries.size() == 2);
+
+        auto it1 = std::ranges::find_if(entries, [](const SAuthEntry& e) { return e.name == "Export Test 1"; });
+        REQUIRE(it1 != entries.end());
+        REQUIRE(it1->secret == "ABCDEFGHIJKLMNOP");
+        REQUIRE(it1->digits == 6);
+        REQUIRE(it1->period == 30);
+
+        auto it2 = std::ranges::find_if(entries, [](const SAuthEntry& e) { return e.name == "Export Test 2"; });
+        REQUIRE(it2 != entries.end());
+        REQUIRE(it2->secret == "QRSTUVWXYZ234567");
+        REQUIRE(it2->digits == 8);
+        REQUIRE(it2->period == 60);
+
+        std::filesystem::remove(tempFile);
+    }
+
+    SECTION("JSON import/export roundtrip with non-default values") {
+        std::string roundtripFile = "/tmp/auth_test_roundtrip.json";
+        std::filesystem::remove(roundtripFile);
+
+        cli.getMockDb()->addEntry({"Roundtrip Test 1", "ABCDEFGHIJKLMNOP", 7, 45});
+        cli.getMockDb()->addEntry({"Roundtrip Test 2", "QRSTUVWXYZ234567", 8, 90});
+
+        REQUIRE(cli.runCommand("export", {roundtripFile, "json"}));
+
+        cli.getMockDb()->reset();
+        REQUIRE(cli.getMockDb()->getEntries().empty());
+
+        REQUIRE(cli.runCommand("import", {roundtripFile, "json"}));
+
+        auto entries = cli.getMockDb()->getEntries();
+        REQUIRE(entries.size() == 2);
+
+        auto it1 = std::ranges::find_if(entries, [](const SAuthEntry& e) { return e.name == "Roundtrip Test 1"; });
+        REQUIRE(it1 != entries.end());
+        REQUIRE(it1->secret == "ABCDEFGHIJKLMNOP");
+        REQUIRE(it1->digits == 7);
+        REQUIRE(it1->period == 45);
+
+        auto it2 = std::ranges::find_if(entries, [](const SAuthEntry& e) { return e.name == "Roundtrip Test 2"; });
+        REQUIRE(it2 != entries.end());
+        REQUIRE(it2->secret == "QRSTUVWXYZ234567");
+        REQUIRE(it2->digits == 8);
+        REQUIRE(it2->period == 90);
+
+        std::filesystem::remove(roundtripFile);
+    }
+}
