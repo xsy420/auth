@@ -18,22 +18,13 @@ set(BINDIR ${CMAKE_INSTALL_BINDIR})
 configure_file(auth.pc.in auth.pc @ONLY)
 
 set(CMAKE_MESSAGE_LOG_LEVEL "STATUS")
-
-find_package(PkgConfig REQUIRED)
-
-if(CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES DEBUG)
-  add_compile_definitions(AUTH_DEBUG)
-else()
-  add_compile_options(-O3)
-endif()
-
-add_compile_definitions(AUTH_VERSION="${AUTH_VERSION}")
-
-include_directories(. "include/" "src/")
-
 set(CMAKE_CXX_STANDARD 26)
-set(CXX_STANDARD_REQUIRED ON)
-add_compile_options(
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_EXECUTABLE_ENABLE_EXPORTS ON)
+
+add_library(auth_compiler_options INTERFACE)
+target_compile_options(auth_compiler_options INTERFACE
   -Wall
   -Wextra
   -Wno-unused-parameter
@@ -43,33 +34,48 @@ add_compile_options(
   -Wno-pointer-arith
   -fmacro-prefix-map=${CMAKE_SOURCE_DIR}/=)
 
-set(CMAKE_EXECUTABLE_ENABLE_EXPORTS TRUE)
-set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+target_compile_definitions(auth_compiler_options INTERFACE
+  AUTH_VERSION="${AUTH_VERSION}")
+
+if(CMAKE_BUILD_TYPE MATCHES Debug|DEBUG)
+  target_compile_definitions(auth_compiler_options INTERFACE AUTH_DEBUG)
+  target_compile_options(auth_compiler_options INTERFACE
+    -fsanitize=address,undefined
+    -fno-omit-frame-pointer)
+  target_link_options(auth_compiler_options INTERFACE
+    -fsanitize=address,undefined)
+else()
+  target_compile_options(auth_compiler_options INTERFACE -O3)
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT IPO_SUPPORTED)
+  if(IPO_SUPPORTED)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+  endif()
+endif()
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-everything -Wno-shadow -Wno-undef")
+  target_compile_options(auth_compiler_options INTERFACE -Wno-shadow -Wno-undef)
 endif()
-add_subdirectory(subprojects/tomlplusplus)
-add_subdirectory(subprojects/catch2)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-  string(REGEX REPLACE "-Wno-everything" "" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
-endif()
+find_package(PkgConfig REQUIRED)
+find_package(Threads REQUIRED)
 
 set(SQLITE_AMALGAMATION_DIR "${CMAKE_BINARY_DIR}/sqlite_amalgamation")
 file(MAKE_DIRECTORY ${SQLITE_AMALGAMATION_DIR})
 
 add_custom_command(
   OUTPUT "${SQLITE_AMALGAMATION_DIR}/sqlite3.c" "${SQLITE_AMALGAMATION_DIR}/sqlite3.h"
-  COMMAND mkdir -p "${SQLITE_AMALGAMATION_DIR}"
+  COMMAND ${CMAKE_COMMAND} -E make_directory "${SQLITE_AMALGAMATION_DIR}"
   COMMAND cd "${CMAKE_SOURCE_DIR}/subprojects/sqlite" && ./configure && make sqlite3.c
-  COMMAND cp "${CMAKE_SOURCE_DIR}/subprojects/sqlite/sqlite3.c" "${SQLITE_AMALGAMATION_DIR}/"
-  COMMAND cp "${CMAKE_SOURCE_DIR}/subprojects/sqlite/sqlite3.h" "${SQLITE_AMALGAMATION_DIR}/"
+  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/subprojects/sqlite/sqlite3.c" "${SQLITE_AMALGAMATION_DIR}/"
+  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/subprojects/sqlite/sqlite3.h" "${SQLITE_AMALGAMATION_DIR}/"
   COMMENT "Generating SQLite amalgamation files"
   VERBATIM
 )
 
-add_custom_target(sqlite3_amalgamation DEPENDS "${SQLITE_AMALGAMATION_DIR}/sqlite3.c" "${SQLITE_AMALGAMATION_DIR}/sqlite3.h")
+add_custom_target(sqlite3_amalgamation DEPENDS
+  "${SQLITE_AMALGAMATION_DIR}/sqlite3.c"
+  "${SQLITE_AMALGAMATION_DIR}/sqlite3.h")
 
 add_library(sqlite3 STATIC "${SQLITE_AMALGAMATION_DIR}/sqlite3.c")
 add_dependencies(sqlite3 sqlite3_amalgamation)
@@ -82,14 +88,13 @@ target_compile_options(sqlite3 PRIVATE
   -DSQLITE_ENABLE_RTREE=1
   -w
 )
-set_target_properties(sqlite3 PROPERTIES POSITION_INDEPENDENT_CODE ON)
+set_target_properties(sqlite3 PROPERTIES
+  POSITION_INDEPENDENT_CODE ON)
+target_include_directories(sqlite3 PUBLIC "${SQLITE_AMALGAMATION_DIR}")
 
-set(SQLITE3_INCLUDE_DIR "${SQLITE_AMALGAMATION_DIR}")
-
-include_directories(${CMAKE_SOURCE_DIR}/subprojects/nlohmann_json/include ${SQLITE3_INCLUDE_DIR})
-
-find_package(Threads REQUIRED)
-
+add_subdirectory(subprojects/tomlplusplus)
+add_subdirectory(subprojects/catch2)
+add_subdirectory(subprojects/nlohmann_json EXCLUDE_FROM_ALL)
 pkg_check_modules(
   deps
   REQUIRED
@@ -97,43 +102,53 @@ pkg_check_modules(
   openssl)
 
 file(GLOB_RECURSE SRCFILES "src/*.cpp")
-
 add_executable(Auth ${SRCFILES})
-add_dependencies(Auth sqlite3)
-
-target_include_directories(Auth PRIVATE ${SQLITE3_INCLUDE_DIR})
-target_link_libraries(
-  Auth
+target_include_directories(Auth PRIVATE
+  ${CMAKE_CURRENT_SOURCE_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(Auth PRIVATE
+  auth_compiler_options
   PkgConfig::deps
   Threads::Threads
   tomlplusplus::tomlplusplus
+  nlohmann_json::nlohmann_json
   sqlite3)
 
 set(LIBSRCFILES ${SRCFILES})
 list(REMOVE_ITEM LIBSRCFILES "${CMAKE_CURRENT_SOURCE_DIR}/src/Main.cpp")
 add_library(AuthLib STATIC ${LIBSRCFILES})
-add_dependencies(AuthLib sqlite3)
-
-target_include_directories(AuthLib PRIVATE ${SQLITE3_INCLUDE_DIR})
-target_link_libraries(
-  AuthLib
-  PkgConfig::deps
-  Threads::Threads
-  tomlplusplus::tomlplusplus
-  sqlite3)
+target_include_directories(AuthLib
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+  PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(AuthLib
+  PUBLIC
+    auth_compiler_options
+    sqlite3
+  PRIVATE
+    PkgConfig::deps
+    Threads::Threads
+    tomlplusplus::tomlplusplus
+    nlohmann_json::nlohmann_json)
+set_target_properties(AuthLib PROPERTIES
+  POSITION_INDEPENDENT_CODE ON)
 
 enable_testing()
 include(CTest)
 include(Catch)
 
-configure_file(tests/misc/TestEntries.toml tests/misc/TestEntries.toml COPYONLY)
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/tests/misc/TestEntries.toml
+  ${CMAKE_CURRENT_BINARY_DIR}/tests/misc/TestEntries.toml
+  COPYONLY)
 
 file(GLOB_RECURSE TESTFILES "tests/*.cpp")
 add_executable(AuthTests ${TESTFILES})
-add_dependencies(AuthTests sqlite3)
-
-target_link_libraries(
-  AuthTests
+target_link_libraries(AuthTests PRIVATE
+  auth_compiler_options
   AuthLib
   Catch2::Catch2WithMain)
 
@@ -152,7 +167,7 @@ install(
         \"\$ENV{DESTDIR}${CMAKE_INSTALL_FULL_BINDIR}/auth\" \
         )")
 
-file(GLOB_RECURSE MANPAGES "man/*.1")
+file(GLOB_RECURSE MANPAGES "${CMAKE_CURRENT_SOURCE_DIR}/man/*.1")
 install(FILES ${MANPAGES} DESTINATION ${CMAKE_INSTALL_MANDIR}/man1)
 
 install(FILES ${CMAKE_BINARY_DIR}/auth.pc
