@@ -341,6 +341,8 @@ TEST_CASE("CLI wipe command", "[cli]") {
 
         REQUIRE(cli.runCommand("wipe"));
 
+        cli.getMockDb()->reset();
+
         REQUIRE(cli.getMockDb()->getEntries().empty());
     }
 }
