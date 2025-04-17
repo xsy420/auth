@@ -100,8 +100,24 @@ else()
   add_library(sqlite3 ALIAS PkgConfig::sqlite_dep)
 endif()
 
-add_subdirectory(subprojects/tomlplusplus)
-add_subdirectory(subprojects/catch2)
+pkg_check_modules(toml_dep IMPORTED_TARGET tomlplusplus)
+
+if(NOT toml_dep_FOUND)
+  message(STATUS "System tomlplusplus not found, falling back to subproject")
+  add_subdirectory(subprojects/tomlplusplus)
+else()
+  message(STATUS "Found system tomlplusplus: ${toml_dep_VERSION}")
+  add_library(tomlplusplus::tomlplusplus ALIAS PkgConfig::toml_dep)
+endif()
+
+find_package(Catch2 QUIET)
+
+if(NOT Catch2_FOUND)
+  message(STATUS "System Catch2 not found, falling back to subproject")
+  add_subdirectory(subprojects/catch2)
+else()
+  message(STATUS "Found system Catch2: ${Catch2_VERSION}")
+endif()
 
 pkg_check_modules(json_dep IMPORTED_TARGET nlohmann_json)
 
