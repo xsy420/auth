@@ -1,4 +1,5 @@
 #include "Db.hpp"
+#include "../helpers/Color.hpp"
 #include <iostream>
 #include <filesystem>
 #include <algorithm>
@@ -21,7 +22,7 @@ bool CFileAuthDB::initializeDb() {
 
     int rc = sqlite3_open(m_path.c_str(), &m_db);
     if (rc != SQLITE_OK) {
-        std::cerr << "Cannot open database: " << sqlite3_errmsg(m_db) << std::endl;
+        std::cerr << CColor::RED << "Cannot open database: " << sqlite3_errmsg(m_db) << CColor::RESET << std::endl;
         closeDb();
         return false;
     }
@@ -37,7 +38,7 @@ bool CFileAuthDB::initializeDb() {
     rc                 = sqlite3_exec(m_db, createTableSQL, nullptr, nullptr, &errMsg);
 
     if (rc != SQLITE_OK) {
-        std::cerr << "SQL error: " << errMsg << std::endl;
+        std::cerr << CColor::RED << "SQL error: " << errMsg << CColor::RESET << std::endl;
         sqlite3_free(errMsg);
         closeDb();
         return false;
@@ -64,7 +65,7 @@ bool CFileAuthDB::load() {
 
     int           rc = sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr);
     if (rc != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << std::endl;
+        std::cerr << CColor::RED << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << CColor::RESET << std::endl;
         return false;
     }
 
@@ -106,7 +107,7 @@ std::vector<SAuthEntry> CFileAuthDB::getEntries() {
 
     int           rc = sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr);
     if (rc != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << std::endl;
+        std::cerr << CColor::RED << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << CColor::RESET << std::endl;
         return entries;
     }
 
@@ -127,7 +128,7 @@ std::vector<SAuthEntry> CFileAuthDB::getEntries() {
             if (!actualSecret.empty())
                 entry.secret = actualSecret;
             else {
-                std::cerr << "Failed to retrieve secret from secure storage" << std::endl;
+                std::cerr << CColor::RED << "Failed to retrieve secret from secure storage" << CColor::RESET << std::endl;
                 entry.secret = storedSecret;
             }
         } else
@@ -152,7 +153,7 @@ bool CFileAuthDB::addEntry(const SAuthEntry& entry) {
 
     int           rc = sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr);
     if (rc != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << std::endl;
+        std::cerr << CColor::RED << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << CColor::RESET << std::endl;
         return false;
     }
 
@@ -164,7 +165,7 @@ bool CFileAuthDB::addEntry(const SAuthEntry& entry) {
         if (!secureId.empty())
             secretToStore = secureId;
         else
-            std::cerr << "Failed to store secret securely, falling back to plaintext" << std::endl;
+            std::cerr << CColor::RED << "Failed to store secret securely, falling back to plaintext" << CColor::RESET << std::endl;
     }
 
     sqlite3_bind_int64(stmt, 1, newId);
@@ -198,7 +199,7 @@ bool CFileAuthDB::removeEntry(uint64_t id) {
 
     int           rc = sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr);
     if (rc != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << std::endl;
+        std::cerr << CColor::RED << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << CColor::RESET << std::endl;
         return false;
     }
 
@@ -237,7 +238,7 @@ bool CFileAuthDB::updateEntry(const SAuthEntry& entry) {
 
     int           rc = sqlite3_prepare_v2(m_db, sql, -1, &stmt, nullptr);
     if (rc != SQLITE_OK) {
-        std::cerr << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << std::endl;
+        std::cerr << CColor::RED << "Failed to prepare statement: " << sqlite3_errmsg(m_db) << CColor::RESET << std::endl;
         return false;
     }
 
@@ -249,7 +250,7 @@ bool CFileAuthDB::updateEntry(const SAuthEntry& entry) {
             if (!secureId.empty())
                 secretToStore = secureId;
             else
-                std::cerr << "Failed to update secret securely" << std::endl;
+                std::cerr << CColor::RED << "Failed to update secret securely" << CColor::RESET << std::endl;
         } else
             secretToStore = oldSecretId;
     }
