@@ -24,6 +24,8 @@ CTestEnvSetup::~CTestEnvSetup() {
         setenv("AUTH_DATABASE_DIR", m_origDbDir.c_str(), 1);
     else
         unsetenv("AUTH_DATABASE_DIR");
+
+    std::filesystem::remove_all("/tmp/auth_test_dir");
 }
 
 CTestAuthCLI::CTestAuthCLI() : CAuthCLI() {
