@@ -152,30 +152,20 @@ bool CAuthCLI::commandRemove(const std::vector<std::string>& args) {
     std::string nameOrId = args[0];
     auto        entries  = m_db->getEntries();
 
-    try {
-        uint64_t id = std::stoull(nameOrId);
-        if (m_db->removeEntry(id)) {
-            std::cout << CColor::GREEN << "Removed entry with ID: " << id << CColor::RESET << "\n";
-            return true;
-        }
-    } catch (const std::exception&) {
-        // no-op
-    }
-
-    for (const auto& entry : entries) {
-        if (entry.name != nameOrId)
-            continue;
-
-        if (m_db->removeEntry(entry.id)) {
-            std::cout << CColor::GREEN << "Removed entry: " << nameOrId << CColor::RESET << "\n";
-            return true;
-        }
-
-        std::cerr << CColor::RED << "Failed to remove entry" << CColor::RESET << "\n";
+    auto        entryOpt = FindEntryByNameOrId(entries, nameOrId);
+    if (!entryOpt) {
+        std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
         return false;
     }
 
-    std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
+    const auto& entry = *entryOpt;
+
+    if (m_db->removeEntry(entry.id)) {
+        std::cout << CColor::GREEN << "Removed entry: " << entry.name << CColor::RESET << "\n";
+        return true;
+    }
+
+    std::cerr << CColor::RED << "Failed to remove entry" << CColor::RESET << "\n";
     return false;
 }
 
