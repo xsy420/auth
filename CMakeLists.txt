@@ -149,13 +149,10 @@ if(NOT libsecret_dep_FOUND)
   set(LIBSECRET_INCLUDE_DIRS
       "${CMAKE_SOURCE_DIR}/subprojects/libsecret"
       "${CMAKE_SOURCE_DIR}/subprojects/libsecret/libsecret")
-
-  add_compile_definitions(HAVE_LIBSECRET)
 else()
   message(STATUS "Found system libsecret: ${libsecret_dep_VERSION}")
   add_library(libsecret::libsecret ALIAS PkgConfig::libsecret_dep)
   set(LIBSECRET_INCLUDE_DIRS ${libsecret_dep_INCLUDE_DIRS})
-  add_compile_definitions(HAVE_LIBSECRET)
 endif()
 
 pkg_check_modules(

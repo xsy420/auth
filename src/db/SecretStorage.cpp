@@ -3,40 +3,27 @@
 #include "../helpers/Color.hpp"
 #include <sstream>
 #include <iostream>
-
-#ifdef HAVE_LIBSECRET
 #include <libsecret/secret.h>
-#endif
 
 const char* CSecretStorage::schemaName = "com.github.nnyyxxxx.auth.totp";
 
 CSecretStorage::CSecretStorage() {
-#ifdef HAVE_LIBSECRET
     initSchema();
-#else
-    m_schema = nullptr;
-#endif
 }
 
 CSecretStorage::~CSecretStorage() {
-#ifdef HAVE_LIBSECRET
     if (m_schema) {
         secret_schema_unref(static_cast<SecretSchema*>(m_schema));
         m_schema = nullptr;
     }
-#endif
 }
 
 void CSecretStorage::initSchema() {
-#ifdef HAVE_LIBSECRET
     SecretSchema* schema = secret_schema_new(schemaName, SECRET_SCHEMA_NONE, "name", SECRET_SCHEMA_ATTRIBUTE_STRING, "id", SECRET_SCHEMA_ATTRIBUTE_STRING, NULL);
-
-    m_schema = schema;
-#endif
+    m_schema             = schema;
 }
 
 std::string CSecretStorage::storeSecret(const std::string& name, uint64_t id, const std::string& secret) {
-#ifdef HAVE_LIBSECRET
     if (!m_schema)
         return "";
 
@@ -57,13 +44,9 @@ std::string CSecretStorage::storeSecret(const std::string& name, uint64_t id, co
     std::stringstream ss;
     ss << "SecretStorage:" << name << ":" << id;
     return ss.str();
-#else
-    return secret;
-#endif
 }
 
 std::string CSecretStorage::getSecret(const std::string& secretId) {
-#ifdef HAVE_LIBSECRET
     if (!m_schema || secretId.empty() || !secretId.starts_with("SecretStorage:"))
         return secretId;
 
@@ -89,13 +72,9 @@ std::string CSecretStorage::getSecret(const std::string& secretId) {
     std::string result(password);
     secret_password_free(password);
     return result;
-#else
-    return secretId;
-#endif
 }
 
 bool CSecretStorage::deleteSecret(const std::string& secretId) {
-#ifdef HAVE_LIBSECRET
     if (!m_schema || secretId.empty() || !secretId.starts_with("SecretStorage:"))
         return false;
 
@@ -116,13 +95,9 @@ bool CSecretStorage::deleteSecret(const std::string& secretId) {
     }
 
     return result;
-#else
-    return true;
-#endif
 }
 
 bool CSecretStorage::deleteSecretByName(const std::string& name) {
-#ifdef HAVE_LIBSECRET
     if (!m_schema || name.empty())
         return false;
 
@@ -136,24 +111,16 @@ bool CSecretStorage::deleteSecretByName(const std::string& name) {
     }
 
     return result;
-#else
-    return true;
-#endif
 }
 
 std::string CSecretStorage::updateSecret(const std::string& secretId, const std::string& name, uint64_t id, const std::string& newSecret) {
-#ifdef HAVE_LIBSECRET
     if (!secretId.empty() && secretId.starts_with("SecretStorage:"))
         deleteSecret(secretId);
 
     return storeSecret(name, id, newSecret);
-#else
-    return newSecret;
-#endif
 }
 
 bool CSecretStorage::isAvailable() {
-#ifdef HAVE_LIBSECRET
     SecretService* service = secret_service_get_sync(SECRET_SERVICE_NONE, NULL, NULL);
 
     if (service) {
@@ -161,7 +128,4 @@ bool CSecretStorage::isAvailable() {
         return true;
     }
     return false;
-#else
-    return false;
-#endif
 }
