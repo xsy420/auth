@@ -26,6 +26,20 @@ CTestEnvSetup::~CTestEnvSetup() {
         unsetenv("AUTH_DATABASE_DIR");
 
     std::filesystem::remove_all("/tmp/auth_test_dir");
+
+    system("secret-tool clear name \"TestEntry\" 2>/dev/null");
+    system("secret-tool clear name \"Entry1\" 2>/dev/null");
+    system("secret-tool clear name \"Entry2\" 2>/dev/null");
+    system("secret-tool clear name \"TestEntry2\" 2>/dev/null");
+    system("secret-tool clear name \"DeleteTest\" 2>/dev/null");
+    system("secret-tool clear name \"UpdateTest\" 2>/dev/null");
+    system("secret-tool clear name \"Test Entry\" 2>/dev/null");
+    system("secret-tool clear name \"Updated Entry\" 2>/dev/null");
+    system("secret-tool clear name \"TestName\" 2>/dev/null");
+    system("secret-tool clear name \"Test\" 2>/dev/null");
+    system("secret-tool clear name \"Entry 1\" 2>/dev/null");
+    system("secret-tool clear name \"Entry 2\" 2>/dev/null");
+    system("secret-tool clear name \"Entry 3\" 2>/dev/null");
 }
 
 CTestAuthCLI::CTestAuthCLI() : CAuthCLI() {
