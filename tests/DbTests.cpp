@@ -117,7 +117,7 @@ TEST_CASE_METHOD(CTemporaryFileFixture, "Database handles corrupted file", "[db]
     REQUIRE(entries.empty());
 }
 
-TEST_CASE_METHOD(CTemporaryFileFixture, "Database generates incremental IDs", "[db]") {
+TEST_CASE_METHOD(CTemporaryFileFixture, "Database generates random IDs in the correct range", "[db]") {
     CFileAuthDB db(getDbPath());
 
     SAuthEntry  entry1;
@@ -139,6 +139,12 @@ TEST_CASE_METHOD(CTemporaryFileFixture, "Database generates incremental IDs", "[
     auto entries = db.getEntries();
     REQUIRE(entries.size() == 3);
 
-    REQUIRE(entries[0].id + 1 == entries[1].id);
-    REQUIRE(entries[1].id + 1 == entries[2].id);
+    for (const auto& entry : entries) {
+        REQUIRE(entry.id >= 1000);
+        REQUIRE(entry.id <= 5000);
+    }
+
+    REQUIRE(entries[0].id != entries[1].id);
+    REQUIRE(entries[1].id != entries[2].id);
+    REQUIRE(entries[0].id != entries[2].id);
 }

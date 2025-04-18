@@ -3,6 +3,7 @@
 #include "../../src/db/Db.hpp"
 #include <vector>
 #include <string>
+#include <random>
 
 class CMockAuthDB : public IAuthDB {
   public:
@@ -17,8 +18,12 @@ class CMockAuthDB : public IAuthDB {
     void                    reset();
 
   private:
-    std::vector<SAuthEntry> m_entries;
-    uint64_t                m_nextId = 1;
+    uint64_t                                generateRandomId();
+
+    std::vector<SAuthEntry>                 m_entries;
+    std::mt19937_64                         m_rng{std::random_device{}()};
+    std::uniform_int_distribution<uint64_t> m_dist{1000, 5000};
+    std::vector<uint64_t>                   m_usedIds;
 };
 
 class CTemporaryFileFixture {

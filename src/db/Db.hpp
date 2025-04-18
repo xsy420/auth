@@ -5,6 +5,7 @@
 #include <vector>
 #include <memory>
 #include <sqlite3.h>
+#include <random>
 
 struct SAuthEntry {
     std::string name;
@@ -37,10 +38,13 @@ class CFileAuthDB : public IAuthDB {
     bool                    updateEntry(const SAuthEntry& entry) override;
 
   private:
-    bool        initializeDb();
-    void        closeDb();
+    bool                                    initializeDb();
+    void                                    closeDb();
+    uint64_t                                generateRandomId();
 
-    std::string m_path;
-    sqlite3*    m_db     = nullptr;
-    uint64_t    m_nextId = 1;
+    std::string                             m_path;
+    sqlite3*                                m_db = nullptr;
+    std::mt19937_64                         m_rng{std::random_device{}()};
+    std::uniform_int_distribution<uint64_t> m_dist{1000, 5000};
+    std::vector<uint64_t>                   m_usedIds;
 };
