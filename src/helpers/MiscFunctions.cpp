@@ -57,19 +57,25 @@ std::string GetHomeDir() {
 
 std::optional<SAuthEntry> FindEntryByNameOrId(const std::vector<SAuthEntry>& entries, const std::string& nameOrId) {
     try {
-        uint64_t id = std::stoull(nameOrId);
-        auto     it = std::ranges::find_if(entries, [id](const SAuthEntry& e) { return e.id == id; });
+        uint64_t num = std::stoull(nameOrId);
 
+        auto     it = std::ranges::find_if(entries, [num](const SAuthEntry& e) { return e.id == num; });
         if (it != entries.end())
             return *it;
+
+        if (num > 0 && num <= entries.size()) {
+            std::vector<SAuthEntry> sortedEntries = entries;
+            std::ranges::sort(sortedEntries, [](const SAuthEntry& a, const SAuthEntry& b) { return a.id < b.id; });
+
+            return sortedEntries[num - 1];
+        }
     } catch (const std::exception&) {
         // no-op
     }
 
     auto it = std::ranges::find_if(entries, [&nameOrId](const SAuthEntry& e) { return e.name == nameOrId; });
-    if (it != entries.end()) {
+    if (it != entries.end())
         return *it;
-    }
 
     return std::nullopt;
 }

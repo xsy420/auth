@@ -184,9 +184,10 @@ bool CAuthCLI::commandList() {
         maxNameLength = std::max(maxNameLength, entry.name.length());
     }
 
-    std::cout << CColor::BOLD << std::left << std::setw(5) << "ID" << std::setw(maxNameLength + 2) << "NAME" << "CODE" << "    EXPIRES" << CColor::RESET << "\n";
+    std::cout << CColor::BOLD << std::left << std::setw(5) << "#" << std::setw(maxNameLength + 2) << "NAME" << "CODE" << "    EXPIRES" << CColor::RESET << "\n";
 
-    time_t now = time(nullptr);
+    time_t now       = time(nullptr);
+    size_t rowNumber = 1;
 
     for (const auto& entry : entries) {
         CTOTP       totp(entry.secret, entry.digits, entry.period);
@@ -194,7 +195,7 @@ bool CAuthCLI::commandList() {
 
         int         periodRemaining = entry.period - (now % entry.period);
 
-        std::cout << CColor::CYAN << std::left << std::setw(5) << entry.id << CColor::RESET << CColor::GREEN << std::setw(maxNameLength + 2) << entry.name << CColor::RESET
+        std::cout << CColor::CYAN << std::left << std::setw(5) << rowNumber++ << CColor::RESET << CColor::GREEN << std::setw(maxNameLength + 2) << entry.name << CColor::RESET
                   << CColor::BOLD << CColor::YELLOW << std::setw(8) << code << CColor::RESET << " " << CColor::MAGENTA << periodRemaining << "s" << CColor::RESET << "\n";
     }
 
