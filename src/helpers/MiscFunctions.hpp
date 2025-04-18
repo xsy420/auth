@@ -23,3 +23,5 @@ bool                      ValidatePeriod(uint32_t period, std::string& errorMess
 bool                      IsSecretValid(const std::string& secret, std::string& errorMessage);
 
 std::string               GetDatabasePath();
+
+std::vector<std::string>  SplitString(const std::string& input, const std::string& delimiter);

@@ -10,3 +10,6 @@
 [submodule "subprojects/sqlite"]
 	path = subprojects/sqlite
 	url = https://github.com/sqlite/sqlite.git
+[submodule "subprojects/libsecret"]
+	path = subprojects/libsecret
+	url = https://github.com/GNOME/libsecret.git

@@ -129,6 +129,35 @@ else()
   add_library(nlohmann_json::nlohmann_json ALIAS PkgConfig::json_dep)
 endif()
 
+pkg_check_modules(libsecret_dep IMPORTED_TARGET libsecret-1)
+
+if(NOT libsecret_dep_FOUND)
+  message(STATUS "System libsecret not found, falling back to subproject")
+
+  find_package(GLib REQUIRED)
+  pkg_check_modules(glib_dep REQUIRED IMPORTED_TARGET glib-2.0 gobject-2.0 gio-2.0)
+
+  set(WITH_MANPAGE OFF CACHE BOOL "Build libsecret manpages")
+  set(WITH_GTK_DOC OFF CACHE BOOL "Build libsecret documentation")
+  set(WITH_VAPI OFF CACHE BOOL "Build libsecret vala bindings")
+  set(WITH_INTROSPECTION OFF CACHE BOOL "Build libsecret introspection data")
+
+  add_subdirectory(subprojects/libsecret EXCLUDE_FROM_ALL)
+
+  add_library(libsecret::libsecret ALIAS secret)
+
+  set(LIBSECRET_INCLUDE_DIRS
+      "${CMAKE_SOURCE_DIR}/subprojects/libsecret"
+      "${CMAKE_SOURCE_DIR}/subprojects/libsecret/libsecret")
+
+  add_compile_definitions(HAVE_LIBSECRET)
+else()
+  message(STATUS "Found system libsecret: ${libsecret_dep_VERSION}")
+  add_library(libsecret::libsecret ALIAS PkgConfig::libsecret_dep)
+  set(LIBSECRET_INCLUDE_DIRS ${libsecret_dep_INCLUDE_DIRS})
+  add_compile_definitions(HAVE_LIBSECRET)
+endif()
+
 pkg_check_modules(
   deps
   REQUIRED
@@ -140,13 +169,15 @@ add_executable(Auth ${SRCFILES})
 target_include_directories(Auth PRIVATE
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/include
-  ${CMAKE_CURRENT_SOURCE_DIR}/src)
+  ${CMAKE_CURRENT_SOURCE_DIR}/src
+  ${LIBSECRET_INCLUDE_DIRS})
 target_link_libraries(Auth PRIVATE
   auth_compiler_options
   PkgConfig::deps
   Threads::Threads
   tomlplusplus::tomlplusplus
   nlohmann_json::nlohmann_json
+  libsecret::libsecret
   sqlite3)
 
 set(LIBSRCFILES ${SRCFILES})
@@ -157,7 +188,8 @@ target_include_directories(AuthLib
     ${CMAKE_CURRENT_SOURCE_DIR}/include
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
-    ${CMAKE_CURRENT_SOURCE_DIR}/src)
+    ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${LIBSECRET_INCLUDE_DIRS})
 target_link_libraries(AuthLib
   PUBLIC
     auth_compiler_options
@@ -166,7 +198,8 @@ target_link_libraries(AuthLib
     PkgConfig::deps
     Threads::Threads
     tomlplusplus::tomlplusplus
-    nlohmann_json::nlohmann_json)
+    nlohmann_json::nlohmann_json
+    libsecret::libsecret)
 set_target_properties(AuthLib PROPERTIES
   POSITION_INDEPENDENT_CODE ON)
 

@@ -6,6 +6,7 @@
 #include <memory>
 #include <sqlite3.h>
 #include <random>
+#include "SecretStorage.hpp"
 
 struct SAuthEntry {
     std::string name;
@@ -47,4 +48,7 @@ class CFileAuthDB : public IAuthDB {
     std::mt19937_64                         m_rng{std::random_device{}()};
     std::uniform_int_distribution<uint64_t> m_dist{1000, 5000};
     std::vector<uint64_t>                   m_usedIds;
+
+    CSecretStorage                          m_secretStorage;
+    bool                                    m_useSecureStorage = false;
 };

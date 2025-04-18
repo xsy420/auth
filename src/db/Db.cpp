@@ -7,6 +7,8 @@ CFileAuthDB::CFileAuthDB(const std::string& path) : m_path(path) {
     const std::filesystem::path configPath = std::filesystem::path(path).parent_path();
     if (!std::filesystem::exists(configPath))
         std::filesystem::create_directories(configPath);
+
+    m_useSecureStorage = CSecretStorage::isAvailable();
 }
 
 CFileAuthDB::~CFileAuthDB() {
@@ -115,8 +117,22 @@ std::vector<SAuthEntry> CFileAuthDB::getEntries() {
         const char* name   = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
         const char* secret = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
 
-        entry.name   = name ? name : "";
-        entry.secret = secret ? secret : "";
+        entry.name = name ? name : "";
+
+        std::string storedSecret = secret ? secret : "";
+
+        if (m_useSecureStorage && storedSecret.starts_with("SecretStorage:")) {
+            std::string actualSecret = m_secretStorage.getSecret(storedSecret);
+
+            if (!actualSecret.empty())
+                entry.secret = actualSecret;
+            else {
+                std::cerr << "Failed to retrieve secret from secure storage" << std::endl;
+                entry.secret = storedSecret;
+            }
+        } else
+            entry.secret = storedSecret;
+
         entry.digits = sqlite3_column_int(stmt, 3);
         entry.period = sqlite3_column_int(stmt, 4);
 
@@ -140,11 +156,20 @@ bool CFileAuthDB::addEntry(const SAuthEntry& entry) {
         return false;
     }
 
-    uint64_t newId = generateRandomId();
+    uint64_t    newId = generateRandomId();
+
+    std::string secretToStore = entry.secret;
+    if (m_useSecureStorage) {
+        std::string secureId = m_secretStorage.storeSecret(entry.name, newId, entry.secret);
+        if (!secureId.empty())
+            secretToStore = secureId;
+        else
+            std::cerr << "Failed to store secret securely, falling back to plaintext" << std::endl;
+    }
 
     sqlite3_bind_int64(stmt, 1, newId);
     sqlite3_bind_text(stmt, 2, entry.name.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 3, entry.secret.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, secretToStore.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 4, entry.digits);
     sqlite3_bind_int(stmt, 5, entry.period);
 
@@ -158,6 +183,16 @@ bool CFileAuthDB::removeEntry(uint64_t id) {
     if (!initializeDb())
         return false;
 
+    std::vector<SAuthEntry> entries = getEntries();
+    std::string             secretId;
+
+    for (const auto& entry : entries) {
+        if (entry.id == id) {
+            secretId = entry.secret;
+            break;
+        }
+    }
+
     const char*   sql  = "DELETE FROM auth_entries WHERE id = ?;";
     sqlite3_stmt* stmt = nullptr;
 
@@ -168,11 +203,13 @@ bool CFileAuthDB::removeEntry(uint64_t id) {
     }
 
     sqlite3_bind_int64(stmt, 1, id);
-
     rc = sqlite3_step(stmt);
     sqlite3_finalize(stmt);
 
     if (rc == SQLITE_DONE) {
+        if (m_useSecureStorage && !secretId.empty())
+            m_secretStorage.deleteSecret(secretId);
+
         auto it = std::ranges::find(m_usedIds, id);
         if (it != m_usedIds.end())
             m_usedIds.erase(it);
@@ -185,6 +222,16 @@ bool CFileAuthDB::updateEntry(const SAuthEntry& entry) {
     if (!initializeDb())
         return false;
 
+    std::vector<SAuthEntry> entries = getEntries();
+    std::string             oldSecretId;
+
+    for (const auto& e : entries) {
+        if (e.id == entry.id) {
+            oldSecretId = e.secret;
+            break;
+        }
+    }
+
     const char*   sql  = "UPDATE auth_entries SET name = ?, secret = ?, digits = ?, period = ? WHERE id = ?;";
     sqlite3_stmt* stmt = nullptr;
 
@@ -194,8 +241,21 @@ bool CFileAuthDB::updateEntry(const SAuthEntry& entry) {
         return false;
     }
 
+    std::string secretToStore = entry.secret;
+
+    if (m_useSecureStorage) {
+        if (entry.secret != oldSecretId || !oldSecretId.starts_with("SecretStorage:")) {
+            std::string secureId = m_secretStorage.updateSecret(oldSecretId, entry.name, entry.id, entry.secret);
+            if (!secureId.empty())
+                secretToStore = secureId;
+            else
+                std::cerr << "Failed to update secret securely" << std::endl;
+        } else
+            secretToStore = oldSecretId;
+    }
+
     sqlite3_bind_text(stmt, 1, entry.name.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, entry.secret.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, secretToStore.c_str(), -1, SQLITE_STATIC);
     sqlite3_bind_int(stmt, 3, entry.digits);
     sqlite3_bind_int(stmt, 4, entry.period);
     sqlite3_bind_int64(stmt, 5, entry.id);
