@@ -86,7 +86,7 @@ bool CAuthCLI::processCommand(int argc, char* argv[]) {
 bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
     if (args.size() < 2) {
         std::cerr << CColor::RED << "Not enough arguments for add command" << CColor::RESET << "\n";
-        std::cerr << "Usage: auth add <n> <secret> [digits] [period]\n";
+        std::cerr << CColor::CYAN << "Usage: auth add <n> <secret> [digits] [period]" << CColor::RESET << "\n";
         return false;
     }
 
@@ -145,7 +145,7 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
 bool CAuthCLI::commandRemove(const std::vector<std::string>& args) {
     if (args.empty()) {
         std::cerr << CColor::RED << "Missing argument for remove command" << CColor::RESET << "\n";
-        std::cerr << "Usage: auth remove <name or id>\n";
+        std::cerr << CColor::CYAN << "Usage: auth remove <name or id>" << CColor::RESET << "\n";
         return false;
     }
 
@@ -205,7 +205,7 @@ bool CAuthCLI::commandList() {
 bool CAuthCLI::commandGenerate(const std::vector<std::string>& args) {
     if (args.empty()) {
         std::cerr << CColor::RED << "Missing argument for generate command" << CColor::RESET << "\n";
-        std::cerr << "Usage: auth generate <name or id>\n";
+        std::cerr << CColor::CYAN << "Usage: auth generate <name or id>" << CColor::RESET << "\n";
         return false;
     }
 
@@ -228,7 +228,7 @@ bool CAuthCLI::commandGenerate(const std::vector<std::string>& args) {
 bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
     if (args.empty()) {
         std::cerr << CColor::RED << "Missing argument for info command" << CColor::RESET << "\n";
-        std::cerr << "Usage: auth info <name or id>\n";
+        std::cerr << CColor::CYAN << "Usage: auth info <name or id>" << CColor::RESET << "\n";
         return false;
     }
 
@@ -262,7 +262,7 @@ bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
 bool CAuthCLI::commandEdit(const std::vector<std::string>& args) {
     if (args.empty()) {
         std::cerr << CColor::RED << "Missing arguments for edit command" << CColor::RESET << "\n";
-        std::cerr << "Usage: auth edit <name or id> [name] [secret] [digits] [period]\n";
+        std::cerr << CColor::CYAN << "Usage: auth edit <name or id> [name] [secret] [digits] [period]" << CColor::RESET << "\n";
         return false;
     }
 
@@ -333,8 +333,8 @@ bool CAuthCLI::commandEdit(const std::vector<std::string>& args) {
 bool CAuthCLI::commandImport(const std::vector<std::string>& args) {
     if (args.empty()) {
         std::cerr << CColor::RED << "Missing argument for import command" << CColor::RESET << "\n";
-        std::cerr << "Usage: auth import <file> [format]\n";
-        std::cerr << "Supported formats: toml, json (default: toml)\n";
+        std::cerr << CColor::CYAN << "Usage: auth import <file> [format]" << CColor::RESET << "\n";
+        std::cerr << CColor::CYAN << "Supported formats: toml, json (default: toml)" << CColor::RESET << "\n";
         return false;
     }
 
@@ -351,7 +351,7 @@ bool CAuthCLI::commandImport(const std::vector<std::string>& args) {
             format = EFileFormat::TOML;
         else {
             std::cerr << CColor::RED << "Unsupported format: " << formatStr << CColor::RESET << "\n";
-            std::cerr << "Supported formats: toml, json\n";
+            std::cerr << CColor::CYAN << "Supported formats: toml, json" << CColor::RESET << "\n";
             return false;
         }
     }
@@ -368,8 +368,8 @@ bool CAuthCLI::commandImport(const std::vector<std::string>& args) {
 bool CAuthCLI::commandExport(const std::vector<std::string>& args) {
     if (args.empty()) {
         std::cerr << CColor::RED << "Missing argument for export command" << CColor::RESET << "\n";
-        std::cerr << "Usage: auth export <file> [format]\n";
-        std::cerr << "Supported formats: toml, json (default: toml)\n";
+        std::cerr << CColor::CYAN << "Usage: auth export <file> [format]" << CColor::RESET << "\n";
+        std::cerr << CColor::CYAN << "Supported formats: toml, json (default: toml)" << CColor::RESET << "\n";
         return false;
     }
 
@@ -386,7 +386,7 @@ bool CAuthCLI::commandExport(const std::vector<std::string>& args) {
             format = EFileFormat::TOML;
         else {
             std::cerr << CColor::RED << "Unsupported format: " << formatStr << CColor::RESET << "\n";
-            std::cerr << "Supported formats: toml, json\n";
+            std::cerr << CColor::CYAN << "Supported formats: toml, json" << CColor::RESET << "\n";
             return false;
         }
     }
