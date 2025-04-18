@@ -111,7 +111,6 @@ std::vector<SAuthEntry> CFileAuthDB::getEntries() {
         return entries;
     }
 
-    bool errorAlreadyPrinted = false;
     bool secretStorageFailed = false;
 
     while (sqlite3_step(stmt) == SQLITE_ROW) {
@@ -130,14 +129,8 @@ std::vector<SAuthEntry> CFileAuthDB::getEntries() {
 
             if (!actualSecret.empty())
                 entry.secret = actualSecret;
-            else {
-                if (!errorAlreadyPrinted) {
-                    std::cerr << CColor::RED << "Failed to retrieve secret from secure storage" << CColor::RESET << std::endl;
-                    errorAlreadyPrinted = true;
-                    secretStorageFailed = true;
-                }
-                entry.secret = storedSecret;
-            }
+            else
+                secretStorageFailed = true;
         } else
             entry.secret = storedSecret;
 
