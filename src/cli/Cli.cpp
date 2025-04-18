@@ -33,8 +33,8 @@ void CAuthCLI::printUsage() {
     std::cout << "  " << CColor::GREEN << "remove" << CColor::RESET << "   <name or #>                                      Remove an entry\n";
     std::cout << "  " << CColor::GREEN << "info" << CColor::RESET << "     <name or #>                                      Show details for an entry\n";
     std::cout << "  " << CColor::GREEN << "edit" << CColor::RESET << "     <name or #> [name] [secret] [digits] [period]    Edit an entry\n";
-    std::cout << "  " << CColor::GREEN << "import" << CColor::RESET << "   <file> [format]                                  Import entries from file (format: toml, json)\n";
-    std::cout << "  " << CColor::GREEN << "export" << CColor::RESET << "   <file> [format]                                  Export entries to file   (format: toml, json)\n";
+    std::cout << "  " << CColor::GREEN << "import" << CColor::RESET << "   <file> [format]                                  Import entries from file\n";
+    std::cout << "  " << CColor::GREEN << "export" << CColor::RESET << "   <file> [format]                                  Export entries to file\n";
     std::cout << "  " << CColor::GREEN << "wipe" << CColor::RESET << "                                                      Wipe database\n";
     std::cout << "  " << CColor::GREEN << "help" << CColor::RESET << "                                                      Show this help message\n";
     std::cout << "\n" << CColor::BOLD << "Options:" << CColor::RESET << "\n";
