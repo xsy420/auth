@@ -1,5 +1,6 @@
 #include "SecretStorage.hpp"
 #include "../helpers/MiscFunctions.hpp"
+#include "../helpers/Color.hpp"
 #include <sstream>
 #include <iostream>
 
@@ -47,7 +48,7 @@ std::string CSecretStorage::storeSecret(const std::string& name, uint64_t id, co
 
     if (!result) {
         if (error) {
-            std::cerr << "Failed to store secret: " << error->message << std::endl;
+            std::cerr << CColor::RED << "Failed to store secret: " << error->message << CColor::RESET << std::endl;
             g_error_free(error);
         }
         return "";
@@ -77,7 +78,7 @@ std::string CSecretStorage::getSecret(const std::string& secretId) {
     gchar*      password = secret_password_lookup_sync(static_cast<SecretSchema*>(m_schema), NULL, &error, "name", name.c_str(), "id", idStr.c_str(), NULL);
 
     if (error) {
-        std::cerr << "Failed to retrieve secret: " << error->message << std::endl;
+        std::cerr << CColor::RED << "Failed to retrieve secret: " << error->message << CColor::RESET << std::endl;
         g_error_free(error);
         return "";
     }
@@ -109,7 +110,7 @@ bool CSecretStorage::deleteSecret(const std::string& secretId) {
     gboolean    result = secret_password_clear_sync(static_cast<SecretSchema*>(m_schema), NULL, &error, "name", name.c_str(), "id", idStr.c_str(), NULL);
 
     if (error) {
-        std::cerr << "Failed to delete secret: " << error->message << std::endl;
+        std::cerr << CColor::RED << "Failed to delete secret: " << error->message << CColor::RESET << std::endl;
         g_error_free(error);
         return false;
     }
