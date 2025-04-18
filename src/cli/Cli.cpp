@@ -182,6 +182,11 @@ bool CAuthCLI::commandList() {
         return true;
     }
 
+    for (const auto& entry : entries) {
+        if (entry.name.starts_with("$$SECRET_STORAGE_FAILED$$"))
+            return false;
+    }
+
     std::ranges::sort(entries, [](const SAuthEntry& a, const SAuthEntry& b) { return a.id < b.id; });
 
     size_t maxNameLength = 0;
@@ -217,9 +222,19 @@ bool CAuthCLI::commandGenerate(const std::vector<std::string>& args) {
     std::string nameOrId = args[0];
     auto        entries  = m_db->getEntries();
 
-    auto        entryOpt = FindEntryByNameOrId(entries, nameOrId);
+    for (const auto& entry : entries) {
+        if (entry.name.starts_with("$$SECRET_STORAGE_FAILED$$"))
+            return false;
+    }
+
+    auto entryOpt = FindEntryByNameOrId(entries, nameOrId);
     if (!entryOpt) {
         std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
+        return false;
+    }
+
+    if (entryOpt->secret.starts_with("SecretStorage:")) {
+        std::cerr << CColor::RED << "Failed to retrieve secret for this entry" << CColor::RESET << "\n";
         return false;
     }
 
@@ -240,13 +255,24 @@ bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
     std::string nameOrId = args[0];
     auto        entries  = m_db->getEntries();
 
-    auto        entryOpt = FindEntryByNameOrId(entries, nameOrId);
+    for (const auto& entry : entries) {
+        if (entry.name.starts_with("$$SECRET_STORAGE_FAILED$$"))
+            return false;
+    }
+
+    auto entryOpt = FindEntryByNameOrId(entries, nameOrId);
     if (!entryOpt) {
         std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
         return false;
     }
 
     const auto& entry = *entryOpt;
+
+    if (entry.secret.starts_with("SecretStorage:")) {
+        std::cerr << CColor::RED << "Failed to retrieve secret for this entry" << CColor::RESET << "\n";
+        return false;
+    }
+
     std::cout << CColor::BOLD << "Name:   " << CColor::RESET << CColor::GREEN << entry.name << CColor::RESET << "\n";
     std::cout << CColor::BOLD << "ID:     " << CColor::RESET << CColor::CYAN << entry.id << CColor::RESET << "\n";
     std::cout << CColor::BOLD << "Secret: " << CColor::RESET << entry.secret << "\n";
@@ -274,9 +300,19 @@ bool CAuthCLI::commandEdit(const std::vector<std::string>& args) {
     std::string nameOrId = args[0];
     auto        entries  = m_db->getEntries();
 
-    auto        entryOpt = FindEntryByNameOrId(entries, nameOrId);
+    for (const auto& entry : entries) {
+        if (entry.name.starts_with("$$SECRET_STORAGE_FAILED$$"))
+            return false;
+    }
+
+    auto entryOpt = FindEntryByNameOrId(entries, nameOrId);
     if (!entryOpt) {
         std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
+        return false;
+    }
+
+    if (entryOpt->secret.starts_with("SecretStorage:") && (args.size() <= 2 || args[2].empty())) {
+        std::cerr << CColor::RED << "Cannot edit entry with unavailable secret" << CColor::RESET << "\n";
         return false;
     }
 
