@@ -160,7 +160,12 @@ bool CAuthCLI::commandRemove(const std::vector<std::string>& args) {
 
     const auto& entry = *entryOpt;
 
-    if (m_db->removeEntry(entry.id)) {
+    bool        success = m_db->removeEntry(entry.id);
+
+    std::string command = "secret-tool clear name \"" + entry.name + "\" 2>/dev/null";
+    system(command.c_str());
+
+    if (success) {
         std::cout << CColor::GREEN << "Removed entry: " << entry.name << CColor::RESET << "\n";
         return true;
     }
@@ -421,6 +426,13 @@ bool CAuthCLI::commandWipe() {
     }
 
     try {
+        for (const auto& entry : entries) {
+            m_db->removeEntry(entry.id);
+
+            std::string command = "secret-tool clear name \"" + entry.name + "\" 2>/dev/null";
+            system(command.c_str());
+        }
+
         if (std::filesystem::exists(dbPath))
             std::filesystem::remove(dbPath);
 
