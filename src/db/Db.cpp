@@ -223,7 +223,7 @@ bool CFileAuthDB::removeEntry(uint64_t id) {
     sqlite3_finalize(stmt);
 
     if (rc == SQLITE_DONE) {
-        if (m_useSecureStorage && !secretId.empty())
+        if (m_useSecureStorage && !secretId.empty() && secretId.starts_with("SecretStorage:"))
             m_secretStorage.deleteSecret(secretId);
 
         auto it = std::ranges::find(m_usedIds, id);

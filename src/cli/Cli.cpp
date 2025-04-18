@@ -3,6 +3,7 @@
 #include "../core/Totp.hpp"
 #include "../helpers/ImportExport.hpp"
 #include "../helpers/MiscFunctions.hpp"
+#include "../db/SecretStorage.hpp"
 #include <iostream>
 #include <filesystem>
 #include <pwd.h>
@@ -162,8 +163,10 @@ bool CAuthCLI::commandRemove(const std::vector<std::string>& args) {
 
     bool        success = m_db->removeEntry(entry.id);
 
-    std::string command = "secret-tool clear name \"" + entry.name + "\" 2>/dev/null";
-    system(command.c_str());
+    if (CSecretStorage::isAvailable()) {
+        CSecretStorage secretStorage;
+        secretStorage.deleteSecretByName(entry.name);
+    }
 
     if (success) {
         std::cout << CColor::GREEN << "Removed entry: " << entry.name << CColor::RESET << "\n";
@@ -462,11 +465,14 @@ bool CAuthCLI::commandWipe() {
     }
 
     try {
+        CSecretStorage secretStorage;
+        bool           isSecureStorageAvailable = CSecretStorage::isAvailable();
+
         for (const auto& entry : entries) {
             m_db->removeEntry(entry.id);
 
-            std::string command = "secret-tool clear name \"" + entry.name + "\" 2>/dev/null";
-            system(command.c_str());
+            if (isSecureStorageAvailable)
+                secretStorage.deleteSecretByName(entry.name);
         }
 
         if (std::filesystem::exists(dbPath))

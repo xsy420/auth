@@ -18,6 +18,8 @@ class CSecretStorage {
 
     bool        deleteSecret(const std::string& secretId);
 
+    bool        deleteSecretByName(const std::string& name);
+
     std::string updateSecret(const std::string& secretId, const std::string& name, uint64_t id, const std::string& newSecret);
 
     static bool isAvailable();

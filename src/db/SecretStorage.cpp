@@ -121,6 +121,26 @@ bool CSecretStorage::deleteSecret(const std::string& secretId) {
 #endif
 }
 
+bool CSecretStorage::deleteSecretByName(const std::string& name) {
+#ifdef HAVE_LIBSECRET
+    if (!m_schema || name.empty())
+        return false;
+
+    GError*  error  = nullptr;
+    gboolean result = secret_password_clear_sync(static_cast<SecretSchema*>(m_schema), NULL, &error, "name", name.c_str(), NULL);
+
+    if (error) {
+        std::cerr << CColor::RED << "Failed to delete secret by name: " << error->message << CColor::RESET << std::endl;
+        g_error_free(error);
+        return false;
+    }
+
+    return result;
+#else
+    return true;
+#endif
+}
+
 std::string CSecretStorage::updateSecret(const std::string& secretId, const std::string& name, uint64_t id, const std::string& newSecret) {
 #ifdef HAVE_LIBSECRET
     if (!secretId.empty() && secretId.starts_with("SecretStorage:"))

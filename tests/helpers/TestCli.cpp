@@ -1,8 +1,10 @@
 #include "TestCli.hpp"
+#include "../../src/db/SecretStorage.hpp"
 #include <iostream>
 #include <filesystem>
 #include <cstdlib>
 #include <string>
+#include <vector>
 
 static CTestEnvSetup g_testEnvSetup;
 
@@ -27,19 +29,16 @@ CTestEnvSetup::~CTestEnvSetup() {
 
     std::filesystem::remove_all("/tmp/auth_test_dir");
 
-    system("secret-tool clear name \"TestEntry\" 2>/dev/null");
-    system("secret-tool clear name \"Entry1\" 2>/dev/null");
-    system("secret-tool clear name \"Entry2\" 2>/dev/null");
-    system("secret-tool clear name \"TestEntry2\" 2>/dev/null");
-    system("secret-tool clear name \"DeleteTest\" 2>/dev/null");
-    system("secret-tool clear name \"UpdateTest\" 2>/dev/null");
-    system("secret-tool clear name \"Test Entry\" 2>/dev/null");
-    system("secret-tool clear name \"Updated Entry\" 2>/dev/null");
-    system("secret-tool clear name \"TestName\" 2>/dev/null");
-    system("secret-tool clear name \"Test\" 2>/dev/null");
-    system("secret-tool clear name \"Entry 1\" 2>/dev/null");
-    system("secret-tool clear name \"Entry 2\" 2>/dev/null");
-    system("secret-tool clear name \"Entry 3\" 2>/dev/null");
+    if (CSecretStorage::isAvailable()) {
+        CSecretStorage                 secretStorage;
+
+        const std::vector<std::string> testEntryNames = {"TestEntry",     "Entry1",   "Entry2", "TestEntry2", "DeleteTest", "UpdateTest", "Test Entry",
+                                                         "Updated Entry", "TestName", "Test",   "Entry 1",    "Entry 2",    "Entry 3"};
+
+        for (const auto& name : testEntryNames) {
+            secretStorage.deleteSecretByName(name);
+        }
+    }
 }
 
 CTestAuthCLI::CTestAuthCLI() : CAuthCLI() {
