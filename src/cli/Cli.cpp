@@ -2,6 +2,7 @@
 #include "../helpers/Color.hpp"
 #include "../core/Totp.hpp"
 #include "../helpers/ImportExport.hpp"
+#include "../helpers/MiscFunctions.hpp"
 #include <iostream>
 #include <filesystem>
 #include <pwd.h>
@@ -10,26 +11,10 @@
 #include <iomanip>
 #include <sstream>
 
-std::string CAuthCLI::getHomeDir() const {
-    const char* homeDir = getenv("HOME");
-    if (homeDir == nullptr)
-        homeDir = getpwuid(getuid())->pw_dir;
-    return homeDir ? homeDir : "";
-}
-
 CAuthCLI::CAuthCLI() {
-    const char* dbDir = getenv("AUTH_DATABASE_DIR");
-    std::string dbPath;
-
-    if (dbDir)
-        dbPath = std::string(dbDir) + "/auth.db";
-    else {
-        std::string homeDir = getHomeDir();
-        if (homeDir.empty())
-            return;
-
-        dbPath = homeDir + "/.local/share/auth/auth.db";
-    }
+    std::string dbPath = GetDatabasePath();
+    if (dbPath.empty())
+        return;
 
     const std::filesystem::path configPath = std::filesystem::path(dbPath).parent_path();
     if (!std::filesystem::exists(configPath))
@@ -109,12 +94,13 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
     std::string secret = args[1];
     uint32_t    digits = 6;
     uint32_t    period = 30;
+    std::string errorMessage;
 
     if (args.size() >= 3) {
         try {
             digits = std::stoi(args[2]);
-            if (digits < 6 || digits > 8) {
-                std::cerr << CColor::RED << "Digits must be between 6 and 8" << CColor::RESET << "\n";
+            if (!ValidateDigits(digits, errorMessage)) {
+                std::cerr << CColor::RED << errorMessage << CColor::RESET << "\n";
                 return false;
             }
         } catch (const std::exception& e) {
@@ -126,8 +112,8 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
     if (args.size() >= 4) {
         try {
             period = std::stoi(args[3]);
-            if (period == 0) {
-                std::cerr << CColor::RED << "Period cannot be 0" << CColor::RESET << "\n";
+            if (!ValidatePeriod(period, errorMessage)) {
+                std::cerr << CColor::RED << errorMessage << CColor::RESET << "\n";
                 return false;
             }
         } catch (const std::exception& e) {
@@ -136,11 +122,9 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
         }
     }
 
-    for (char c : secret) {
-        if (c != ' ' && c != '-' && !std::isalnum(c)) {
-            std::cerr << CColor::RED << "Secret contains invalid characters" << CColor::RESET << "\n";
-            return false;
-        }
+    if (!IsSecretValid(secret, errorMessage)) {
+        std::cerr << CColor::RED << errorMessage << CColor::RESET << "\n";
+        return false;
     }
 
     SAuthEntry entry;
@@ -236,32 +220,14 @@ bool CAuthCLI::commandGenerate(const std::vector<std::string>& args) {
 
     std::string nameOrId = args[0];
     auto        entries  = m_db->getEntries();
-    SAuthEntry  entry;
-    bool        found = false;
 
-    try {
-        uint64_t id = std::stoull(nameOrId);
-        auto     it = std::ranges::find_if(entries, [id](const SAuthEntry& e) { return e.id == id; });
-
-        if (it != entries.end()) {
-            entry = *it;
-            found = true;
-        }
-    } catch (const std::exception&) {
-        auto it = std::ranges::find_if(entries, [&nameOrId](const SAuthEntry& e) { return e.name == nameOrId; });
-
-        if (it != entries.end()) {
-            entry = *it;
-            found = true;
-        }
-    }
-
-    if (!found) {
+    auto        entryOpt = FindEntryByNameOrId(entries, nameOrId);
+    if (!entryOpt) {
         std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
         return false;
     }
 
-    CTOTP       totp(entry.secret, entry.digits, entry.period);
+    CTOTP       totp(entryOpt->secret, entryOpt->digits, entryOpt->period);
     std::string code = totp.generate();
 
     std::cout << CColor::YELLOW << code << CColor::RESET << std::endl;
@@ -277,31 +243,14 @@ bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
 
     std::string nameOrId = args[0];
     auto        entries  = m_db->getEntries();
-    SAuthEntry  entry;
-    bool        found = false;
 
-    try {
-        uint64_t id = std::stoull(nameOrId);
-        auto     it = std::ranges::find_if(entries, [id](const SAuthEntry& e) { return e.id == id; });
-
-        if (it != entries.end()) {
-            entry = *it;
-            found = true;
-        }
-    } catch (const std::exception&) {
-        auto it = std::ranges::find_if(entries, [&nameOrId](const SAuthEntry& e) { return e.name == nameOrId; });
-
-        if (it != entries.end()) {
-            entry = *it;
-            found = true;
-        }
-    }
-
-    if (!found) {
+    auto        entryOpt = FindEntryByNameOrId(entries, nameOrId);
+    if (!entryOpt) {
         std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
         return false;
     }
 
+    const auto& entry = *entryOpt;
     std::cout << CColor::BOLD << "Name:   " << CColor::RESET << CColor::GREEN << entry.name << CColor::RESET << "\n";
     std::cout << CColor::BOLD << "ID:     " << CColor::RESET << CColor::CYAN << entry.id << CColor::RESET << "\n";
     std::cout << CColor::BOLD << "Secret: " << CColor::RESET << entry.secret << "\n";
@@ -328,32 +277,16 @@ bool CAuthCLI::commandEdit(const std::vector<std::string>& args) {
 
     std::string nameOrId = args[0];
     auto        entries  = m_db->getEntries();
-    SAuthEntry  entryToEdit;
-    bool        found = false;
 
-    try {
-        uint64_t id = std::stoull(nameOrId);
-        auto     it = std::ranges::find_if(entries, [id](const SAuthEntry& entry) { return entry.id == id; });
-
-        if (it != entries.end()) {
-            entryToEdit = *it;
-            found       = true;
-        }
-    } catch (const std::exception&) {
-        auto it = std::ranges::find_if(entries, [&nameOrId](const SAuthEntry& entry) { return entry.name == nameOrId; });
-
-        if (it != entries.end()) {
-            entryToEdit = *it;
-            found       = true;
-        }
-    }
-
-    if (!found) {
+    auto        entryOpt = FindEntryByNameOrId(entries, nameOrId);
+    if (!entryOpt) {
         std::cerr << CColor::RED << "Entry not found: " << nameOrId << CColor::RESET << "\n";
         return false;
     }
 
+    SAuthEntry  entryToEdit  = *entryOpt;
     std::string originalName = entryToEdit.name;
+    std::string errorMessage;
 
     if (args.size() > 1 && !args[1].empty())
         entryToEdit.name = args[1];
@@ -361,11 +294,9 @@ bool CAuthCLI::commandEdit(const std::vector<std::string>& args) {
     if (args.size() > 2 && !args[2].empty()) {
         std::string secret = args[2];
 
-        for (char c : secret) {
-            if (c != ' ' && c != '-' && !std::isalnum(c)) {
-                std::cerr << CColor::RED << "Secret contains invalid characters" << CColor::RESET << "\n";
-                return false;
-            }
+        if (!IsSecretValid(secret, errorMessage)) {
+            std::cerr << CColor::RED << errorMessage << CColor::RESET << "\n";
+            return false;
         }
 
         entryToEdit.secret = secret;
@@ -374,8 +305,8 @@ bool CAuthCLI::commandEdit(const std::vector<std::string>& args) {
     if (args.size() > 3 && !args[3].empty()) {
         try {
             uint32_t digits = std::stoi(args[3]);
-            if (digits < 6 || digits > 8) {
-                std::cerr << CColor::RED << "Digits must be between 6 and 8" << CColor::RESET << "\n";
+            if (!ValidateDigits(digits, errorMessage)) {
+                std::cerr << CColor::RED << errorMessage << CColor::RESET << "\n";
                 return false;
             }
             entryToEdit.digits = digits;
@@ -388,8 +319,8 @@ bool CAuthCLI::commandEdit(const std::vector<std::string>& args) {
     if (args.size() > 4 && !args[4].empty()) {
         try {
             uint32_t period = std::stoi(args[4]);
-            if (period == 0) {
-                std::cerr << CColor::RED << "Period cannot be 0" << CColor::RESET << "\n";
+            if (!ValidatePeriod(period, errorMessage)) {
+                std::cerr << CColor::RED << errorMessage << CColor::RESET << "\n";
                 return false;
             }
             entryToEdit.period = period;
@@ -421,7 +352,7 @@ bool CAuthCLI::commandImport(const std::vector<std::string>& args) {
 
     if (args.size() > 1) {
         std::string formatStr = args[1];
-        std::transform(formatStr.begin(), formatStr.end(), formatStr.begin(), [](unsigned char c) { return std::tolower(c); });
+        StringToLowerInPlace(formatStr);
 
         if (formatStr == "json")
             format = EFileFormat::JSON;
@@ -456,7 +387,7 @@ bool CAuthCLI::commandExport(const std::vector<std::string>& args) {
 
     if (args.size() > 1) {
         std::string formatStr = args[1];
-        std::transform(formatStr.begin(), formatStr.end(), formatStr.begin(), [](unsigned char c) { return std::tolower(c); });
+        StringToLowerInPlace(formatStr);
 
         if (formatStr == "json")
             format = EFileFormat::JSON;
@@ -492,18 +423,10 @@ bool CAuthCLI::commandWipe() {
         return false;
     }
 
-    std::string dbPath;
-    const char* dbDir = getenv("AUTH_DATABASE_DIR");
-
-    if (dbDir)
-        dbPath = std::string(dbDir) + "/auth.db";
-    else {
-        std::string homeDir = getHomeDir();
-        if (homeDir.empty()) {
-            std::cerr << CColor::RED << "Could not find home directory" << CColor::RESET << "\n";
-            return false;
-        }
-        dbPath = homeDir + "/.local/share/auth/auth.db";
+    std::string dbPath = GetDatabasePath();
+    if (dbPath.empty()) {
+        std::cerr << CColor::RED << "Could not find home directory" << CColor::RESET << "\n";
+        return false;
     }
 
     try {

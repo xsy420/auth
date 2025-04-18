@@ -1,4 +1,5 @@
 #include "Totp.hpp"
+#include "../helpers/MiscFunctions.hpp"
 #include <openssl/hmac.h>
 #include <openssl/evp.h>
 #include <ctime>
@@ -9,45 +10,13 @@
 #include <stdexcept>
 #include <cmath>
 
-constexpr const char* BASE32_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-
-std::vector<uint8_t>  decodeBase32(const std::string& input) {
-    std::string sanitized;
-    for (char c : input) {
-        if (c != ' ' && c != '-')
-            sanitized += std::toupper(c);
-    }
-
-    std::vector<uint8_t> result;
-    size_t               buffer   = 0;
-    size_t               bitsLeft = 0;
-
-    for (char c : sanitized) {
-        const char* pos = strchr(BASE32_CHARS, c);
-        if (pos == nullptr)
-            continue;
-
-        size_t val = pos - BASE32_CHARS;
-        buffer <<= 5;
-        buffer |= val;
-        bitsLeft += 5;
-
-        if (bitsLeft >= 8) {
-            bitsLeft -= 8;
-            result.push_back((buffer >> bitsLeft) & 0xFF);
-        }
-    }
-
-    return result;
-}
-
 CTOTP::CTOTP(const std::string& secret, uint32_t digits, uint32_t period) : m_secret(secret), m_digits(digits), m_period(period) {
     if (m_period == 0)
         m_period = 30;
 }
 
 std::string CTOTP::generate() const {
-    std::vector<uint8_t> key = decodeBase32(m_secret);
+    std::vector<uint8_t> key = DecodeBase32(m_secret);
     if (key.empty())
         return "Invalid key";
 

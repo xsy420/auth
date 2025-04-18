@@ -15,7 +15,6 @@ class CAuthCLI {
 
   protected:
     std::unique_ptr<IAuthDB> m_db;
-    virtual std::string      getHomeDir() const;
 
   private:
     bool commandAdd(const std::vector<std::string>& args);
