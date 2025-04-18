@@ -29,10 +29,10 @@ void CAuthCLI::printUsage() {
     std::cout << CColor::BOLD << "Commands:" << CColor::RESET << "\n";
     std::cout << "  " << CColor::GREEN << "add" << CColor::RESET << "      <n> <secret> [digits] [period]                   Add a new TOTP entry\n";
     std::cout << "  " << CColor::GREEN << "list" << CColor::RESET << "                                                      List all entries\n";
-    std::cout << "  " << CColor::GREEN << "generate" << CColor::RESET << " <name or id>                                     Generate TOTP code for specific entry\n";
-    std::cout << "  " << CColor::GREEN << "remove" << CColor::RESET << "   <name or id>                                     Remove an entry\n";
-    std::cout << "  " << CColor::GREEN << "info" << CColor::RESET << "     <name or id>                                     Show details for an entry\n";
-    std::cout << "  " << CColor::GREEN << "edit" << CColor::RESET << "     <name or id> [name] [secret] [digits] [period]   Edit an entry\n";
+    std::cout << "  " << CColor::GREEN << "generate" << CColor::RESET << " <name or #>                                      Generate TOTP code for specific entry\n";
+    std::cout << "  " << CColor::GREEN << "remove" << CColor::RESET << "   <name or #>                                      Remove an entry\n";
+    std::cout << "  " << CColor::GREEN << "info" << CColor::RESET << "     <name or #>                                      Show details for an entry\n";
+    std::cout << "  " << CColor::GREEN << "edit" << CColor::RESET << "     <name or #> [name] [secret] [digits] [period]    Edit an entry\n";
     std::cout << "  " << CColor::GREEN << "import" << CColor::RESET << "   <file> [format]                                  Import entries from file (format: toml, json)\n";
     std::cout << "  " << CColor::GREEN << "export" << CColor::RESET << "   <file> [format]                                  Export entries to file   (format: toml, json)\n";
     std::cout << "  " << CColor::GREEN << "wipe" << CColor::RESET << "                                                      Wipe database\n";
