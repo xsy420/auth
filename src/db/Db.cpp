@@ -172,8 +172,10 @@ bool CFileAuthDB::addEntry(const SAuthEntry& entry) {
         std::string secureId = m_secretStorage.storeSecret(entry.name, newId, entry.secret);
         if (!secureId.empty())
             secretToStore = secureId;
-        else
-            std::cerr << CColor::RED << "Failed to store secret securely, falling back to plaintext" << CColor::RESET << std::endl;
+        else {
+            sqlite3_finalize(stmt);
+            return false;
+        }
     }
 
     sqlite3_bind_int64(stmt, 1, newId);
@@ -257,8 +259,10 @@ bool CFileAuthDB::updateEntry(const SAuthEntry& entry) {
             std::string secureId = m_secretStorage.updateSecret(oldSecretId, entry.name, entry.id, entry.secret);
             if (!secureId.empty())
                 secretToStore = secureId;
-            else
-                std::cerr << CColor::RED << "Failed to update secret securely" << CColor::RESET << std::endl;
+            else {
+                sqlite3_finalize(stmt);
+                return false;
+            }
         } else
             secretToStore = oldSecretId;
     }

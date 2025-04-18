@@ -49,8 +49,10 @@ static bool importEntriesFromToml(const std::string& filepath, IAuthDB& db) {
         if (auto period = entryTable->get("period"))
             authEntry.period = static_cast<uint32_t>(period->as_integer()->get());
 
-        if (db.addEntry(authEntry))
-            importCount++;
+        if (!db.addEntry(authEntry))
+            return false;
+
+        importCount++;
     }
 
     return importCount > 0;
@@ -145,8 +147,10 @@ static bool importEntriesFromJson(const std::string& filepath, IAuthDB& db) {
         if (entry.contains("period") && entry["period"].is_number())
             authEntry.period = entry["period"].get<uint32_t>();
 
-        if (db.addEntry(authEntry))
-            importCount++;
+        if (!db.addEntry(authEntry))
+            return false;
+
+        importCount++;
     }
 
     return importCount > 0;
