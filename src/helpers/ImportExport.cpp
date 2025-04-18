@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 #include <filesystem>
-#include "../core/Color.hpp"
+#include "Color.hpp"
 
 static bool importEntriesFromToml(const std::string& filepath, IAuthDB& db) {
     toml::table tbl;

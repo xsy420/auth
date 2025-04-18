@@ -1,5 +1,5 @@
 #include "Cli.hpp"
-#include "../core/Color.hpp"
+#include "../helpers/Color.hpp"
 #include "../core/Totp.hpp"
 #include "../helpers/ImportExport.hpp"
 #include <iostream>

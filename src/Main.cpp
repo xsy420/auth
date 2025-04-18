@@ -1,4 +1,4 @@
-#include "core/Color.hpp"
+#include "helpers/Color.hpp"
 #include "cli/Cli.hpp"
 #include <iostream>
 #include <clocale>
