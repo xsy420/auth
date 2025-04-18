@@ -212,8 +212,6 @@ bool CAuthCLI::commandList() {
 
     std::cout << CColor::BOLD << std::left << std::setw(5) << "ID" << std::setw(maxNameLength + 2) << "NAME" << "CODE" << "    EXPIRES" << CColor::RESET << "\n";
 
-    std::cout << std::string(5 + maxNameLength + 8 + 14, '-') << "\n";
-
     time_t now = time(nullptr);
 
     for (const auto& entry : entries) {
