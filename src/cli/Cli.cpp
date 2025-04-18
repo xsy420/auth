@@ -38,8 +38,8 @@ void CAuthCLI::printUsage() {
     std::cout << "  " << CColor::GREEN << "wipe" << CColor::RESET << "                                                      Wipe database\n";
     std::cout << "  " << CColor::GREEN << "help" << CColor::RESET << "                                                      Show this help message\n";
     std::cout << "\n" << CColor::BOLD << "Options:" << CColor::RESET << "\n";
-    std::cout << "  " << CColor::YELLOW << "digits" << CColor::RESET << "   Number of digits in the code (default: 6)\n";
-    std::cout << "  " << CColor::YELLOW << "period" << CColor::RESET << "   Time period in seconds (default: 30)\n";
+    std::cout << "  " << CColor::YELLOW << "digits" << CColor::RESET << "   Number of digits in the code                (default: 6)\n";
+    std::cout << "  " << CColor::YELLOW << "period" << CColor::RESET << "   Time period in seconds                      (default: 30)\n";
     std::cout << "  " << CColor::YELLOW << "format" << CColor::RESET << "   File format for import/export: toml or json (default: toml)\n";
 }
 
