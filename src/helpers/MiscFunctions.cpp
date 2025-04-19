@@ -138,3 +138,9 @@ std::vector<std::string> SplitString(const std::string& input, const std::string
     tokens.push_back(input.substr(start));
     return tokens;
 }
+
+std::string truncateWithEllipsis(const std::string& str, size_t maxLength) {
+    if (str.length() <= maxLength)
+        return str;
+    return str.substr(0, maxLength - 3) + "...";
+}

@@ -12,6 +12,8 @@
 #include <iomanip>
 #include <sstream>
 
+constexpr size_t MAX_NAME_DISPLAY_LENGTH = 40;
+
 CAuthCLI::CAuthCLI() {
     std::string dbPath = GetDatabasePath();
     if (dbPath.empty())
@@ -194,7 +196,8 @@ bool CAuthCLI::commandList() {
 
     size_t maxNameLength = 0;
     for (const auto& entry : entries) {
-        maxNameLength = std::max(maxNameLength, entry.name.length());
+        const std::string truncatedName = truncateWithEllipsis(entry.name, MAX_NAME_DISPLAY_LENGTH);
+        maxNameLength                   = std::max(maxNameLength, truncatedName.length());
     }
 
     std::cout << CColor::BOLD << std::left << std::setw(5) << "#" << std::setw(maxNameLength + 2) << "NAME" << "CODE" << "    EXPIRES" << CColor::RESET << "\n";
@@ -208,7 +211,9 @@ bool CAuthCLI::commandList() {
 
         int         periodRemaining = entry.period - (now % entry.period);
 
-        std::cout << CColor::CYAN << std::left << std::setw(5) << rowNumber++ << CColor::RESET << CColor::GREEN << std::setw(maxNameLength + 2) << entry.name << CColor::RESET
+        std::string displayName = truncateWithEllipsis(entry.name, MAX_NAME_DISPLAY_LENGTH);
+
+        std::cout << CColor::CYAN << std::left << std::setw(5) << rowNumber++ << CColor::RESET << CColor::GREEN << std::setw(maxNameLength + 2) << displayName << CColor::RESET
                   << CColor::BOLD << CColor::YELLOW << std::setw(8) << code << CColor::RESET << " " << CColor::MAGENTA << periodRemaining << "s" << CColor::RESET << "\n";
     }
 

@@ -25,3 +25,5 @@ bool                      IsSecretValid(const std::string& secret, std::string& 
 std::string               GetDatabasePath();
 
 std::vector<std::string>  SplitString(const std::string& input, const std::string& delimiter);
+
+std::string               truncateWithEllipsis(const std::string& str, size_t maxLength);
