@@ -281,7 +281,8 @@ bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
         return false;
     }
 
-    std::cout << CColor::BOLD << "Name:   " << CColor::RESET << CColor::GREEN << entry.name << CColor::RESET << "\n";
+    std::string displayName = truncateWithEllipsis(entry.name, MAX_NAME_DISPLAY_LENGTH);
+    std::cout << CColor::BOLD << "Name:   " << CColor::RESET << CColor::GREEN << displayName << CColor::RESET << "\n";
     std::cout << CColor::BOLD << "ID:     " << CColor::RESET << CColor::CYAN << entry.id << CColor::RESET << "\n";
     std::cout << CColor::BOLD << "Secret: " << CColor::RESET << entry.secret << "\n";
     std::cout << CColor::BOLD << "Digits: " << CColor::RESET << entry.digits << "\n";
