@@ -84,6 +84,10 @@ retrieved from the keyring. Please make sure your keyring is running.
 Double-check your file format. If you claim it's JSON but it's actually a picture
 of your cat, the import will fail.
 
+#### WTF!? My long ass entry name doesn't show the full length and has ... at the end
+
+All entries get truncated at 40 characters, for common reasons.
+
 #### None of the above worked!?!?!? What do i do???
 
 Are you trying to run this on Windows? macOS? Your smartphone? Your smart fridge?
