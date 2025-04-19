@@ -327,6 +327,18 @@ TEST_CASE("CLI unknown command", "[cli]") {
     }
 }
 
+TEST_CASE("CLI version command", "[cli]") {
+    CTestAuthCLI cli;
+
+    SECTION("Version command shows version") {
+        REQUIRE(cli.runCommand("version"));
+        std::string output = cli.getStdout();
+        REQUIRE(contains(output, "Auth"));
+        REQUIRE(contains(output, AUTH_VERSION));
+        REQUIRE(contains(output, AUTH_GIT_COMMIT));
+    }
+}
+
 TEST_CASE("CLI import command", "[cli]") {
     CTestAuthCLI cli;
 

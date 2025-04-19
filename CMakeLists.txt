@@ -15,6 +15,33 @@ set(AUTH_VERSION ${VER})
 set(PREFIX ${CMAKE_INSTALL_PREFIX})
 set(INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR})
 set(BINDIR ${CMAKE_INSTALL_BINDIR})
+
+find_package(Git QUIET)
+if(GIT_FOUND)
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET
+  )
+
+  execute_process(
+    COMMAND ${GIT_EXECUTABLE} diff --quiet --exit-code
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    RESULT_VARIABLE GIT_DIRTY
+    ERROR_QUIET
+  )
+
+  if(GIT_DIRTY)
+    set(GIT_STATUS "${GIT_COMMIT_HASH}-dirty")
+  else()
+    set(GIT_STATUS "${GIT_COMMIT_HASH}")
+  endif()
+else()
+  set(GIT_STATUS "unknown")
+endif()
+
 configure_file(auth.pc.in auth.pc @ONLY)
 
 set(CMAKE_MESSAGE_LOG_LEVEL "STATUS")
@@ -35,7 +62,8 @@ target_compile_options(auth_compiler_options INTERFACE
   -fmacro-prefix-map=${CMAKE_SOURCE_DIR}/=)
 
 target_compile_definitions(auth_compiler_options INTERFACE
-  AUTH_VERSION="${AUTH_VERSION}")
+  AUTH_VERSION="${AUTH_VERSION}"
+  AUTH_GIT_COMMIT="${GIT_STATUS}")
 
 if(CMAKE_BUILD_TYPE MATCHES Debug|DEBUG)
   target_compile_definitions(auth_compiler_options INTERFACE AUTH_DEBUG)

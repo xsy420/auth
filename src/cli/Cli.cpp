@@ -40,6 +40,7 @@ void CAuthCLI::printUsage() {
     std::cout << "  " << CColor::GREEN << "import" << CColor::RESET << "   <file> [format]                                  Import entries from file\n";
     std::cout << "  " << CColor::GREEN << "export" << CColor::RESET << "   <file> [format]                                  Export entries to file\n";
     std::cout << "  " << CColor::GREEN << "wipe" << CColor::RESET << "                                                      Wipe database\n";
+    std::cout << "  " << CColor::GREEN << "version" << CColor::RESET << "                                                   Show the current version and commit information\n";
     std::cout << "  " << CColor::GREEN << "help" << CColor::RESET << "                                                      Show this help message\n";
     std::cout << "\n" << CColor::BOLD << "Options:" << CColor::RESET << "\n";
     std::cout << "  " << CColor::YELLOW << "digits" << CColor::RESET << "   Number of digits in the code                (default: 6)\n";
@@ -78,6 +79,8 @@ bool CAuthCLI::processCommand(int argc, char* argv[]) {
         return commandExport(args);
     else if (command == "wipe")
         return commandWipe();
+    else if (command == "version")
+        return commandVersion();
     else if (command == "help") {
         printUsage();
         return true;
@@ -488,4 +491,9 @@ bool CAuthCLI::commandWipe() {
         std::cerr << CColor::RED << "Error wiping database: " << e.what() << CColor::RESET << "\n";
         return false;
     }
+}
+
+bool CAuthCLI::commandVersion() {
+    std::cout << CColor::BOLD << "Auth " << CColor::CYAN << AUTH_VERSION << CColor::RESET << " (" << CColor::YELLOW << AUTH_GIT_COMMIT << CColor::RESET << ")" << "\n";
+    return true;
 }
