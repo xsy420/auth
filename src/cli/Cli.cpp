@@ -12,7 +12,8 @@
 #include <iomanip>
 #include <sstream>
 
-constexpr size_t MAX_NAME_DISPLAY_LENGTH = 40;
+constexpr size_t MAX_NAME_DISPLAY_LENGTH   = 40;
+constexpr size_t MAX_SECRET_DISPLAY_LENGTH = 40;
 
 CAuthCLI::CAuthCLI() {
     std::string dbPath = GetDatabasePath();
@@ -286,7 +287,8 @@ bool CAuthCLI::commandInfo(const std::vector<std::string>& args) {
     std::string displayName = truncateWithEllipsis(entry.name, MAX_NAME_DISPLAY_LENGTH);
     std::cout << CColor::BOLD << "Name:   " << CColor::RESET << CColor::GREEN << displayName << CColor::RESET << "\n";
     std::cout << CColor::BOLD << "ID:     " << CColor::RESET << CColor::CYAN << entry.id << CColor::RESET << "\n";
-    std::cout << CColor::BOLD << "Secret: " << CColor::RESET << entry.secret << "\n";
+    std::string displaySecret = truncateWithEllipsis(entry.secret, MAX_SECRET_DISPLAY_LENGTH);
+    std::cout << CColor::BOLD << "Secret: " << CColor::RESET << displaySecret << "\n";
     std::cout << CColor::BOLD << "Digits: " << CColor::RESET << entry.digits << "\n";
     std::cout << CColor::BOLD << "Period: " << CColor::RESET << entry.period << "s\n";
 
