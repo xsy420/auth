@@ -125,6 +125,16 @@ TOTP secrets are stored in your keyring.
 .B AUTH_DATABASE_DIR
 Specifies the directory where the database file (auth.db) is stored. If this variable is not set, the default location $HOME/.local/share/auth/ is used.
 
+.SH OVERVIEW
+It is recommended that you have a keyring installed, otherwise this won't work as
+TOTP secrets are stored in your keyring.
+
+The keyring requirement will eventually change in the future, there will eventually
+be an option to store entries inside of the database in plaintext if the user so
+desires.
+
+For the list of dependencies see the submodules.
+
 .SH COMMON MISTAKES
 .TP
 \fBMy code says Invalid Key!?!?! What do I do??\fR
