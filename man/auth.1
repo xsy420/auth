@@ -175,6 +175,10 @@ Double-check your file format. If you claim it's JSON but it's actually a pictur
 All entries get truncated at 40 characters, for common reasons.
 
 .TP
+\fBWTF!? My super long totp secret is also truncated with ... at the end\fR
+All secrets are also truncated at 40 characters for common reasons. Secrets are only shown through the info command.
+
+.TP
 \fBNone of the above worked!?!?!? What do i do???\fR
 Are you trying to run this on Windows? macOS? Your smartphone? Your smart fridge? Sorry to break it to you, but this is a Linux-only tool. It depends on Linux keyrings, Linux paths, and general Linux-ness. If you're not using Linux, your options are:
 .br
