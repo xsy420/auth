@@ -31,6 +31,10 @@ submodules. The keyring requirement will eventually change in the future, there
 will eventually be an option to store entries inside of the database in plaintext
 if the user so desires.
 
+Common mistakes below are related to the latest commit, not the latest release so
+that means if you are using the tagged releases some information below might not
+be correct / pushed to a release yet.
+
 ### Common mistakes
 
 #### My code says Invalid Key!?!?! What do I do??
