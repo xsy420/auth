@@ -137,7 +137,8 @@ bool CAuthCLI::commandAdd(const std::vector<std::string>& args) {
     entry.period = period;
 
     if (m_db->addEntry(entry)) {
-        std::cout << CColor::GREEN << "Added new entry: " << name << CColor::RESET << "\n";
+        std::string displayName = truncateWithEllipsis(name, MAX_NAME_DISPLAY_LENGTH);
+        std::cout << CColor::GREEN << "Added new entry: " << displayName << CColor::RESET << "\n";
         return true;
     } else {
         std::cerr << CColor::RED << "Failed to add entry" << CColor::RESET << "\n";
@@ -171,7 +172,8 @@ bool CAuthCLI::commandRemove(const std::vector<std::string>& args) {
     }
 
     if (success) {
-        std::cout << CColor::GREEN << "Removed entry: " << entry.name << CColor::RESET << "\n";
+        std::string displayName = truncateWithEllipsis(entry.name, MAX_NAME_DISPLAY_LENGTH);
+        std::cout << CColor::GREEN << "Removed entry: " << displayName << CColor::RESET << "\n";
         return true;
     }
 
@@ -372,7 +374,8 @@ bool CAuthCLI::commandEdit(const std::vector<std::string>& args) {
     }
 
     if (m_db->updateEntry(entryToEdit)) {
-        std::cout << CColor::GREEN << "Updated entry: " << originalName << CColor::RESET << "\n";
+        std::string displayName = truncateWithEllipsis(originalName, MAX_NAME_DISPLAY_LENGTH);
+        std::cout << CColor::GREEN << "Updated entry: " << displayName << CColor::RESET << "\n";
         return true;
     } else {
         std::cerr << CColor::RED << "Failed to update entry" << CColor::RESET << "\n";
