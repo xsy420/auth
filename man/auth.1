@@ -125,6 +125,63 @@ TOTP secrets are stored locally on disk.
 .B AUTH_DATABASE_DIR
 Specifies the directory where the database file (auth.db) is stored. If this variable is not set, the default location $HOME/.local/share/auth/ is used.
 
+.SH COMMON MISTAKES
+.TP
+\fBMy code says Invalid Key!?!?! What do I do??\fR
+It is 100% likely that your keyring is not running.
+
+.TP
+\fBI can't add my super special secret with cool symbols!!1!\fR
+If your secret contains anything other than letters, numbers, spaces, or hyphens, it will be rejected. Base32 encoding only uses those characters.
+
+.TP
+\fBMy 12-digit TOTP code doesn't work?!\fR
+The app only supports 6-8 digit codes because that's what every sane authentication app uses. If you need more digits, you might also need therapy.
+
+.TP
+\fBAuth says "Period cannot be 0"\fR
+The time period has to be greater than 0. Common sense.
+
+.TP
+\fBI keep getting "Entry not found" when I KNOW it's there!\fR
+You can refer to entries by name or #.
+
+.TP
+\fBWhere is my database stored? I want to do dangerous things to it!\fR
+By default, it's at \fI~/.local/share/auth/auth.db\fR, but you can change it with the \fBAUTH_DATABASE_DIR\fR environment variable.
+
+.TP
+\fBI just installed auth but it says it can't save my entries?!\fR
+This happens when you ignored the first recommendation about having a keyring installed. Install and run one of these: GNOME Keyring, KDE Wallet. Yes, this means you have to actually READ the documentation.
+
+.TP
+\fBWhy can't I export to my favorite obscure file format?\fR
+Because we only support TOML and JSON like normal people.
+
+.TP
+\fBI added a bunch of entries and now I regret everything!\fR
+Use the \fBwipe\fR command to delete everything.
+
+.TP
+\fBI can't edit my entry because "Cannot edit entry with unavailable secret"?\fR
+This happens when you're trying to edit an entry but the secret can't be retrieved from the keyring. Please make sure your keyring is running.
+
+.TP
+\fBHelp! I'm trying to import but nothing happens!\fR
+Double-check your file format. If you claim it's JSON but it's actually a picture of your cat, the import will fail.
+
+.TP
+\fBWTF!? My long ass entry name doesn't show the full length and has ... at the end\fR
+All entries get truncated at 40 characters, for common reasons.
+
+.TP
+\fBNone of the above worked!?!?!? What do i do???\fR
+Are you trying to run this on Windows? macOS? Your smartphone? Your smart fridge? Sorry to break it to you, but this is a Linux-only tool. It depends on Linux keyrings, Linux paths, and general Linux-ness. If you're not using Linux, your options are:
+.br
+\- Install Linux
+.br
+\- Cry quietly in a corner
+
 .SH REPORTING BUGS
 Report bugs at: https://github.com/nnyyxxxx/auth/issues
 
