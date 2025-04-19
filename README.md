@@ -2,6 +2,27 @@
 
 A simple terminal-based authenticator CLI written in CPP that generates TOTP codes.
 
+## Installation
+
+### Arch Linux
+
+Auth is available on the [AUR](https://aur.archlinux.org/packages/auth-cli)
+
+```bash
+paru -S auth-cli
+```
+
+### Releases
+
+Yoink the binary from the
+[releases page](https://github.com/nnyyxxxx/auth/releases/latest)
+
+### Building
+
+```bash
+make release; sudo make install
+```
+
 ## Overview
 
 It is recommended that you have a keyring installed, otherwise this won't work as
@@ -62,24 +83,3 @@ retrieved from the keyring. Please make sure your keyring is running.
 
 Double-check your file format. If you claim it's JSON but it's actually a picture
 of your cat, the import will fail.
-
-## Installation
-
-### Arch Linux
-
-Auth is available on the [AUR](https://aur.archlinux.org/packages/auth-cli)
-
-```bash
-paru -S auth-cli
-```
-
-### Releases
-
-Yoink the binary from the
-[releases page](https://github.com/nnyyxxxx/auth/releases/latest)
-
-### Building
-
-```bash
-make release; sudo make install
-```
