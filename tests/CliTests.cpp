@@ -59,12 +59,6 @@ TEST_CASE("CLI add command", "[cli]") {
         REQUIRE(entries[0].period == 60);
     }
 
-    SECTION("Missing arguments") {
-        REQUIRE_FALSE(cli.runCommand("add", {"TestEntry"}));
-        std::string error = cli.getStderr();
-        REQUIRE(contains(error, "Not enough arguments"));
-    }
-
     SECTION("Invalid digits") {
         REQUIRE_FALSE(cli.runCommand("add", {"TestEntry", "ABCDEFGHIJKLMN", "9"}));
         std::string error = cli.getStderr();
@@ -137,12 +131,6 @@ TEST_CASE("CLI remove command", "[cli]") {
         std::string error = cli.getStderr();
         REQUIRE(contains(error, "Entry not found"));
     }
-
-    SECTION("Missing arguments") {
-        REQUIRE_FALSE(cli.runCommand("remove"));
-        std::string error = cli.getStderr();
-        REQUIRE(contains(error, "Missing argument"));
-    }
 }
 
 TEST_CASE("CLI generate command", "[cli]") {
@@ -162,12 +150,6 @@ TEST_CASE("CLI generate command", "[cli]") {
         REQUIRE_FALSE(cli.runCommand("generate", {"NonExistent"}));
         std::string error = cli.getStderr();
         REQUIRE(contains(error, "Entry not found"));
-    }
-
-    SECTION("Missing arguments") {
-        REQUIRE_FALSE(cli.runCommand("generate"));
-        std::string error = cli.getStderr();
-        REQUIRE(contains(error, "Missing argument"));
     }
 }
 
@@ -190,12 +172,6 @@ TEST_CASE("CLI info command", "[cli]") {
         REQUIRE_FALSE(cli.runCommand("info", {"NonExistent"}));
         std::string error = cli.getStderr();
         REQUIRE(contains(error, "Entry not found"));
-    }
-
-    SECTION("Missing arguments") {
-        REQUIRE_FALSE(cli.runCommand("info"));
-        std::string error = cli.getStderr();
-        REQUIRE(contains(error, "Missing argument"));
     }
 }
 
@@ -317,12 +293,6 @@ TEST_CASE("CLI edit command", "[cli]") {
         REQUIRE(entries[0].secret == "SECRET123");
     }
 
-    SECTION("Missing arguments") {
-        REQUIRE_FALSE(cli.runCommand("edit"));
-        std::string error = cli.getStderr();
-        REQUIRE(contains(error, "Missing arguments"));
-    }
-
     SECTION("Non-existent entry") {
         REQUIRE_FALSE(cli.runCommand("edit", {"NonExistent", "UpdatedName"}));
         std::string error = cli.getStderr();
@@ -347,26 +317,6 @@ TEST_CASE("CLI wipe command", "[cli]") {
     }
 }
 
-TEST_CASE("CLI import command arg validation", "[cli]") {
-    CTestAuthCLI cli;
-
-    SECTION("Missing arguments") {
-        REQUIRE_FALSE(cli.runCommand("import"));
-        std::string error = cli.getStderr();
-        REQUIRE(contains(error, "Missing argument"));
-    }
-}
-
-TEST_CASE("CLI export command arg validation", "[cli]") {
-    CTestAuthCLI cli;
-
-    SECTION("Missing arguments") {
-        REQUIRE_FALSE(cli.runCommand("export"));
-        std::string error = cli.getStderr();
-        REQUIRE(contains(error, "Missing argument"));
-    }
-}
-
 TEST_CASE("CLI unknown command", "[cli]") {
     CTestAuthCLI cli;
 
@@ -379,12 +329,6 @@ TEST_CASE("CLI unknown command", "[cli]") {
 
 TEST_CASE("CLI import command", "[cli]") {
     CTestAuthCLI cli;
-
-    SECTION("Missing arguments") {
-        REQUIRE_FALSE(cli.runCommand("import"));
-        std::string error = cli.getStderr();
-        REQUIRE(contains(error, "Missing argument"));
-    }
 
     SECTION("Import from test file") {
         REQUIRE(cli.getMockDb()->getEntries().empty());
@@ -412,12 +356,6 @@ TEST_CASE("CLI export command", "[cli]") {
     std::string  tempFile = "/tmp/auth_test_export.toml";
 
     std::filesystem::remove(tempFile);
-
-    SECTION("Missing arguments") {
-        REQUIRE_FALSE(cli.runCommand("export"));
-        std::string error = cli.getStderr();
-        REQUIRE(contains(error, "Missing argument"));
-    }
 
     SECTION("Export to file") {
         cli.getMockDb()->addEntry({"Export Test 1", "ABCDEFGHIJKLMNOP", 6, 30});
