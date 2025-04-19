@@ -83,3 +83,13 @@ retrieved from the keyring. Please make sure your keyring is running.
 
 Double-check your file format. If you claim it's JSON but it's actually a picture
 of your cat, the import will fail.
+
+#### None of the above worked!?!?!? What do i do???
+
+Are you trying to run this on Windows? macOS? Your smartphone? Your smart fridge?
+Sorry to break it to you, but this is a Linux-only tool. It depends on Linux
+keyrings, Linux paths, and general Linux-ness. If you're not using Linux, your
+options are:
+
+- Install Linux
+- Cry quietly in a corner
