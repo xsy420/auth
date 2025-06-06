@@ -7,6 +7,7 @@ use auth::utils::cli;
 use auth::utils::error::AuthResult;
 use ratatui::crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use ratatui::crossterm::execute;
+use ratatui::crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 
 fn main() -> AuthResult<()> {
     let args = cli::parse_args();
@@ -25,6 +26,7 @@ fn main() -> AuthResult<()> {
         execute!(stdout(), EnableMouseCapture)?;
     }
 
+    enable_raw_mode()?;
     let mut terminal = ratatui::init();
     let mut app = App::new()?;
 
@@ -39,6 +41,7 @@ fn main() -> AuthResult<()> {
     if args.mouse {
         execute!(stdout(), DisableMouseCapture)?;
     }
+    disable_raw_mode()?;
 
     ratatui::restore();
     Ok(())
