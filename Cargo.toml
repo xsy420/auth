@@ -1,16 +1,41 @@
 [package]
 name = "auth"
 version = "0.2.5"
-authors = ["Nyx <nnyyxxxx@protonmail.com>"]
+authors = ["xsy420 <xsy0420@gmail.com>", "Nyx <nnyyxxxx@protonmail.com>"]
 license = "GPL-2.0"
 description = "Authenticator TUI made in rust, generate totps on the fly. "
-repository = "https://github.com/nnyyxxxx/auth.git"
+repository = "https://github.com/xsy420/auth.git"
 readme = "readme.md"
 keywords = [
     "authenticator",
     "tui",
 ]
 edition = "2024"
+rust-version = "1.87.0"
+[package.metadata.deb]
+assets = [
+  [
+    "target/release/auth",
+    "/usr/bin/",
+    "755",
+  ],
+  [
+    "LICENSE",
+    "/usr/share/doc/auth/LICENSE",
+    "644",
+  ],
+  [
+    "README.md",
+    "/usr/share/licenses/auth/README.md",
+    "644",
+  ],
+]
+[package.metadata.generate-rpm]
+assets = [
+  { source = "target/release/auth", dest = "/usr/bin/auth", mode = "755" },
+  { source = "LICENSE", dest = "/usr/share/licenses/auth/LICENSE", mode = "644" },
+  { source = "README.md", dest = "/usr/share/doc/auth/README.md", mode = "644" },
+]
 
 [dependencies]
 ratatui = "0.29.0"
@@ -31,3 +56,6 @@ codegen-units = 1
 panic = "abort"
 strip = true
 opt-level = 3
+
+[profile.dev]
+strip = true

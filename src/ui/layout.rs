@@ -2,7 +2,7 @@ use ratatui::prelude::*;
 use ratatui::style::{Color, Style};
 use ratatui::widgets::{Block, BorderType, Borders};
 
-pub fn create_block(title: &str) -> Block {
+pub fn create_block(title: &str) -> Block<'_> {
     Block::default()
         .title(title)
         .borders(Borders::ALL)
