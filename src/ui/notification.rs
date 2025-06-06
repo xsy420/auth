@@ -23,7 +23,7 @@ pub fn get_notification_title(
 fn check_notification_time(notification: Option<(&str, SystemTime)>) -> Option<String> {
     let (message, time) = notification?;
     if time.elapsed().unwrap_or_default().as_secs() < 3 {
-        Some(format!(" {} ", message))
+        Some(format!(" {message} "))
     } else {
         None
     }

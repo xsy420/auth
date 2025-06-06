@@ -170,10 +170,10 @@ fn create_entry_popup_lines<'a>(
 ) -> Vec<Line<'a>> {
     vec![
         Line::from("Name:"),
-        Line::from(format!("{}{}", name, name_cursor)),
+        Line::from(format!("{name}{name_cursor}")),
         Line::from(""),
         Line::from("Secret:"),
-        Line::from(format!("{}{}", secret, secret_cursor)),
+        Line::from(format!("{secret}{secret_cursor}")),
     ]
 }
 
