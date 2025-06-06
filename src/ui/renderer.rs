@@ -45,7 +45,7 @@ fn draw_main_block(frame: &mut Frame, app: &App, area: Rect) {
     frame.render_widget(main_widget, area);
 }
 
-fn create_entry_lines(app: &App) -> Vec<Line> {
+fn create_entry_lines(app: &App) -> Vec<Line<'_>> {
     if app.entries.is_empty() {
         return Vec::new();
     }
@@ -58,7 +58,7 @@ fn get_max_name_width(entries: &[Entry]) -> usize {
     entries.iter().map(|e| e.name.len()).max().unwrap_or(0)
 }
 
-fn create_formatted_lines(entries: &[Entry], selected: usize, max_width: usize) -> Vec<Line> {
+fn create_formatted_lines(entries: &[Entry], selected: usize, max_width: usize) -> Vec<Line<'_>> {
     entries
         .iter()
         .enumerate()
@@ -66,7 +66,7 @@ fn create_formatted_lines(entries: &[Entry], selected: usize, max_width: usize) 
         .collect()
 }
 
-fn create_entry_line(index: usize, entry: &Entry, selected: usize, max_width: usize) -> Line {
+fn create_entry_line(index: usize, entry: &Entry, selected: usize, max_width: usize) -> Line<'_> {
     let style = get_line_style(index == selected);
     let formatted_text = format_entry_text(entry, max_width);
     Line::styled(formatted_text, style)
