@@ -1,5 +1,6 @@
 use std::time::SystemTime;
 
+#[must_use]
 pub fn get_notification_title(
     error_message: &Option<(String, SystemTime)>,
     copy_notification_time: Option<SystemTime>,

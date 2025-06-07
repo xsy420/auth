@@ -73,11 +73,11 @@ fn create_entry_line(index: usize, entry: &Entry, selected: usize, max_width: us
 }
 
 fn get_line_style(is_selected: bool) -> Style {
-    let color = match is_selected {
-        true => Color::Green,
-        false => Color::Reset,
-    };
-    Style::default().fg(color)
+    Style::default().fg(if is_selected {
+        Color::Green
+    } else {
+        Color::Reset
+    })
 }
 
 fn format_entry_text(entry: &Entry, max_width: usize) -> String {
@@ -121,7 +121,7 @@ fn draw_popups(frame: &mut Frame, app: &App, area: Rect) {
         InputMode::Importing | InputMode::Exporting => draw_file_popup(frame, app, area),
         InputMode::Editing => draw_edit_popup(frame, app, area),
         InputMode::FileBrowser => draw_file_browser_popup(frame, app, area),
-        _ => {}
+        InputMode::Normal => {}
     }
 }
 

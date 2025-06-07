@@ -32,6 +32,7 @@ impl Default for FileBrowser {
 }
 
 impl FileBrowser {
+    #[must_use]
     pub fn new() -> Self {
         let default_dir = Self::get_default_directory();
         let mut browser = Self {
@@ -160,6 +161,7 @@ impl FileBrowser {
         }
     }
 
+    #[must_use]
     pub fn get_selected_path(&self) -> Option<PathBuf> {
         if self.entries.is_empty() {
             None
@@ -168,6 +170,7 @@ impl FileBrowser {
         }
     }
 
+    #[must_use]
     pub fn get_current_dir(&self) -> &Path {
         &self.current_dir
     }
