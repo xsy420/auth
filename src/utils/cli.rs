@@ -1,5 +1,6 @@
 use clap::Parser;
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 pub struct Args {

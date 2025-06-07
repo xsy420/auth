@@ -11,6 +11,7 @@ pub fn create_block(title: &str) -> Block<'_> {
         .border_style(Style::default().fg(Color::Green))
 }
 
+#[allow(clippy::cast_possible_truncation)]
 #[must_use]
 pub fn pad_vertical(text: Vec<Line>, height: u16) -> Vec<Line> {
     let padding = (height.saturating_sub(text.len() as u16) / 2) as usize;
