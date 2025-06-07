@@ -37,11 +37,9 @@ impl CommandExt for Command {
         child: &mut std::process::Child,
         input: &[u8],
     ) -> std::io::Result<()> {
-        let stdin = match child.stdin.take() {
-            Some(stdin) => stdin,
-            None => return Ok(()),
+        let Some(stdin) = child.stdin.take() else {
+            return Ok(());
         };
-
         let mut stdin = stdin;
         std::io::Write::write_all(&mut stdin, input)
             .map_err(|_| std::io::Error::other(AuthError::ClipboardWriteError.to_string()))

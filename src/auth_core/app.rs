@@ -243,17 +243,17 @@ impl App {
     #[must_use]
     pub fn expand_path(&self, path: &str) -> PathBuf {
         if path.starts_with('~') {
-            return self.expand_home_path(path);
+            return Self::expand_home_path(path);
         }
 
         if let Some(stripped) = path.strip_prefix('$') {
-            return self.expand_env_path(stripped, path);
+            return Self::expand_env_path(stripped, path);
         }
 
         PathBuf::from(path)
     }
 
-    fn expand_home_path(&self, path: &str) -> PathBuf {
+    fn expand_home_path(path: &str) -> PathBuf {
         let Some(home) = dirs::home_dir() else {
             return PathBuf::from(path);
         };
@@ -265,7 +265,7 @@ impl App {
         home.join(&path[2..])
     }
 
-    fn expand_env_path(&self, stripped: &str, original_path: &str) -> PathBuf {
+    fn expand_env_path(stripped: &str, original_path: &str) -> PathBuf {
         let var_end = Self::get_var_end(stripped, original_path);
         let (var, rest) = stripped.split_at(var_end - 1);
         let expanded_path = Self::expand_env_var(var, rest);
@@ -273,10 +273,7 @@ impl App {
     }
 
     fn get_var_end(stripped: &str, original_path: &str) -> usize {
-        stripped
-            .find('/')
-            .map(|i| i + 1)
-            .unwrap_or(original_path.len())
+        stripped.find('/').map_or(original_path.len(), |i| i + 1)
     }
 
     fn expand_env_var(var: &str, rest: &str) -> Option<PathBuf> {
@@ -454,7 +451,7 @@ impl App {
     }
 
     fn check_control_quit(&mut self, key: KeyEvent) -> bool {
-        if matches!(key.code, KeyCode::Char('q') | KeyCode::Char('c'))
+        if matches!(key.code, KeyCode::Char('q' | 'c'))
             && key.modifiers.contains(KeyModifiers::CONTROL)
         {
             self.should_quit = true;

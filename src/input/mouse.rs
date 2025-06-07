@@ -12,7 +12,7 @@ pub fn handle_mouse_event(app: &mut App, event: MouseEvent) -> AuthResult<()> {
         | InputMode::FileBrowser => {
             return Ok(());
         }
-        _ => {}
+        InputMode::Normal => {}
     }
 
     match event.kind {
