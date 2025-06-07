@@ -288,7 +288,7 @@ impl App {
         }
 
         let path = self.get_validated_import_path()?;
-        let entries = self.read_and_parse_entries(&path)?;
+        let entries = self.read_and_parse_entries(&path);
         self.merge_and_save_entries(entries)?;
 
         Ok(())
@@ -300,9 +300,9 @@ impl App {
         Ok(path)
     }
 
-    fn read_and_parse_entries(&mut self, path: &Path) -> AuthResult<Entries> {
+    fn read_and_parse_entries(&mut self, path: &Path) -> Entries {
         if !self.validate_file_exists(path) {
-            return Ok(Entries { entries: vec![] });
+            return Entries { entries: vec![] };
         }
 
         let contents = self.read_file_contents(path);
@@ -324,15 +324,15 @@ impl App {
         })
     }
 
-    fn parse_toml_contents(&mut self, contents: String) -> AuthResult<Entries> {
+    fn parse_toml_contents(&mut self, contents: String) -> Entries {
         if contents.is_empty() {
-            return Ok(Entries { entries: vec![] });
+            return Entries { entries: vec![] };
         }
 
-        Ok(toml::from_str(&contents).unwrap_or_else(|_| {
+        toml::from_str(&contents).unwrap_or_else(|_| {
             self.show_error(&AuthError::ParseError.to_string());
             Entries { entries: vec![] }
-        }))
+        })
     }
 
     fn merge_and_save_entries(&mut self, entries: Entries) -> AuthResult<()> {
@@ -375,25 +375,25 @@ impl App {
             return Ok(());
         }
 
-        let path = self.get_validated_export_path()?;
+        let path = self.get_validated_export_path();
         let contents = self.serialize_entries()?;
         self.write_export_file(&path, &contents)?;
 
         Ok(())
     }
 
-    fn get_validated_export_path(&mut self) -> AuthResult<PathBuf> {
+    fn get_validated_export_path(&mut self) -> PathBuf {
         let mut path = self.expand_path(&self.path_input);
 
         if path.is_dir() || self.path_input.ends_with('/') || self.path_input.ends_with('\\') {
             path = path.join("auth_backup.toml");
-            return Ok(path);
+            return path;
         }
 
         if !path.to_string_lossy().ends_with(".toml") {
             path.set_extension("toml");
         }
-        Ok(path)
+        path
     }
 
     fn write_export_file(&mut self, path: &Path, contents: &str) -> AuthResult<()> {
@@ -590,7 +590,7 @@ impl App {
             return Ok(());
         }
 
-        if !self.validate_edit_entry()? {
+        if !self.validate_edit_entry() {
             return Ok(());
         }
 
@@ -599,12 +599,12 @@ impl App {
         Ok(())
     }
 
-    fn validate_edit_entry(&mut self) -> AuthResult<bool> {
+    fn validate_edit_entry(&mut self) -> bool {
         if self.edit_entry_name.is_empty() || self.edit_entry_secret.is_empty() {
             self.show_error(&AuthError::EmptyEntryError.to_string());
-            return Ok(false);
+            return false;
         }
-        Ok(true)
+        true
     }
 
     fn update_entry(&mut self) {
