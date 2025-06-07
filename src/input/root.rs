@@ -13,10 +13,12 @@ pub const ROOT_WARNING: &[&str] = &[
     "Press any key to exit",
 ];
 
+#[must_use]
 pub fn check_root() -> bool {
     Uid::effective().is_root()
 }
 
+/// # Errors
 pub fn show_root_warning() -> AuthResult<()> {
     let mut terminal = ratatui::init();
     terminal.clear()?;
@@ -39,6 +41,7 @@ pub struct WarningWidget<'a> {
 }
 
 impl<'a> WarningWidget<'a> {
+    #[must_use]
     pub fn new(text: &'a [&'a str]) -> Self {
         Self {
             text,
@@ -47,11 +50,13 @@ impl<'a> WarningWidget<'a> {
         }
     }
 
+    #[must_use]
     pub fn title(mut self, title: &'a str) -> Self {
         self.title = title;
         self
     }
 
+    #[must_use]
     pub fn style(mut self, style: Style) -> Self {
         self.style = style;
         self

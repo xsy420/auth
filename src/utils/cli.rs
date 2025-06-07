@@ -1,5 +1,6 @@
 use clap::Parser;
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 pub struct Args {
@@ -20,6 +21,7 @@ pub struct Args {
     pub mouse: bool,
 }
 
+#[must_use]
 pub fn parse_args() -> Args {
     Args::parse()
 }

@@ -2,6 +2,7 @@ use ratatui::prelude::*;
 use ratatui::style::{Color, Style};
 use ratatui::widgets::{Block, BorderType, Borders};
 
+#[must_use]
 pub fn create_block(title: &str) -> Block<'_> {
     Block::default()
         .title(title)
@@ -10,6 +11,8 @@ pub fn create_block(title: &str) -> Block<'_> {
         .border_style(Style::default().fg(Color::Green))
 }
 
+#[allow(clippy::cast_possible_truncation)]
+#[must_use]
 pub fn pad_vertical(text: Vec<Line>, height: u16) -> Vec<Line> {
     let padding = (height.saturating_sub(text.len() as u16) / 2) as usize;
     let mut padded = vec![Line::from(""); padding];
@@ -17,6 +20,7 @@ pub fn pad_vertical(text: Vec<Line>, height: u16) -> Vec<Line> {
     padded
 }
 
+#[must_use]
 pub fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let vertical_layout = create_vertical_layout(percent_y, r);
     create_horizontal_layout(percent_x, vertical_layout[1])

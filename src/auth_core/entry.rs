@@ -14,6 +14,7 @@ pub struct Entry {
 }
 
 impl Entry {
+    #[must_use]
     pub fn generate_totp_with_time(&self) -> (String, u64) {
         match generate_totp(&self.secret) {
             Ok(result) => result,

@@ -3,16 +3,20 @@ use std::process::Command;
 use crate::utils::error::AuthError;
 
 pub trait CommandExt {
+    /// # Errors
     fn process_input(&mut self, input: &[u8]) -> std::io::Result<std::process::Output>;
 
+    /// # Errors
     fn spawn_with_stdin(&mut self) -> std::io::Result<std::process::Child>;
 
+    /// # Errors
     fn write_input_to_child(
         &self,
         child: &mut std::process::Child,
         input: &[u8],
     ) -> std::io::Result<()>;
 
+    /// # Errors
     fn wait_for_child_output(
         &self,
         child: std::process::Child,
@@ -37,11 +41,9 @@ impl CommandExt for Command {
         child: &mut std::process::Child,
         input: &[u8],
     ) -> std::io::Result<()> {
-        let stdin = match child.stdin.take() {
-            Some(stdin) => stdin,
-            None => return Ok(()),
+        let Some(stdin) = child.stdin.take() else {
+            return Ok(());
         };
-
         let mut stdin = stdin;
         std::io::Write::write_all(&mut stdin, input)
             .map_err(|_| std::io::Error::other(AuthError::ClipboardWriteError.to_string()))

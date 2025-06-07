@@ -6,10 +6,11 @@ use std::time::Duration;
 use crate::utils::command::CommandExt;
 use crate::utils::error::{AuthError, AuthResult};
 
+/// # Errors
 pub fn copy_to_clipboard(text: String) -> AuthResult<()> {
     let (tx, rx) = mpsc::channel();
     spawn_clipboard_thread(text, tx);
-    check_clipboard_result(rx)
+    check_clipboard_result(&rx)
 }
 
 fn spawn_clipboard_thread(text: String, tx: mpsc::Sender<()>) {
@@ -49,7 +50,7 @@ fn try_xclip_copy(text: &str) -> bool {
         .is_ok()
 }
 
-fn check_clipboard_result(rx: mpsc::Receiver<()>) -> AuthResult<()> {
+fn check_clipboard_result(rx: &mpsc::Receiver<()>) -> AuthResult<()> {
     thread::sleep(Duration::from_millis(100));
     rx.try_recv().map_err(|_| AuthError::ClipboardError)
 }

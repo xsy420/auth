@@ -41,6 +41,7 @@ pub struct App {
 }
 
 impl App {
+    /// # Errors
     pub fn new() -> AuthResult<Self> {
         let auth_dir = Self::get_auth_directory()?;
         let entries_path = auth_dir.join("entries.toml");
@@ -141,6 +142,7 @@ impl App {
         Ok(())
     }
 
+    /// # Errors
     pub fn save_entries(&mut self) -> AuthResult<()> {
         let contents = self.serialize_entries()?;
         let encrypted = self.encrypt_contents(&contents)?;
@@ -173,10 +175,10 @@ impl App {
         })
     }
 
-    pub fn add_entry(&mut self) -> AuthResult<()> {
+    pub fn add_entry(&mut self) {
         if self.new_entry_name.is_empty() || self.new_entry_secret.is_empty() {
             self.show_error(&AuthError::EmptyEntryError.to_string());
-            return Ok(());
+            return;
         }
         self.entries.push(Entry {
             name: self.new_entry_name.clone(),
@@ -185,7 +187,6 @@ impl App {
         if self.save_entries().is_err() {
             self.show_error(&AuthError::SaveError.to_string());
         }
-        Ok(())
     }
 
     pub fn delete_entry(&mut self) {
@@ -214,45 +215,44 @@ impl App {
         }
     }
 
-    pub fn copy_current_code(&mut self) -> AuthResult<()> {
+    pub fn copy_current_code(&mut self) {
         if self.entries.is_empty() {
-            return Ok(());
+            return;
         }
 
-        self.try_copy_code()?;
-        Ok(())
+        self.try_copy_code();
     }
 
-    fn try_copy_code(&mut self) -> AuthResult<()> {
+    fn try_copy_code(&mut self) {
         let entry = &self.entries[self.selected];
         let (code, _) = entry.generate_totp_with_time();
 
         if copy_to_clipboard(code).is_err() {
             self.show_error(&AuthError::ClipboardError.to_string());
-            return Ok(());
+            return;
         }
 
         self.copy_notification_time = Some(SystemTime::now());
-        Ok(())
     }
 
     pub fn show_error(&mut self, message: &str) {
         self.error_message = Some((message.to_string(), SystemTime::now()));
     }
 
+    #[must_use]
     pub fn expand_path(&self, path: &str) -> PathBuf {
         if path.starts_with('~') {
-            return self.expand_home_path(path);
+            return Self::expand_home_path(path);
         }
 
         if let Some(stripped) = path.strip_prefix('$') {
-            return self.expand_env_path(stripped, path);
+            return Self::expand_env_path(stripped, path);
         }
 
         PathBuf::from(path)
     }
 
-    fn expand_home_path(&self, path: &str) -> PathBuf {
+    fn expand_home_path(path: &str) -> PathBuf {
         let Some(home) = dirs::home_dir() else {
             return PathBuf::from(path);
         };
@@ -264,7 +264,7 @@ impl App {
         home.join(&path[2..])
     }
 
-    fn expand_env_path(&self, stripped: &str, original_path: &str) -> PathBuf {
+    fn expand_env_path(stripped: &str, original_path: &str) -> PathBuf {
         let var_end = Self::get_var_end(stripped, original_path);
         let (var, rest) = stripped.split_at(var_end - 1);
         let expanded_path = Self::expand_env_var(var, rest);
@@ -272,10 +272,7 @@ impl App {
     }
 
     fn get_var_end(stripped: &str, original_path: &str) -> usize {
-        stripped
-            .find('/')
-            .map(|i| i + 1)
-            .unwrap_or(original_path.len())
+        stripped.find('/').map_or(original_path.len(), |i| i + 1)
     }
 
     fn expand_env_var(var: &str, rest: &str) -> Option<PathBuf> {
@@ -284,31 +281,29 @@ impl App {
             .map(|val| PathBuf::from(val).join(rest.trim_start_matches('/')))
     }
 
-    pub fn import_entries(&mut self) -> AuthResult<()> {
+    pub fn import_entries(&mut self) {
         if self.path_input.is_empty() {
-            return Ok(());
+            return;
         }
 
-        let path = self.get_validated_import_path()?;
-        let entries = self.read_and_parse_entries(&path)?;
-        self.merge_and_save_entries(entries)?;
-
-        Ok(())
+        let path = self.get_validated_import_path();
+        let entries = self.read_and_parse_entries(&path);
+        self.merge_and_save_entries(entries);
     }
 
-    fn get_validated_import_path(&mut self) -> AuthResult<PathBuf> {
+    fn get_validated_import_path(&mut self) -> PathBuf {
         let path = self.expand_path(&self.path_input);
-        self.validate_import_path(&path)?;
-        Ok(path)
+        self.validate_import_path(&path);
+        path
     }
 
-    fn read_and_parse_entries(&mut self, path: &Path) -> AuthResult<Entries> {
+    fn read_and_parse_entries(&mut self, path: &Path) -> Entries {
         if !self.validate_file_exists(path) {
-            return Ok(Entries { entries: vec![] });
+            return Entries { entries: vec![] };
         }
 
         let contents = self.read_file_contents(path);
-        self.parse_toml_contents(contents)
+        self.parse_toml_contents(contents.as_str())
     }
 
     fn validate_file_exists(&mut self, path: &Path) -> bool {
@@ -326,46 +321,42 @@ impl App {
         })
     }
 
-    fn parse_toml_contents(&mut self, contents: String) -> AuthResult<Entries> {
+    fn parse_toml_contents(&mut self, contents: &str) -> Entries {
         if contents.is_empty() {
-            return Ok(Entries { entries: vec![] });
+            return Entries { entries: vec![] };
         }
 
-        Ok(toml::from_str(&contents).unwrap_or_else(|_| {
+        toml::from_str(contents).unwrap_or_else(|_| {
             self.show_error(&AuthError::ParseError.to_string());
             Entries { entries: vec![] }
-        }))
+        })
     }
 
-    fn merge_and_save_entries(&mut self, entries: Entries) -> AuthResult<()> {
+    fn merge_and_save_entries(&mut self, entries: Entries) {
         self.entries.extend(entries.entries);
 
         if self.save_entries().is_err() {
             self.show_error(&AuthError::SaveError.to_string());
         }
-
-        Ok(())
     }
 
-    fn validate_import_path(&mut self, path: &Path) -> AuthResult<()> {
+    fn validate_import_path(&mut self, path: &Path) {
         if !path.exists() {
             self.show_error(&AuthError::FileNotExistError.to_string());
-            return Ok(());
+            return;
         }
 
         if path.is_dir() {
             self.show_error(&AuthError::DirectoryError.to_string());
-            return Ok(());
+            return;
         }
 
         if path.extension().is_none_or(|ext| ext != "toml") {
             self.show_error(&AuthError::TomlExtError.to_string());
-            return Ok(());
         }
-
-        Ok(())
     }
 
+    /// # Errors
     pub fn export_entries(&mut self) -> AuthResult<()> {
         if self.path_input.is_empty() {
             self.show_error(&AuthError::NoFilenameError.to_string());
@@ -377,25 +368,25 @@ impl App {
             return Ok(());
         }
 
-        let path = self.get_validated_export_path()?;
+        let path = self.get_validated_export_path();
         let contents = self.serialize_entries()?;
         self.write_export_file(&path, &contents)?;
 
         Ok(())
     }
 
-    fn get_validated_export_path(&mut self) -> AuthResult<PathBuf> {
+    fn get_validated_export_path(&mut self) -> PathBuf {
         let mut path = self.expand_path(&self.path_input);
 
         if path.is_dir() || self.path_input.ends_with('/') || self.path_input.ends_with('\\') {
             path = path.join("auth_backup.toml");
-            return Ok(path);
+            return path;
         }
 
         if !path.to_string_lossy().ends_with(".toml") {
             path.set_extension("toml");
         }
-        Ok(path)
+        path
     }
 
     fn write_export_file(&mut self, path: &Path, contents: &str) -> AuthResult<()> {
@@ -405,10 +396,14 @@ impl App {
         })
     }
 
-    pub fn handle_events(&mut self, event: Event) -> AuthResult<()> {
+    /// # Errors
+    pub fn handle_events(&mut self, event: &Event) -> AuthResult<()> {
         match event {
-            Event::Key(key) => self.handle_key_event(key),
-            Event::Mouse(mouse) => mouse::handle_mouse_event(self, mouse),
+            Event::Key(key) => self.handle_key_event(*key),
+            Event::Mouse(mouse) => {
+                mouse::handle_mouse_event(self, *mouse);
+                Ok(())
+            }
             _ => Ok(()),
         }
     }
@@ -419,14 +414,23 @@ impl App {
         }
 
         match self.input_mode {
-            InputMode::Normal => self.handle_normal_mode(key),
-            InputMode::Adding | InputMode::Editing => self.handle_entry_mode(key),
+            InputMode::Normal => {
+                self.handle_normal_mode(key);
+                Ok(())
+            }
+            InputMode::Adding | InputMode::Editing => {
+                self.handle_entry_mode(key);
+                Ok(())
+            }
             InputMode::Importing | InputMode::Exporting => self.handle_file_mode(key),
-            InputMode::FileBrowser => self.handle_file_browser_mode(key),
+            InputMode::FileBrowser => {
+                self.handle_file_browser_mode(key);
+                Ok(())
+            }
         }
     }
 
-    fn handle_normal_mode(&mut self, key: KeyEvent) -> AuthResult<()> {
+    fn handle_normal_mode(&mut self, key: KeyEvent) {
         match key.code {
             KeyCode::Char('q') => self.should_quit = true,
             KeyCode::Char('j') | KeyCode::Down => self.next_entry(),
@@ -445,15 +449,13 @@ impl App {
                 self.file_browser.reset();
                 self.input_mode = InputMode::FileBrowser;
             }
-            KeyCode::Enter => self.copy_current_code()?,
+            KeyCode::Enter => self.copy_current_code(),
             _ => {}
         }
-
-        Ok(())
     }
 
     fn check_control_quit(&mut self, key: KeyEvent) -> bool {
-        if matches!(key.code, KeyCode::Char('q') | KeyCode::Char('c'))
+        if matches!(key.code, KeyCode::Char('q' | 'c'))
             && key.modifiers.contains(KeyModifiers::CONTROL)
         {
             self.should_quit = true;
@@ -462,16 +464,15 @@ impl App {
         false
     }
 
-    fn handle_entry_mode(&mut self, key: KeyEvent) -> AuthResult<()> {
+    fn handle_entry_mode(&mut self, key: KeyEvent) {
         match key.code {
             KeyCode::Esc => self.reset_entry_state(),
-            KeyCode::Enter => self.process_entry_input()?,
+            KeyCode::Enter => self.process_entry_input(),
             KeyCode::Char(c) => self.update_entry_field(c),
             KeyCode::Backspace => self.remove_entry_char(),
             KeyCode::Tab => self.handle_tab_key(key.modifiers.contains(KeyModifiers::SHIFT)),
             _ => {}
         }
-        Ok(())
     }
 
     fn handle_tab_key(&mut self, is_shift: bool) {
@@ -508,7 +509,10 @@ impl App {
 
     fn handle_file_operation(&mut self) -> AuthResult<()> {
         match self.input_mode {
-            InputMode::Importing => self.import_entries(),
+            InputMode::Importing => {
+                self.import_entries();
+                Ok(())
+            }
             InputMode::Exporting => self.export_entries(),
             _ => unreachable!(),
         }
@@ -526,38 +530,35 @@ impl App {
         self.input_field = 0;
     }
 
-    fn process_entry_input(&mut self) -> AuthResult<()> {
+    fn process_entry_input(&mut self) {
         if self.is_name_field() {
             self.switch_to_secret_field();
-            return Ok(());
+            return;
         }
-        self.handle_final_entry_input()
+        self.handle_final_entry_input();
     }
 
     fn is_name_field(&self) -> bool {
         self.input_field == 0
     }
 
-    fn handle_final_entry_input(&mut self) -> AuthResult<()> {
+    fn handle_final_entry_input(&mut self) {
         match self.input_mode {
-            InputMode::Adding => self.handle_add_entry()?,
-            InputMode::Editing => self.handle_edit_entry()?,
+            InputMode::Adding => self.handle_add_entry(),
+            InputMode::Editing => self.handle_edit_entry(),
             _ => unreachable!(),
         }
         self.reset_input_field();
-        Ok(())
     }
 
-    fn handle_add_entry(&mut self) -> AuthResult<()> {
-        self.add_entry()?;
+    fn handle_add_entry(&mut self) {
+        self.add_entry();
         self.reset_entry_state();
-        Ok(())
     }
 
-    fn handle_edit_entry(&mut self) -> AuthResult<()> {
-        self.edit_entry()?;
+    fn handle_edit_entry(&mut self) {
+        self.edit_entry();
         self.reset_entry_state();
-        Ok(())
     }
 
     fn reset_input_field(&mut self) {
@@ -587,26 +588,25 @@ impl App {
         }
     }
 
-    fn edit_entry(&mut self) -> AuthResult<()> {
+    fn edit_entry(&mut self) {
         if self.entries.is_empty() {
-            return Ok(());
+            return;
         }
 
-        if !self.validate_edit_entry()? {
-            return Ok(());
+        if !self.validate_edit_entry() {
+            return;
         }
 
         self.update_entry();
         self.try_save_entries();
-        Ok(())
     }
 
-    fn validate_edit_entry(&mut self) -> AuthResult<bool> {
+    fn validate_edit_entry(&mut self) -> bool {
         if self.edit_entry_name.is_empty() || self.edit_entry_secret.is_empty() {
             self.show_error(&AuthError::EmptyEntryError.to_string());
-            return Ok(false);
+            return false;
         }
-        Ok(true)
+        true
     }
 
     fn update_entry(&mut self) {
@@ -648,7 +648,7 @@ impl App {
         self.selected = self.selected.checked_sub(1).unwrap_or(len - 1);
     }
 
-    fn handle_file_browser_mode(&mut self, key: KeyEvent) -> AuthResult<()> {
+    fn handle_file_browser_mode(&mut self, key: KeyEvent) {
         match key.code {
             KeyCode::Char('q') | KeyCode::Esc => self.reset_file_browser_mode(),
             KeyCode::Up | KeyCode::Char('k') => self.file_browser.move_up(),
@@ -664,7 +664,7 @@ impl App {
                             .to_string();
                         self.path_input = current_dir;
                     }
-                    let _ = self.process_file_browser_selection();
+                    self.process_file_browser_selection();
                 }
             }
             KeyCode::Enter => {
@@ -672,14 +672,12 @@ impl App {
                     self.path_input = path.to_string_lossy().to_string();
 
                     if self.file_operation == Some(InputMode::Importing) {
-                        let _ = self.process_file_browser_selection();
+                        self.process_file_browser_selection();
                     }
                 }
             }
             _ => {}
         }
-
-        Ok(())
     }
 
     fn reset_file_browser_mode(&mut self) {
@@ -688,12 +686,15 @@ impl App {
         self.path_input = String::new();
     }
 
-    fn process_file_browser_selection(&mut self) -> AuthResult<()> {
+    fn process_file_browser_selection(&mut self) {
         if let Some(operation) = &self.file_operation {
             self.input_mode = operation.clone();
 
             let result = match operation {
-                InputMode::Importing => self.import_entries(),
+                InputMode::Importing => {
+                    self.import_entries();
+                    Ok(())
+                }
                 InputMode::Exporting => self.export_entries(),
                 _ => Ok(()),
             };
@@ -705,7 +706,5 @@ impl App {
             self.input_mode = InputMode::Normal;
             self.file_operation = None;
         }
-
-        Ok(())
     }
 }
