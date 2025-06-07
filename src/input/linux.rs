@@ -13,6 +13,7 @@ pub fn check_linux() -> bool {
     cfg!(target_os = "linux")
 }
 
+/// # Errors
 pub fn show_linux_warning() -> AuthResult<()> {
     let mut terminal = ratatui::init();
     terminal.clear()?;

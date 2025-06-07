@@ -41,6 +41,7 @@ pub struct App {
 }
 
 impl App {
+    /// # Errors
     pub fn new() -> AuthResult<Self> {
         let auth_dir = Self::get_auth_directory()?;
         let entries_path = auth_dir.join("entries.toml");
@@ -141,6 +142,7 @@ impl App {
         Ok(())
     }
 
+    /// # Errors
     pub fn save_entries(&mut self) -> AuthResult<()> {
         let contents = self.serialize_entries()?;
         let encrypted = self.encrypt_contents(&contents)?;
@@ -354,6 +356,7 @@ impl App {
         }
     }
 
+    /// # Errors
     pub fn export_entries(&mut self) -> AuthResult<()> {
         if self.path_input.is_empty() {
             self.show_error(&AuthError::NoFilenameError.to_string());
@@ -393,6 +396,7 @@ impl App {
         })
     }
 
+    /// # Errors
     pub fn handle_events(&mut self, event: &Event) -> AuthResult<()> {
         match event {
             Event::Key(key) => self.handle_key_event(*key),

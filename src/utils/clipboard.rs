@@ -6,6 +6,7 @@ use std::time::Duration;
 use crate::utils::command::CommandExt;
 use crate::utils::error::{AuthError, AuthResult};
 
+/// # Errors
 pub fn copy_to_clipboard(text: String) -> AuthResult<()> {
     let (tx, rx) = mpsc::channel();
     spawn_clipboard_thread(text, tx);

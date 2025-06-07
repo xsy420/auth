@@ -18,6 +18,7 @@ pub fn check_root() -> bool {
     Uid::effective().is_root()
 }
 
+/// # Errors
 pub fn show_root_warning() -> AuthResult<()> {
     let mut terminal = ratatui::init();
     terminal.clear()?;

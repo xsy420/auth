@@ -14,6 +14,7 @@ pub struct Crypto {
 }
 
 impl Crypto {
+    /// # Errors
     pub fn new(auth_dir: &Path) -> AuthResult<Self> {
         let key_path = auth_dir.join("key");
         let identity = if key_path.exists() {
@@ -28,6 +29,7 @@ impl Crypto {
         Ok(Self { identity })
     }
 
+    /// # Errors
     pub fn encrypt(&self, data: &[u8]) -> AuthResult<Vec<u8>> {
         let recipient = self.identity.to_public();
         let encryptor =
@@ -42,6 +44,7 @@ impl Crypto {
         Ok(encrypted)
     }
 
+    /// # Errors
     pub fn decrypt(&self, data: &[u8]) -> AuthResult<Vec<u8>> {
         let decryptor = age::Decryptor::new(data)?;
         let mut decrypted = vec![];

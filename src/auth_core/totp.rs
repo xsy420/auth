@@ -4,6 +4,7 @@ use totp_rs::{Algorithm, TOTP};
 
 use crate::{AuthError, AuthResult};
 
+/// # Errors
 pub fn generate_totp(secret: &str) -> AuthResult<(String, u64)> {
     let secret = normalize_secret(secret);
     let key = decode_and_pad_secret(&secret)?;
