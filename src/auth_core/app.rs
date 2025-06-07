@@ -306,7 +306,7 @@ impl App {
         }
 
         let contents = self.read_file_contents(path);
-        self.parse_toml_contents(contents)
+        self.parse_toml_contents(contents.as_str())
     }
 
     fn validate_file_exists(&mut self, path: &Path) -> bool {
@@ -324,12 +324,12 @@ impl App {
         })
     }
 
-    fn parse_toml_contents(&mut self, contents: String) -> Entries {
+    fn parse_toml_contents(&mut self, contents: &str) -> Entries {
         if contents.is_empty() {
             return Entries { entries: vec![] };
         }
 
-        toml::from_str(&contents).unwrap_or_else(|_| {
+        toml::from_str(contents).unwrap_or_else(|_| {
             self.show_error(&AuthError::ParseError.to_string());
             Entries { entries: vec![] }
         })
@@ -403,10 +403,10 @@ impl App {
         })
     }
 
-    pub fn handle_events(&mut self, event: Event) -> AuthResult<()> {
+    pub fn handle_events(&mut self, event: &Event) -> AuthResult<()> {
         match event {
-            Event::Key(key) => self.handle_key_event(key),
-            Event::Mouse(mouse) => mouse::handle_mouse_event(self, mouse),
+            Event::Key(key) => self.handle_key_event(*key),
+            Event::Mouse(mouse) => mouse::handle_mouse_event(self, *mouse),
             _ => Ok(()),
         }
     }

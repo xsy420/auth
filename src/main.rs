@@ -34,7 +34,7 @@ fn main() -> AuthResult<()> {
         terminal.draw(|f| draw(f, &app, args.no_size_check))?;
 
         if let Some(event) = event::poll_event()? {
-            app.handle_events(event)?;
+            app.handle_events(&event)?;
         }
     }
 
