@@ -240,6 +240,7 @@ impl App {
         self.error_message = Some((message.to_string(), SystemTime::now()));
     }
 
+    #[must_use]
     pub fn expand_path(&self, path: &str) -> PathBuf {
         if path.starts_with('~') {
             return self.expand_home_path(path);

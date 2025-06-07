@@ -20,6 +20,7 @@ pub struct Args {
     pub mouse: bool,
 }
 
+#[must_use]
 pub fn parse_args() -> Args {
     Args::parse()
 }

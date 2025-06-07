@@ -8,6 +8,7 @@ use crate::ui::layout::centered_rect;
 
 const LINUX_WARNING: &[&str] = &["Only Linux is supported", "", "Press any key to exit"];
 
+#[must_use]
 pub fn check_linux() -> bool {
     cfg!(target_os = "linux")
 }
@@ -36,6 +37,7 @@ pub struct WarningWidget<'a> {
 }
 
 impl<'a> WarningWidget<'a> {
+    #[must_use]
     pub fn new(text: &'a [&'a str]) -> Self {
         Self {
             text,
