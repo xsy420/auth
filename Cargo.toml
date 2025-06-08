@@ -5,7 +5,7 @@ authors = ["xsy420 <xsy0420@gmail.com>", "Nyx <nnyyxxxx@protonmail.com>"]
 license = "GPL-2.0"
 description = "Authenticator TUI made in rust, generate totps on the fly. "
 repository = "https://github.com/xsy420/auth.git"
-readme = "readme.md"
+readme = "README.md"
 keywords = [
     "authenticator",
     "tui",
