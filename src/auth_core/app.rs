@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use std::{env, fs};
 
-use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
+use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 use crate::auth_core::crypto::Crypto;
 use crate::auth_core::entry::{Entries, Entry};
@@ -409,6 +409,9 @@ impl App {
     }
 
     fn handle_key_event(&mut self, key: KeyEvent) -> AuthResult<()> {
+        if key.kind != KeyEventKind::Press {
+            return Ok(());
+        }
         if self.check_control_quit(key) {
             return Ok(());
         }
