@@ -36,8 +36,8 @@ cd auth
 cargo build --release
 ```
 
-[Code Quality]: https://github.com/xsy420/project-setup/actions/workflows/code_quality.yml
-[Rust CI]: https://github.com/xsy420/project-setup/actions/workflows/rust.yml
+[Code Quality]: https://github.com/xsy420/auth/actions/workflows/code_quality.yml
+[Rust CI]: https://github.com/xsy420/auth/actions/workflows/rust.yml
 [License]: https://opensource.org/license/GPL-2.0
 
 [Code Quality Badge]: https://img.shields.io/github/actions/workflow/status/xsy420/auth/code_quality.yml?style=flat-square&logo=githubactions&logoColor=ffffff&label=Code+Quality&labelColor=2088FF&color=347D39&event=push
