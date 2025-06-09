@@ -50,6 +50,9 @@ nix = { version = "0.30.1", features = ["user"] }
 clap = { version = "4.5.39", features = ["derive"] }
 thiserror = "2.0.12"
 
+[dev-dependencies]
+serial_test = "3.2.0"
+
 [profile.release]
 lto = "fat"
 codegen-units = 1
