@@ -2,8 +2,10 @@ use std::env;
 use std::path::PathBuf;
 
 use auth::auth_core::app::App;
+use serial_test::serial;
 
 #[test]
+#[serial]
 fn test_home_path_expansion() {
     let app = App::new().unwrap();
     let home = dirs::home_dir().unwrap();
@@ -13,6 +15,7 @@ fn test_home_path_expansion() {
 }
 
 #[test]
+#[serial]
 fn test_env_var_expansion() {
     let app = App::new().unwrap();
     unsafe {
@@ -24,6 +27,7 @@ fn test_env_var_expansion() {
 }
 
 #[test]
+#[serial]
 fn test_auth_entries_dir_env_var() {
     unsafe {
         env::set_var("AUTH_ENTRIES_DIR", "/tmp/test_auth_dir");
@@ -43,6 +47,7 @@ fn test_auth_entries_dir_env_var() {
 }
 
 #[test]
+#[serial]
 fn test_absolute_path() {
     let app = App::new().unwrap();
 
@@ -51,6 +56,7 @@ fn test_absolute_path() {
 }
 
 #[test]
+#[serial]
 fn test_file_browser_dir_env_var() {
     let test_dir = PathBuf::from("/tmp/test_file_browser_dir");
     std::fs::create_dir_all(&test_dir).expect("Failed to create test directory");
@@ -70,6 +76,7 @@ fn test_file_browser_dir_env_var() {
 }
 
 #[test]
+#[serial]
 fn test_file_browser_invalid_dir() {
     let home = dirs::home_dir().unwrap();
     let nonexistent_dir = PathBuf::from("/tmp/nonexistent_dir_123456789");
