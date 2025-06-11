@@ -1,3 +1,4 @@
+#[cfg(unix)]
 use nix::unistd::Uid;
 use ratatui::crossterm::event::Event;
 use ratatui::prelude::*;
@@ -14,8 +15,15 @@ pub const ROOT_WARNING: &[&str] = &[
 ];
 
 #[must_use]
+#[cfg(unix)]
 pub fn check_root() -> bool {
     Uid::effective().is_root()
+}
+
+#[must_use]
+#[cfg(not(unix))]
+pub fn check_root() -> bool {
+    false
 }
 
 /// # Errors
