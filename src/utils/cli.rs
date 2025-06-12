@@ -4,6 +4,7 @@ use clap::Parser;
 #[command(author, version, about)]
 pub struct Args {
     /// Skip root user check
+    #[cfg(unix)]
     #[arg(long, short = 'r')]
     pub no_root_check: bool,
 
