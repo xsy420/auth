@@ -59,8 +59,7 @@ impl App {
             return Ok(auth_dir);
         }
 
-        let home = dirs::home_dir().ok_or(AuthError::HomeDirError)?;
-        let auth_dir = home.join(".local/share/auth");
+        let auth_dir = dirs::data_dir().unwrap().join("auth");
 
         fs::create_dir_all(&auth_dir).map_err(|_| AuthError::CreateDirError)?;
 

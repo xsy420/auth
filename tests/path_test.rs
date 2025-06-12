@@ -18,47 +18,50 @@ fn test_home_path_expansion() {
 #[serial]
 fn test_env_var_expansion() {
     let app = App::new().unwrap();
+    let test_env = &env::temp_dir().join("test_env");
     unsafe {
-        env::set_var("TEST_ENV", "/tmp/test_env");
+        env::set_var("TEST_ENV", test_env);
     }
 
     let result = app.expand_path("$TEST_ENV/test_file.txt");
-    assert_eq!(result, PathBuf::from("/tmp/test_env/test_file.txt"));
+    assert_eq!(result, test_env.join("test_file.txt"));
 }
 
 #[test]
 #[serial]
 fn test_auth_entries_dir_env_var() {
+    let test_auth_dir = &env::temp_dir().join("test_auth_dir");
     unsafe {
-        env::set_var("AUTH_ENTRIES_DIR", "/tmp/test_auth_dir");
+        env::set_var("AUTH_ENTRIES_DIR", test_auth_dir);
     }
 
     let app = App::new().unwrap();
 
-    assert_eq!(
-        app.entries_path.parent().unwrap(),
-        PathBuf::from("/tmp/test_auth_dir")
-    );
+    assert_eq!(app.entries_path.parent().unwrap(), test_auth_dir);
 
     unsafe {
         env::remove_var("AUTH_ENTRIES_DIR");
     }
-    std::fs::remove_dir_all("/tmp/test_auth_dir").ok();
+    std::fs::remove_dir_all(test_auth_dir).ok();
 }
 
 #[test]
 #[serial]
 fn test_absolute_path() {
     let app = App::new().unwrap();
-
-    let result = app.expand_path("/etc/passwd");
-    assert_eq!(result, PathBuf::from("/etc/passwd"));
+    let test_path = if cfg!(windows) {
+        r"C:\Windows\System32\drivers\etc\hosts"
+    } else {
+        "/etc/passwd"
+    };
+    let result = app.expand_path(test_path);
+    assert_eq!(result, PathBuf::from(test_path));
 }
 
 #[test]
 #[serial]
 fn test_file_browser_dir_env_var() {
-    let test_dir = PathBuf::from("/tmp/test_file_browser_dir");
+    let test_dir = env::temp_dir().join("test_file_browser_dir");
     std::fs::create_dir_all(&test_dir).expect("Failed to create test directory");
 
     unsafe {
@@ -79,7 +82,7 @@ fn test_file_browser_dir_env_var() {
 #[serial]
 fn test_file_browser_invalid_dir() {
     let home = dirs::home_dir().unwrap();
-    let nonexistent_dir = PathBuf::from("/tmp/nonexistent_dir_123456789");
+    let nonexistent_dir = env::temp_dir().join("nonexistent_dir_123456789");
 
     unsafe {
         env::set_var("AUTH_FILE_BROWSER_DIR", &nonexistent_dir);
