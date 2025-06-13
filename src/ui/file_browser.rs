@@ -65,6 +65,21 @@ impl FileBrowser {
         self.refresh_entries();
     }
 
+    #[cfg(target_os = "windows")]
+    fn is_hidden(path: &Path) -> bool {
+        use std::os::windows::fs::MetadataExt;
+        let metadata = path.metadata().unwrap();
+        let attributes = metadata.file_attributes();
+        attributes & 0x2 != 0
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    fn is_hidden(path: &Path) -> bool {
+        path.file_name()
+            .and_then(|name| name.to_str())
+            .is_some_and(|name| name.starts_with('.'))
+    }
+
     pub fn refresh_entries(&mut self) {
         self.entries.clear();
 
@@ -85,7 +100,7 @@ impl FileBrowser {
                 let name = entry.file_name().to_string_lossy().to_string();
                 let is_dir = path.is_dir();
 
-                if !self.show_hidden && name.starts_with('.') && name != ".." {
+                if !self.show_hidden && Self::is_hidden(&path) {
                     continue;
                 }
 
