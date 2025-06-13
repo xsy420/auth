@@ -14,8 +14,8 @@ pub mod utils {
 
 pub mod input {
     pub mod event;
-    pub mod linux;
     pub mod mouse;
+    #[cfg(unix)]
     pub mod root;
 }
 

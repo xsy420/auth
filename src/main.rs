@@ -1,7 +1,9 @@
 use std::io::stdout;
 
 use auth::auth_core::app::App;
-use auth::input::{event, linux, root};
+use auth::input::event;
+#[cfg(unix)]
+use auth::input::root;
 use auth::ui::renderer::draw;
 use auth::utils::cli;
 use auth::utils::error::AuthResult;
@@ -12,11 +14,7 @@ use ratatui::crossterm::terminal::{disable_raw_mode, enable_raw_mode};
 fn main() -> AuthResult<()> {
     let args = cli::parse_args();
 
-    if !args.no_linux_check && !linux::check_linux() {
-        linux::show_linux_warning()?;
-        return Ok(());
-    }
-
+    #[cfg(unix)]
     if !args.no_root_check && root::check_root() {
         root::show_root_warning()?;
         return Ok(());

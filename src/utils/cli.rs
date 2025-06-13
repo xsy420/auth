@@ -1,16 +1,12 @@
 use clap::Parser;
 
-#[allow(clippy::struct_excessive_bools)]
 #[derive(Parser, Debug)]
 #[command(author, version, about)]
 pub struct Args {
     /// Skip root user check
+    #[cfg(unix)]
     #[arg(long, short = 'r')]
     pub no_root_check: bool,
-
-    /// Skip Linux check
-    #[arg(long, short = 'l')]
-    pub no_linux_check: bool,
 
     /// Skip terminal size check
     #[arg(long, short = 's')]

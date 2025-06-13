@@ -15,7 +15,7 @@ Stores encrypted TOTP secrets securely on disk.
 .SH OPTIONS
 .TP
 \fB\-r\fR, \fB\-\-no\-root\-check\fR
-Skip the root user check
+Skip root user check (Unix only)
 
 .TP
 \fB\-s\fR, \fB\-\-no\-size\-check\fR
@@ -24,10 +24,6 @@ Skip the terminal size check
 .TP
 \fB\-m\fR, \fB\-\-mouse\fR
 Enable mouse support
-
-.TP
-\fB\-l\fR, \fB\-\-no\-linux\-check\fR
-Skip the Linux check
 
 .SH CONTROLS
 .TP
@@ -72,17 +68,17 @@ Quit application
 
 .SH FILES
 .TP
-\fI~/.local/share/auth/entries.toml\fR
+\fI$DATA_DIR/auth/entries.toml\fR
 Encrypted storage for TOTP entries
 
 .TP
-\fI~/.local/share/auth/key\fR
+\fI$DATA_DIR/auth/key\fR
 Encryption key file
 
 .SH ENVIRONMENT
 .TP
 \fBAUTH_ENTRIES_DIR\fR
-Override the default directory for storing auth data. If set, auth will use this directory instead of ~/.local/share/auth.
+Override the default directory for storing auth data. If set, auth will use this directory instead of $DATA_DIR/auth.
 
 .TP
 \fBAUTH_FILE_BROWSER_DIR\fR
@@ -94,10 +90,10 @@ TOTP secrets are stored encrypted using the age encryption format.
 The encryption key is stored separately from the entries file.
 
 .SH REPORTING BUGS
-Report bugs at: https://github.com/nnyyxxxx/auth/issues
+Report bugs at: https://github.com/xsy420/auth/issues
 
 .SH COPYRIGHT
-Copyright (c) 2025 Nyx
+Copyright (c) 2025 Nyx and xsy420
 .br
 License GPLv2: GNU GPL version 2 <https://gnu.org/licenses/gpl-2.0.html>
 .br
@@ -106,4 +102,4 @@ This is free software: you are free to change and redistribute it.
 There is NO WARRANTY, to the extent permitted by law.
 
 .SH AUTHOR
-Written by Nyx <nnyyxxxx@protonmail.com>
+Written by Nyx <nnyyxxxx@protonmail.com> and xsy420 <xsy0420@gmail.com>
