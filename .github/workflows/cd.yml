@@ -12,3 +12,5 @@ permissions:
 jobs:
   cd:
     uses: xsy420/meta/.github/workflows/cd.yml@main
+    with:
+      repository_name: 'auth'
