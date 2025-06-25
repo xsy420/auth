@@ -30,6 +30,7 @@ assets = [
     "644",
   ],
 ]
+depends = ["libgcc-s1 (>= 3.0)"]
 [package.metadata.generate-rpm]
 assets = [
   { source = "target/release/auth", dest = "/usr/bin/auth", mode = "755" },
