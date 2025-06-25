@@ -7,7 +7,6 @@ pub mod auth_core {
 
 pub mod utils {
     pub mod cli;
-    pub mod clipboard;
     pub mod command;
     pub mod error;
 }

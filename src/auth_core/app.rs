@@ -2,13 +2,13 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use std::{env, fs};
 
+use arboard::Clipboard;
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 use crate::auth_core::crypto::Crypto;
 use crate::auth_core::entry::{Entries, Entry};
 use crate::input::mouse;
 use crate::ui::file_browser::FileBrowser;
-use crate::utils::clipboard::copy_to_clipboard;
 use crate::{AuthError, AuthResult};
 
 #[derive(PartialEq, Clone)]
@@ -226,7 +226,8 @@ impl App {
         let entry = &self.entries[self.selected];
         let (code, _) = entry.generate_totp_with_time();
 
-        if copy_to_clipboard(code).is_err() {
+        let mut clipboard = Clipboard::new().unwrap();
+        if clipboard.set_text(code).is_err() {
             self.show_error(&AuthError::ClipboardError.to_string());
             return;
         }
