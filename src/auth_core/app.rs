@@ -241,7 +241,7 @@ impl App {
     }
 
     #[must_use]
-    pub fn expand_path(&self, path: &str) -> PathBuf {
+    pub fn expand_path(path: &str) -> PathBuf {
         if path.starts_with('~') {
             return Self::expand_home_path(path);
         }
@@ -293,7 +293,7 @@ impl App {
     }
 
     fn get_validated_import_path(&mut self) -> PathBuf {
-        let path = self.expand_path(&self.path_input);
+        let path = Self::expand_path(&self.path_input);
         self.validate_import_path(&path);
         path
     }
@@ -377,7 +377,7 @@ impl App {
     }
 
     fn get_validated_export_path(&mut self) -> PathBuf {
-        let mut path = self.expand_path(&self.path_input);
+        let mut path = Self::expand_path(&self.path_input);
 
         if path.is_dir() || self.path_input.ends_with('/') || self.path_input.ends_with('\\') {
             path = path.join("auth_backup.toml");
