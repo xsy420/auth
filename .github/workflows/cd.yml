@@ -14,3 +14,6 @@ jobs:
     uses: xsy420/meta/.github/workflows/cd.yml@main
     with:
       repository_name: 'auth'
+    secrets:
+      GPG_RELEASE_KEY: ${{ secrets.GPG_RELEASE_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
