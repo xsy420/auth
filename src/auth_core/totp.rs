@@ -18,7 +18,7 @@ fn normalize_secret(secret: &str) -> String {
     }
 
     let mut secret = secret.replace(' ', "").to_uppercase();
-    while secret.len() % 8 != 0 {
+    while !secret.len().is_multiple_of(8) {
         secret.push('=');
     }
     secret
