@@ -24,6 +24,9 @@ pub enum AuthError {
     #[error("Failed to create encryptor")]
     EncryptorError,
 
+    #[error("Failed to initialize clipboard")]
+    ClipboardInitializeError,
+
     #[error("Failed to copy to clipboard")]
     ClipboardError,
 

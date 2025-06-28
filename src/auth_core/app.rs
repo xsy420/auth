@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use std::{env, fs};
 
-use arboard::Clipboard;
+use arboard::{Clipboard, Error};
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 use crate::auth_core::crypto::Crypto;
@@ -38,7 +38,7 @@ pub struct App {
     crypto: Crypto,
     pub file_browser: FileBrowser,
     pub file_operation: Option<InputMode>,
-    clipboard: Clipboard,
+    clipboard: Result<Clipboard, Error>,
 }
 
 impl App {
@@ -89,7 +89,7 @@ impl App {
             crypto,
             file_browser: FileBrowser::new(),
             file_operation: None,
-            clipboard: Clipboard::new().unwrap(),
+            clipboard: Clipboard::new(),
         }
     }
 
@@ -228,9 +228,17 @@ impl App {
         let entry = &self.entries[self.selected];
         let (code, _) = entry.generate_totp_with_time();
 
-        if self.clipboard.set_text(code).is_err() {
-            self.show_error(&AuthError::ClipboardError.to_string());
-            return;
+        match self.clipboard.as_mut() {
+            Ok(clipboard) => {
+                if clipboard.set_text(code).is_err() {
+                    self.show_error(&AuthError::ClipboardError.to_string());
+                    return;
+                }
+            }
+            Err(_) => {
+                self.show_error(&AuthError::ClipboardInitializeError.to_string());
+                return;
+            }
         }
 
         self.copy_notification_time = Some(SystemTime::now());
