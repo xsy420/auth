@@ -38,6 +38,7 @@ pub struct App {
     crypto: Crypto,
     pub file_browser: FileBrowser,
     pub file_operation: Option<InputMode>,
+    clipboard: Clipboard,
 }
 
 impl App {
@@ -88,6 +89,7 @@ impl App {
             crypto,
             file_browser: FileBrowser::new(),
             file_operation: None,
+            clipboard: Clipboard::new().unwrap(),
         }
     }
 
@@ -226,8 +228,7 @@ impl App {
         let entry = &self.entries[self.selected];
         let (code, _) = entry.generate_totp_with_time();
 
-        let mut clipboard = Clipboard::new().unwrap();
-        if clipboard.set_text(code).is_err() {
+        if self.clipboard.set_text(code).is_err() {
             self.show_error(&AuthError::ClipboardError.to_string());
             return;
         }
