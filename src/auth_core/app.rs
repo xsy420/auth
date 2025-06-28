@@ -228,17 +228,14 @@ impl App {
         let entry = &self.entries[self.selected];
         let (code, _) = entry.generate_totp_with_time();
 
-        match self.clipboard.as_mut() {
-            Ok(clipboard) => {
-                if clipboard.set_text(code).is_err() {
-                    self.show_error(&AuthError::ClipboardError.to_string());
-                    return;
-                }
-            }
-            Err(_) => {
-                self.show_error(&AuthError::ClipboardInitializeError.to_string());
+        if let Ok(clipboard) = self.clipboard.as_mut() {
+            if clipboard.set_text(code).is_err() {
+                self.show_error(&AuthError::ClipboardError.to_string());
                 return;
             }
+        } else {
+            self.show_error(&AuthError::ClipboardInitializeError.to_string());
+            return;
         }
 
         self.copy_notification_time = Some(SystemTime::now());
