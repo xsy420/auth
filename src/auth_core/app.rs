@@ -2,13 +2,13 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 use std::{env, fs};
 
+use arboard::{Clipboard, Error};
 use ratatui::crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 
 use crate::auth_core::crypto::Crypto;
 use crate::auth_core::entry::{Entries, Entry};
 use crate::input::mouse;
 use crate::ui::file_browser::FileBrowser;
-use crate::utils::clipboard::copy_to_clipboard;
 use crate::{AuthError, AuthResult};
 
 #[derive(PartialEq, Clone)]
@@ -38,6 +38,7 @@ pub struct App {
     crypto: Crypto,
     pub file_browser: FileBrowser,
     pub file_operation: Option<InputMode>,
+    clipboard: Result<Clipboard, Error>,
 }
 
 impl App {
@@ -88,6 +89,7 @@ impl App {
             crypto,
             file_browser: FileBrowser::new(),
             file_operation: None,
+            clipboard: Clipboard::new(),
         }
     }
 
@@ -226,9 +228,17 @@ impl App {
         let entry = &self.entries[self.selected];
         let (code, _) = entry.generate_totp_with_time();
 
-        if copy_to_clipboard(code).is_err() {
-            self.show_error(&AuthError::ClipboardError.to_string());
-            return;
+        match self.clipboard.as_mut() {
+            Ok(clipboard) => {
+                if clipboard.set_text(code).is_err() {
+                    self.show_error(&AuthError::ClipboardError.to_string());
+                    return;
+                }
+            }
+            Err(_) => {
+                self.show_error(&AuthError::ClipboardInitializeError.to_string());
+                return;
+            }
         }
 
         self.copy_notification_time = Some(SystemTime::now());
@@ -239,7 +249,7 @@ impl App {
     }
 
     #[must_use]
-    pub fn expand_path(&self, path: &str) -> PathBuf {
+    pub fn expand_path(path: &str) -> PathBuf {
         if path.starts_with('~') {
             return Self::expand_home_path(path);
         }
@@ -291,7 +301,7 @@ impl App {
     }
 
     fn get_validated_import_path(&mut self) -> PathBuf {
-        let path = self.expand_path(&self.path_input);
+        let path = Self::expand_path(&self.path_input);
         self.validate_import_path(&path);
         path
     }
@@ -375,7 +385,7 @@ impl App {
     }
 
     fn get_validated_export_path(&mut self) -> PathBuf {
-        let mut path = self.expand_path(&self.path_input);
+        let mut path = Self::expand_path(&self.path_input);
 
         if path.is_dir() || self.path_input.ends_with('/') || self.path_input.ends_with('\\') {
             path = path.join("auth_backup.toml");

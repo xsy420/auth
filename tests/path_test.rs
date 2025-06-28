@@ -7,23 +7,21 @@ use serial_test::serial;
 #[test]
 #[serial]
 fn test_home_path_expansion() {
-    let app = App::new().unwrap();
     let home = dirs::home_dir().unwrap();
 
-    let result = app.expand_path("~/test_home.txt");
+    let result = App::expand_path("~/test_home.txt");
     assert_eq!(result, home.join("test_home.txt"));
 }
 
 #[test]
 #[serial]
 fn test_env_var_expansion() {
-    let app = App::new().unwrap();
     let test_env = &env::temp_dir().join("test_env");
     unsafe {
         env::set_var("TEST_ENV", test_env);
     }
 
-    let result = app.expand_path("$TEST_ENV/test_file.txt");
+    let result = App::expand_path("$TEST_ENV/test_file.txt");
     assert_eq!(result, test_env.join("test_file.txt"));
 }
 
@@ -48,13 +46,12 @@ fn test_auth_entries_dir_env_var() {
 #[test]
 #[serial]
 fn test_absolute_path() {
-    let app = App::new().unwrap();
     let test_path = if cfg!(windows) {
         r"C:\Windows\System32\drivers\etc\hosts"
     } else {
         "/etc/passwd"
     };
-    let result = app.expand_path(test_path);
+    let result = App::expand_path(test_path);
     assert_eq!(result, PathBuf::from(test_path));
 }
 

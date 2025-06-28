@@ -24,6 +24,9 @@ pub enum AuthError {
     #[error("Failed to create encryptor")]
     EncryptorError,
 
+    #[error("Failed to initialize clipboard")]
+    ClipboardInitializeError,
+
     #[error("Failed to copy to clipboard")]
     ClipboardError,
 
@@ -35,9 +38,6 @@ pub enum AuthError {
 
     #[error("Failed to decode entries as UTF-8")]
     Utf8Error,
-
-    #[error("Could not find home directory")]
-    HomeDirError,
 
     #[error("Failed to create auth directory")]
     CreateDirError,
@@ -62,15 +62,6 @@ pub enum AuthError {
 
     #[error("File must have .toml extension")]
     TomlExtError,
-
-    #[error("Failed to spawn clipboard process")]
-    ClipboardSpawnError,
-
-    #[error("Failed to write to clipboard process")]
-    ClipboardWriteError,
-
-    #[error("Failed to wait for clipboard process")]
-    ClipboardWaitError,
 
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
