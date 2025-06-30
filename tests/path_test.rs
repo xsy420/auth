@@ -2,10 +2,8 @@ use std::env;
 use std::path::PathBuf;
 
 use auth::auth_core::app::App;
-use serial_test::serial;
 
 #[test]
-#[serial]
 fn test_home_path_expansion() {
     let home = dirs::home_dir().unwrap();
 
@@ -14,7 +12,6 @@ fn test_home_path_expansion() {
 }
 
 #[test]
-#[serial]
 fn test_env_var_expansion() {
     let test_env = &env::temp_dir().join("test_env");
     unsafe {
@@ -26,7 +23,6 @@ fn test_env_var_expansion() {
 }
 
 #[test]
-#[serial]
 fn test_auth_entries_dir_env_var() {
     let test_auth_dir = &env::temp_dir().join("test_auth_dir");
     unsafe {
@@ -44,7 +40,6 @@ fn test_auth_entries_dir_env_var() {
 }
 
 #[test]
-#[serial]
 fn test_absolute_path() {
     let test_path = if cfg!(windows) {
         r"C:\Windows\System32\drivers\etc\hosts"
@@ -56,7 +51,6 @@ fn test_absolute_path() {
 }
 
 #[test]
-#[serial]
 fn test_file_browser_dir_env_var() {
     let test_dir = env::temp_dir().join("test_file_browser_dir");
     std::fs::create_dir_all(&test_dir).expect("Failed to create test directory");
@@ -76,7 +70,6 @@ fn test_file_browser_dir_env_var() {
 }
 
 #[test]
-#[serial]
 fn test_file_browser_invalid_dir() {
     let home = dirs::home_dir().unwrap();
     let nonexistent_dir = env::temp_dir().join("nonexistent_dir_123456789");
