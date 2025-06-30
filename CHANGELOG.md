@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.4](https://github.com/xsy420/auth/compare/v0.3.3..v0.3.4) - 2025-06-30
+
+### 🧪 Testing
+
+- Remove unused serial_test dev-dependencies ([#31](https://github.com/xsy420/auth/issues/31)) - ([494fe24](https://github.com/xsy420/auth/commit/494fe24b5a386cc380e11e951b19bc3fc6d896ee))
+
+
 ## [0.3.3](https://github.com/xsy420/auth/compare/v0.3.2..v0.3.3) - 2025-06-30
 
 ### 🚀 Features
