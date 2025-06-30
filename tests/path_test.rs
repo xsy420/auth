@@ -2,6 +2,7 @@ use std::env;
 use std::path::PathBuf;
 
 use auth::auth_core::app::App;
+use serial_test::serial;
 
 #[test]
 fn test_home_path_expansion() {
@@ -51,6 +52,7 @@ fn test_absolute_path() {
 }
 
 #[test]
+#[serial]
 fn test_file_browser_dir_env_var() {
     let test_dir = env::temp_dir().join("test_file_browser_dir");
     std::fs::create_dir_all(&test_dir).expect("Failed to create test directory");
@@ -70,6 +72,7 @@ fn test_file_browser_dir_env_var() {
 }
 
 #[test]
+#[serial]
 fn test_file_browser_invalid_dir() {
     let home = dirs::home_dir().unwrap();
     let nonexistent_dir = env::temp_dir().join("nonexistent_dir_123456789");

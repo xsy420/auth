@@ -83,6 +83,9 @@ clap_complete = "4.5.54"
 thiserror = "2.0.12"
 arboard = { version = "3.6.0", default-features = false, features = ["wayland-data-control"] }
 
+[dev-dependencies]
+serial_test = "3.2.0"
+
 [profile.release]
 lto = "fat"
 codegen-units = 1
