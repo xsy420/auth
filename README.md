@@ -19,12 +19,6 @@ Auth is available on my [repo](https://github.com/xsy420-arch/repo/blob/main/aut
 
 Pre-built binaries can be found in the [releases](https://github.com/xsy420/auth/releases) page
 
-```bash
-curl -fsSL https://github.com/xsy420/auth/releases/latest/download/auth -o auth
-chmod +x auth
-sudo mv auth /usr/bin
-```
-
 ### Building
 
 The built binary will be located inside `target/release/`, Then it can be placed in `/usr/bin/`.
