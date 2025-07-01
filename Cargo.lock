@@ -146,7 +146,6 @@ dependencies = [
  "dirs",
  "nix",
  "ratatui",
- "secrecy",
  "serde",
  "serial_test",
  "thiserror 2.0.12",
