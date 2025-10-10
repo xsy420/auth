@@ -72,7 +72,7 @@ assets = [
 ratatui = "0.29.0"
 totp-rs = "5.7.0"
 serde = { version = "1.0", features = ["derive"] }
-toml = "0.9.7"
+toml = "0.9.8"
 dirs = "6.0.0"
 base32 = "0.5.1"
 age = "0.11.1"
