@@ -1,18 +1,7 @@
-[default]
-extend-ignore-re = [
-    "\\b[A-Z]{2,}\\b",
-]
-
 [default.extend-identifiers]
 ratatui = "ratatui"
 
-[default.extend-words]
-
-[files]
-extend-exclude = [
-    "*.lock",
-    "target/",
-    ".git/",
-    "*.svg",
-    "CHANGELOG.md"
+[type.md]
+extend-ignore-re = [
+  "\\[[[:xdigit:]]{7}\\]\\(https://github.com/xsy420/auth/commit/[[:xdigit:]]{40}\\)",
 ]
