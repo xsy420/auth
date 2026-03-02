@@ -663,18 +663,16 @@ impl App {
             KeyCode::Up | KeyCode::Char('k') => self.file_browser.move_up(),
             KeyCode::Down | KeyCode::Char('j') => self.file_browser.move_down(),
             KeyCode::Char('.') => self.file_browser.toggle_hidden_files(),
-            KeyCode::Char('s') => {
-                if self.file_operation == Some(InputMode::Exporting) {
-                    if self.path_input.is_empty() {
-                        let current_dir = self
-                            .file_browser
-                            .get_current_dir()
-                            .to_string_lossy()
-                            .to_string();
-                        self.path_input = current_dir;
-                    }
-                    self.process_file_browser_selection();
+            KeyCode::Char('s') if self.file_operation == Some(InputMode::Exporting) => {
+                if self.path_input.is_empty() {
+                    let current_dir = self
+                        .file_browser
+                        .get_current_dir()
+                        .to_string_lossy()
+                        .to_string();
+                    self.path_input = current_dir;
                 }
+                self.process_file_browser_selection();
             }
             KeyCode::Enter => {
                 if let Some(path) = self.file_browser.enter() {
