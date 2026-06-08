@@ -84,7 +84,7 @@ toml = "1.1.2"
 totp-rs = "5.7.1"
 
 [dev-dependencies]
-serial_test = "3.4.0"
+serial_test = "3.5.0"
 
 [target.'cfg(unix)'.dependencies]
 nix = { version = "0.31.3", features = ["user"] }
