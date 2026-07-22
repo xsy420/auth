@@ -1,5 +1,6 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Clear, Paragraph};
+use ratatui_macros::constraints;
 
 use crate::auth_core::app::{App, InputMode};
 use crate::auth_core::entry::Entry;
@@ -23,10 +24,7 @@ pub fn draw(frame: &mut Frame, app: &App, no_size_check: bool) {
         return;
     }
 
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Min(3), Constraint::Length(3)].as_ref())
-        .split(area);
+    let chunks = Layout::vertical(constraints![>=3,==3]).split(area);
 
     draw_main_block(frame, app, chunks[0]);
     draw_help_block(frame, app, chunks[1]);

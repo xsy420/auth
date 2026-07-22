@@ -34,11 +34,7 @@ fn create_vertical_layout(percent: u16, area: Rect) -> Vec<Rect> {
         Constraint::Percentage(margin),
     ];
 
-    Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(constraints)
-        .split(area)
-        .to_vec()
+    Layout::vertical(constraints).split(area).to_vec()
 }
 
 fn create_horizontal_layout(percent: u16, area: Rect) -> Rect {
@@ -49,8 +45,5 @@ fn create_horizontal_layout(percent: u16, area: Rect) -> Rect {
         Constraint::Percentage(margin),
     ];
 
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints(constraints)
-        .split(area)[1]
+    Layout::horizontal(constraints).split(area)[1]
 }
