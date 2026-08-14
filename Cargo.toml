@@ -82,7 +82,7 @@ ratatui-macros = "0.7.2"
 serde = { version = "1.0", features = ["derive"] }
 thiserror = "2.0.18"
 toml = "1.1.2"
-totp-rs = "5.7.1"
+totp-rs = "6.0.0"
 
 [dev-dependencies]
 serial_test = "3.5.0"
